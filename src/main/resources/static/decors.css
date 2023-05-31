@@ -1,0 +1,22 @@
+
+
+.decors {
+    position: absolute;
+    width: 2em;
+    height: 2em;
+    background-size: contain;
+}
+
+.decors.background {
+    z-index: 1;
+}
+.decors.foreground {
+    z-index: 4;
+}
+
+.decors.ascenseur.background {
+    background-image: url("./ascenseur_b.png");
+}
+.decors.ascenseur.foreground {
+    background-image: url("./ascenseur.png");
+}

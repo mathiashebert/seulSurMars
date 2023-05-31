@@ -10,24 +10,7 @@
     position: absolute;
     bottom: 0;
     left: 0;
-    transition: left 1s linear;
-}
-
-.tile {
-    position: absolute;
-    width: 2em;
-    height: 2em;
-}
-
-.tile.sol {
-    background-image: url("./sol.png");
-    background-size: contain;
-    z-index: 0;
-}
-.tile.roche {
-    background-image: url("./roche.png");
-    background-size: contain;
-    z-index: 5;
+    transition: left 0.5s linear;
 }
 
 #hero {
@@ -37,7 +20,7 @@
     background-image: url("./cosmo_idle.gif");
     background-size: contain;
     z-index: 2;
-    transition: left 1s linear;
+    transition: left 0.5s linear;
 }
 #hero.mouvement {
     position: absolute;

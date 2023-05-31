@@ -49,6 +49,13 @@ function creerPlateau() {
         }
         creerTile(i,9, 'sol');
     }
+
+    creerSalle(8, 8, 5, 4, true, true);
+
+    creer_image('decors', 'ascenseur1-background', 'background', 9, 9, 'ascenseur');
+    creer_image('decors', 'ascenseur1-foreground', 'foreground', 9, 9, 'ascenseur');
+
+
 }
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -60,14 +67,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
 }, false);
 
+function creer_image(base, id, couche, i,j,clazz) {
+    let tile = document.getElementById(id);
+    if (tile === null) {
+        tile = document.createElement('div');
+        tile.setAttribute('id', id);
+        PLATEAU.appendChild(tile);
+        tile.style.bottom = j + 'em';
+        tile.style.left = i + 'em';
+    }
+    tile.className = base + ' ' + couche + ' ' + clazz;
+}
 function creerTile(i,j,clazz) {
-    const tile = document.createElement('div');
-    tile.classList.add('tile');
-    tile.classList.add(clazz);
-    tile.style.bottom = j+'em';
-    tile.style.left = i+'em';
-    tile.setAttribute('id', 'tile-'+i+'-'+j);
-    PLATEAU.appendChild(tile);
+    creer_image('tile', 'tile-background-' + i + '-' + j, 'background', i, j, clazz);
+    creer_image('tile', 'tile-foreground-' + i + '-' + j, 'foreground', i, j, clazz);
 }
 
 function retaillerFenetre() {
@@ -159,7 +172,7 @@ function deplacerHero(x) {
             appliquerAction(ACTION_SUIVANTE);
             ACTION_SUIVANTE = null;
         }
-    }, 1000);
+    }, 500);
 
 
 }
@@ -175,4 +188,42 @@ class Action {
         this.x = x;
         this.y = y;
     }
+}
+
+
+function creerSalle(x,y, largeur, hauteur, porteGauche, porteDroite) {
+
+    // colonne de gauche
+    creerTile(x,y, 'mur5');
+    if(porteGauche) {
+        creerTile(x,y+1, 'porte');
+    } else {
+        creerTile(x,y+1, 'mur1');
+    }
+    for(let j = y+2; j<y+hauteur-1; j++) {
+        creerTile(x,j, 'mur1');
+    }
+    creerTile(x,y+hauteur-1, 'mur3');
+
+    //colonnes à l'interieur de la salle
+    for(let i = x+1; i < x+largeur-1; i++) {
+        creerTile(i,y, 'mur2');
+        creerTile(i,y+1, 'dalle');
+        for(let j = y+2; j<y+hauteur-1; j++) {
+            creerTile(i,j, 'carreau');
+        }
+        creerTile(i, y+hauteur-1, 'mur2');
+    }
+
+    // colonne de droite
+    creerTile(x+largeur-1,y, 'mur6');
+    if(porteDroite) {
+        creerTile(x+largeur-1,y+1, 'porte');
+    } else {
+        creerTile(x+largeur-1,y+1, 'mur1');
+    }
+    for(let j = y+2; j<y+hauteur-1; j++) {
+        creerTile(x+largeur-1,j, 'mur1');
+    }
+    creerTile(x+largeur-1,y+hauteur-1, 'mur4');
 }
