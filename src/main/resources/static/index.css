@@ -1,0 +1,52 @@
+#fenetre {
+    border: solid;
+    position: relative;
+    overflow: hidden;
+
+}
+
+#plateau {
+    background: midnightblue;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    transition: left 1s linear;
+}
+
+.tile {
+    position: absolute;
+    width: 2em;
+    height: 2em;
+}
+
+.tile.sol {
+    background-image: url("./sol.png");
+    background-size: contain;
+    z-index: 0;
+}
+.tile.roche {
+    background-image: url("./roche.png");
+    background-size: contain;
+    z-index: 5;
+}
+
+#hero {
+    position: absolute;
+    width: 1em;
+    height: 1em;
+    background-image: url("./cosmo_idle.gif");
+    background-size: contain;
+    z-index: 2;
+    transition: left 1s linear;
+}
+#hero.mouvement {
+    position: absolute;
+    width: 1em;
+    height: 1em;
+    background-image: url("./cosmo.gif");
+    background-size: contain;
+    z-index: 2;
+}
+#hero.left {
+    transform: scaleX(-1);
+}
