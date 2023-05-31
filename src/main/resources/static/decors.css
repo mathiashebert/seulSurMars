@@ -15,8 +15,8 @@
 }
 
 .decors.ascenseur.background {
-    background-image: url("./ascenseur_b.png");
+    background-image: url("./img/ascenseur_b.png");
 }
 .decors.ascenseur.foreground {
-    background-image: url("./ascenseur.png");
+    background-image: url("./img/ascenseur.png");
 }

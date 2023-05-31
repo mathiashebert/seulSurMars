@@ -17,7 +17,7 @@
     position: absolute;
     width: 1em;
     height: 1em;
-    background-image: url("./cosmo_idle.gif");
+    background-image: url("./img/cosmo_idle.gif");
     background-size: contain;
     z-index: 2;
     transition: left 0.5s linear;
@@ -26,7 +26,7 @@
     position: absolute;
     width: 1em;
     height: 1em;
-    background-image: url("./cosmo.gif");
+    background-image: url("./img/cosmo.gif");
     background-size: contain;
     z-index: 2;
 }
