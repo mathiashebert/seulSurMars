@@ -1,4 +1,4 @@
-fetch('http://localhost:8080/game', {
+/*fetch('http://localhost:8080/game', {
     method: 'POST',
     body: JSON.stringify({
         title:'sdsfd',
@@ -13,8 +13,31 @@ fetch('http://localhost:8080/game', {
         return response.json()})
     .then(function(data)
     {
-        console.log(data)
+        console.log(data);
+        return data;
     }).catch(error => console.error('Error:', error));
+*/
+
+function callActionApi(touche) {
+    return fetchApi('http://localhost:8080/game', {touche: touche});
+}
+function fetchApi(url, params) {
+    return fetch(url, {
+        method: 'POST',
+        body: JSON.stringify(params),
+        headers: {
+            'Content-type': 'application/json; charset=UTF-8',
+        }
+    })
+        .then(function(response){
+            return response.json()})
+        .then(function(data)
+        {
+            data = data.map(value => new Action(value.id, parseInt(value.x), parseInt(value.y)));
+            console.log(data);
+            return data;
+        }).catch(error => console.error('Error:', error));
+}
 
 
 
@@ -50,10 +73,10 @@ function creerPlateau() {
         creerTile(i,9, 'sol');
     }
 
-    creerSalle(8, 8, 5, 4, true, true);
+    creerSalle(8, 8, 5, 5, true, true);
+    creerElement('tile', 'tile-9-9', 9, 9, 'carreau');
 
-    creer_image('decors', 'ascenseur1-background', 'background', 9, 9, 'ascenseur');
-    creer_image('decors', 'ascenseur1-foreground', 'foreground', 9, 9, 'ascenseur');
+    creerElement('decors', 'ascenseur1', 9, 9, 'ascenseur');
 
 
 }
@@ -67,7 +90,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
 }, false);
 
-function creer_image(base, id, couche, i,j,clazz) {
+function creerElement(base, id, i,j,clazz) {
+    creerImage(id+'-background', i, j, base+' background '+clazz);
+    creerImage(id+'-foreground', i, j, base+' foreground '+clazz);
+}
+function creerImage(id, i,j,clazz) {
     let tile = document.getElementById(id);
     if (tile === null) {
         tile = document.createElement('div');
@@ -76,11 +103,10 @@ function creer_image(base, id, couche, i,j,clazz) {
         tile.style.bottom = j + 'em';
         tile.style.left = i + 'em';
     }
-    tile.className = base + ' ' + couche + ' ' + clazz;
+    tile.className = clazz;
 }
 function creerTile(i,j,clazz) {
-    creer_image('tile', 'tile-background-' + i + '-' + j, 'background', i, j, clazz);
-    creer_image('tile', 'tile-foreground-' + i + '-' + j, 'foreground', i, j, clazz);
+    creerElement('tile', 'tile-' + i + '-' + j, i, j, clazz);
 }
 
 function retaillerFenetre() {
@@ -115,55 +141,74 @@ function creerHero() {
 document.addEventListener('keydown', function(e) {
 
     console.log(e.code, e.key);
-    touche(e.key);
+    touche(e.code);
 
 }, false);
 
 function toucheToAction(key) {
+    return callActionApi(key);
+    /*
     if(key === 'ArrowLeft') {
-        return new Action('hero', POSITION_X-1, POSITION_Y);
+        return [new Action('hero', POSITION_X-1, POSITION_Y)];
     } else if(key === 'ArrowRight') {
-        return new Action('hero', POSITION_X+1, POSITION_Y);
+        return [new Action('hero', POSITION_X+1, POSITION_Y)];
+    } else if(key === 'Space') {
+        return [new Action('hero', POSITION_X, POSITION_Y+1), new Action('ascenseur1', POSITION_X, POSITION_Y+1)];
     } else {
         return null;
-    }
+    }*/
 }
 
-function touche(key) {
+async function touche(key) {
     // si on est en mouvement, et qu'il y a déjà une action suivante de prévue, on ne fait rien
     if(MOUVEMENT && ACTION_SUIVANTE !== null) {
         return;
     }
+    const actions = await toucheToAction(key);
     // si on est en mouvement, mais d'autre action prévue, on note la suivante
     if(MOUVEMENT) {
-        ACTION_SUIVANTE = toucheToAction(key);
+        ACTION_SUIVANTE = actions;
         return;
     }
     // si on n'est pas en mouvement
-    appliquerAction(toucheToAction(key));
+    appliquerAction(actions);
 }
 
-function appliquerAction(action) {
-    if(action === null) {return ;}
+function appliquerAction(actions) {
+    if(actions === null) {return ;}
 
-    console.log(action);
-    if(action.id === 'hero') {
-        deplacerHero(action.x);
+    for(let action of actions) {
+        if(action.id === 'hero') {
+            deplacerHero(action.x, action.y);
+        } else {
+            document.getElementById(action.id+'-background').style.bottom= action.y+'em';
+            document.getElementById(action.id+'-background').style.left= action.x+'em';
+            document.getElementById(action.id+'-foreground').style.bottom= action.y+'em';
+            document.getElementById(action.id+'-foreground').style.left= action.x+'em';
+        }
     }
+
 }
 
-function deplacerHero(x) {
+function deplacerHero(x, y) {
+    console.log(x, POSITION_X, x < POSITION_X, x > POSITION_X);
 
     if(x < POSITION_X) {
+        console.log("set left");
+
         HERO.classList.add('left');
-    } else {
+        HERO.classList.add('mouvement');
+    } else if(x > POSITION_X) {
+        console.log("remove left");
+
         HERO.classList.remove('left');
+        HERO.classList.add('mouvement');
     }
 
     POSITION_X = x;
+    POSITION_Y = y;
 
     recentrerPlateau();
-    HERO.classList.add('mouvement');
     MOUVEMENT = true;
     setTimeout(function () {
         MOUVEMENT = false;
@@ -194,20 +239,20 @@ class Action {
 function creerSalle(x,y, largeur, hauteur, porteGauche, porteDroite) {
 
     // colonne de gauche
-    creerTile(x,y, 'mur5');
+    creerTile(x,y, 'mur6');
     if(porteGauche) {
         creerTile(x,y+1, 'porte');
     } else {
-        creerTile(x,y+1, 'mur1');
+        creerTile(x,y+1, 'mur4');
     }
     for(let j = y+2; j<y+hauteur-1; j++) {
-        creerTile(x,j, 'mur1');
+        creerTile(x,j, 'mur4');
     }
-    creerTile(x,y+hauteur-1, 'mur3');
+    creerTile(x,y+hauteur-1, 'mur1');
 
     //colonnes à l'interieur de la salle
     for(let i = x+1; i < x+largeur-1; i++) {
-        creerTile(i,y, 'mur2');
+        creerTile(i,y, 'mur7');
         creerTile(i,y+1, 'dalle');
         for(let j = y+2; j<y+hauteur-1; j++) {
             creerTile(i,j, 'carreau');
@@ -216,14 +261,14 @@ function creerSalle(x,y, largeur, hauteur, porteGauche, porteDroite) {
     }
 
     // colonne de droite
-    creerTile(x+largeur-1,y, 'mur6');
+    creerTile(x+largeur-1,y, 'mur8');
     if(porteDroite) {
         creerTile(x+largeur-1,y+1, 'porte');
     } else {
-        creerTile(x+largeur-1,y+1, 'mur1');
+        creerTile(x+largeur-1,y+1, 'mur5');
     }
     for(let j = y+2; j<y+hauteur-1; j++) {
-        creerTile(x+largeur-1,j, 'mur1');
+        creerTile(x+largeur-1,j, 'mur5');
     }
-    creerTile(x+largeur-1,y+hauteur-1, 'mur4');
+    creerTile(x+largeur-1,y+hauteur-1, 'mur3');
 }

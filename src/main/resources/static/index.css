@@ -5,12 +5,15 @@
 
 }
 
+#fenetre * {
+    transition: left 0.5s linear, bottom 0.5s ease-in-out;
+}
+
 #plateau {
     background: midnightblue;
     position: absolute;
     bottom: 0;
     left: 0;
-    transition: left 0.5s linear;
 }
 
 #hero {
@@ -20,7 +23,6 @@
     background-image: url("./img/cosmo_idle.gif");
     background-size: contain;
     z-index: 2;
-    transition: left 0.5s linear;
 }
 #hero.mouvement {
     position: absolute;
