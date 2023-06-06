@@ -5,7 +5,7 @@
 
 }
 
-#fenetre * {
+#fenetre.ready * {
     transition: left 0.5s linear, bottom 0.5s ease-in-out;
 }
 

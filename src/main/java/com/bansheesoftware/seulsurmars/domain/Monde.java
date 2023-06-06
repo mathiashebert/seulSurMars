@@ -9,8 +9,12 @@ public class Monde {
 
     public List<List<Position>> positions;
 
-    public List<Ascenseur> ascenseurs = new ArrayList<>();
 
+    public int positionX = 2;
+    public int positionY = 2;
+
+    public List<Ascenseur> ascenseurs = new ArrayList<>();
+    public List<Salle> salles = new ArrayList<>();
 
 
     public Monde(int largeur, int hauteur) {

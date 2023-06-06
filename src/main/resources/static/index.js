@@ -33,7 +33,7 @@ function fetchApi(url, params) {
             return response.json()})
         .then(function(data)
         {
-            data = data.map(value => new Action(value.id, parseInt(value.x), parseInt(value.y)));
+            data = data.map(value => new Action(value.type, value.id, parseInt(value.x), parseInt(value.y), parseInt(value.duree)));
             console.log(data);
             return data;
         }).catch(error => console.error('Error:', error));
@@ -46,8 +46,8 @@ const LARGEUR = 20;
 const HAUTEUR = 15;
 const LARGEUR_FENETRE = 9;
 const HAUTEUR_FENETRE = 9;
-let POSITION_Y = 9;
-let POSITION_X = 10;
+let POSITION_Y = 1;
+let POSITION_X = 1;
 
 let PLATEAU;
 let HERO;
@@ -60,12 +60,41 @@ function creerPlateau() {
 
     PLATEAU = document.createElement('div');
     PLATEAU.setAttribute('id', 'plateau');
-    PLATEAU.style.width = LARGEUR+'em';
-    PLATEAU.style.height = HAUTEUR+'em';
 
     document.getElementById("fenetre").appendChild(PLATEAU);
 
 
+    return fetch('http://localhost:8080/game', {
+        headers: {
+            'Content-type': 'application/json; charset=UTF-8',
+        }
+    })
+        .then(function(response){
+            return response.json()})
+        .then(function(data)
+        {
+            PLATEAU.style.width = data.largeur+'em';
+            PLATEAU.style.height = data.hauteur+'em';
+
+            POSITION_X = data.positionX;
+            POSITION_Y = data.positionY;
+
+            for(let i=0; i<data.largeur; i++) {
+                for(let j=0; j<data.hauteur; j++) {
+                    creerTile(i,j,data.positions[i][j].graphisme);
+                }
+            }
+
+            for(let index in data.ascenseurs) {
+                const a = data.ascenseurs[index];
+                creerElement('decors', a.id, a.x, a.y, 'ascenseur');
+            }
+
+
+            return data;
+        }).catch(error => console.error('Error:', error));
+
+/*
     for(let i = 0; i<LARGEUR; i++) {
         for(let j = 0; j <9; j++) {
             creerTile(i,j,'roche');
@@ -78,15 +107,21 @@ function creerPlateau() {
 
     creerElement('decors', 'ascenseur1', 9, 9, 'ascenseur');
 
+    */
+
 
 }
 
 document.addEventListener('DOMContentLoaded', function() {
 
-    creerPlateau();
     retaillerFenetre();
-    creerHero();
-    recentrerPlateau();
+    creerPlateau().then(function () {
+        creerHero();
+        recentrerPlateau();
+        setTimeout(function () {
+            document.getElementById("fenetre").classList.add("ready");
+        }, 500);
+    });
 
 }, false);
 
@@ -178,29 +213,28 @@ function appliquerAction(actions) {
     if(actions === null) {return ;}
 
     for(let action of actions) {
-        if(action.id === 'hero') {
-            deplacerHero(action.x, action.y);
-        } else {
-            document.getElementById(action.id+'-background').style.bottom= action.y+'em';
-            document.getElementById(action.id+'-background').style.left= action.x+'em';
-            document.getElementById(action.id+'-foreground').style.bottom= action.y+'em';
-            document.getElementById(action.id+'-foreground').style.left= action.x+'em';
+        switch (action.type) {
+            case "GRAPHISME":
+                if(action.id === 'hero') {
+                    deplacerHero(action.x, action.y);
+                } else {
+                    document.getElementById(action.id+'-background').style.bottom= action.y+'em';
+                    document.getElementById(action.id+'-background').style.left= action.x+'em';
+                    document.getElementById(action.id+'-foreground').style.bottom= action.y+'em';
+                    document.getElementById(action.id+'-foreground').style.left= action.x+'em';
+                }
+                break;
         }
+
     }
 
 }
 
 function deplacerHero(x, y) {
-    console.log(x, POSITION_X, x < POSITION_X, x > POSITION_X);
-
     if(x < POSITION_X) {
-        console.log("set left");
-
         HERO.classList.add('left');
         HERO.classList.add('mouvement');
     } else if(x > POSITION_X) {
-        console.log("remove left");
-
         HERO.classList.remove('left');
         HERO.classList.add('mouvement');
     }
@@ -226,12 +260,16 @@ class Action {
     id;
     x;
     y;
+    type;
+    duree;
 
 
-    constructor(id, x, y) {
+    constructor(type, id, x, y, duree) {
         this.id = id;
         this.x = x;
         this.y = y;
+        this.type = type;
+        this.duree = duree;
     }
 }
 

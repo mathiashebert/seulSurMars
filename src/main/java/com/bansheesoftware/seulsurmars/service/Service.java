@@ -1,30 +1,24 @@
 package com.bansheesoftware.seulsurmars.service;
 
-import com.bansheesoftware.seulsurmars.domain.Action;
-import com.bansheesoftware.seulsurmars.domain.Ascenseur;
-import com.bansheesoftware.seulsurmars.domain.Monde;
-import com.bansheesoftware.seulsurmars.domain.Position;
+import com.bansheesoftware.seulsurmars.domain.*;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 @org.springframework.stereotype.Service
 public class Service {
 
-    int POSITION_Y = 0;
-    int POSITION_X = 0;
+    private int POSITION_Y;
+    private int POSITION_X;
 
     Monde monde; // package pour pouvoir être modifié dans les tests
+    private int numTimer = 1;
+    private Map<String, String> timers = new HashMap<>();
 
-    public Service() {
-        monde = new Monde(20, 15);
-        for(int i=0; i<20; i++) {
-            monde.position(i, 9, Position.POSTION_TYPE.SOL, Position.GRAPHISME.sol);
-        }
-        POSITION_X = 10;
-        POSITION_Y = 9;
+    public Service(CreerMondeService creerMondeService) {
+        monde = creerMondeService.creerMonde();
 
-        monde.ascenseur("ascenseur1", 9, 9, 9, 11);
+        POSITION_X = monde.positionX;
+        POSITION_Y = monde.positionY;
     }
 
     public enum Touche {
@@ -33,12 +27,14 @@ public class Service {
 
     public List<Action> action(Touche touche) {
         List<Action> list = new ArrayList<>();
+        int oldY = POSITION_Y;
+        int oldX = POSITION_X;
         switch (touche) {
             case LEFT:
                 if(POSITION_X > 0) {
                     if(monde.positions.get(POSITION_X-1).get(POSITION_Y).type.equals(Position.POSTION_TYPE.SOL) || trouverAscenseur(POSITION_X-1, POSITION_Y) != null) {
                         POSITION_X --;
-                        list.add(new Action("hero", POSITION_X, POSITION_Y));
+                        list.add(Action.graphique("hero", POSITION_X, POSITION_Y));
                     }
                 }
                 break;
@@ -46,7 +42,7 @@ public class Service {
                 if(POSITION_X < monde.largeur -1) {
                     if(monde.positions.get(POSITION_X+1).get(POSITION_Y).type.equals(Position.POSTION_TYPE.SOL) || trouverAscenseur(POSITION_X+1, POSITION_Y) != null) {
                         POSITION_X ++;
-                        list.add(new Action("hero", POSITION_X, POSITION_Y));
+                        list.add(Action.graphique("hero", POSITION_X, POSITION_Y));
                     }
                 }
                 break;
@@ -56,24 +52,61 @@ public class Service {
                     if(ascenseur.y == ascenseur.hauteurBas) {
                         POSITION_Y = ascenseur.hauteurHaut;
                         ascenseur.y = POSITION_Y;
-                        list.add(new Action("hero", POSITION_X, POSITION_Y));
-                        list.add(new Action(ascenseur.id, POSITION_X, POSITION_Y));
+                        list.add(Action.graphique("hero", POSITION_X, POSITION_Y));
+                        list.add(Action.graphique(ascenseur.id, POSITION_X, POSITION_Y));
                     } else {
                         POSITION_Y = ascenseur.hauteurBas;
                         ascenseur.y = POSITION_Y;
-                        list.add(new Action("hero", POSITION_X, POSITION_Y));
-                        list.add(new Action(ascenseur.id, POSITION_X, POSITION_Y));
+                        list.add(Action.graphique("hero", POSITION_X, POSITION_Y));
+                        list.add(Action.graphique(ascenseur.id, POSITION_X, POSITION_Y));
                     }
 
                 }
 
                 break;
+            default:
+                return new ArrayList<>();
         }
-        // list.add(new Action("hero", POSITION_X, POSITION_Y));
+
+        if(oldY != POSITION_Y || oldX != POSITION_X) {
+            if(isInterieur(oldX, oldY) && !isInterieur(POSITION_X, POSITION_Y)) {
+                String id = "timer"+numTimer;
+                ++numTimer;
+                list.add(Action.timer(id, 60));
+                timers.put(id, "oxygen");
+            }
+            else if(!isInterieur(oldX, oldY) && isInterieur(POSITION_X, POSITION_Y)) {
+                Set<String> keys = timers.keySet();
+                for(String key : keys) {
+                    if(timers.get(key).equals("oxygen")) {
+                        timers.remove(key);
+                        list.add(Action.timer(key, 0));
+                    }
+                }
+            }
+        }
+
+        return list;
+    }
+
+    public List<Action> timer(String id) {
+        List list = new ArrayList<>();
+        if(timers.containsKey(id) && timers.get(id).equals("oxygen")) {
+            list.add(Action.gameOver());
+        }
         return list;
     }
 
     private Ascenseur trouverAscenseur(int x, int y) {
         return monde.ascenseurs.stream().filter(ascenseur -> ascenseur.x == x && ascenseur.y == y).findAny().orElse(null);
+    }
+
+    private boolean isInterieur(int x, int y) {
+        for(Salle salle : monde.salles) {
+            if(x >= salle.x && x < salle.x + salle.largeur && y >= salle.y && y < salle.y + salle.hauteur ) {
+                return true;
+            }
+        }
+        return false;
     }
 }
