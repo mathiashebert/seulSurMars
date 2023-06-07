@@ -2,7 +2,13 @@
     border: solid;
     position: relative;
     overflow: hidden;
+    transition: opacity 1s linear;
+    background: black;
 
+
+}
+#fenetre.gameOver {
+    opacity: 0;
 }
 
 #fenetre.ready * {

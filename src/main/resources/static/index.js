@@ -18,8 +18,11 @@
     }).catch(error => console.error('Error:', error));
 */
 
-function callActionApi(touche) {
-    return fetchApi('http://localhost:8080/game', {touche: touche});
+function callTimerApi(timer) {
+    return fetchApi('http://localhost:8080/game/timer', {timer: timer});
+}
+function callToucheApi(touche) {
+    return fetchApi('http://localhost:8080/game/touche', {touche: touche});
 }
 function fetchApi(url, params) {
     return fetch(url, {
@@ -54,6 +57,8 @@ let HERO;
 
 let MOUVEMENT = false;
 let ACTION_SUIVANTE = null;
+
+const TIMERS = {};
 
 
 function creerPlateau() {
@@ -180,26 +185,12 @@ document.addEventListener('keydown', function(e) {
 
 }, false);
 
-function toucheToAction(key) {
-    return callActionApi(key);
-    /*
-    if(key === 'ArrowLeft') {
-        return [new Action('hero', POSITION_X-1, POSITION_Y)];
-    } else if(key === 'ArrowRight') {
-        return [new Action('hero', POSITION_X+1, POSITION_Y)];
-    } else if(key === 'Space') {
-        return [new Action('hero', POSITION_X, POSITION_Y+1), new Action('ascenseur1', POSITION_X, POSITION_Y+1)];
-    } else {
-        return null;
-    }*/
-}
-
 async function touche(key) {
     // si on est en mouvement, et qu'il y a déjà une action suivante de prévue, on ne fait rien
     if(MOUVEMENT && ACTION_SUIVANTE !== null) {
         return;
     }
-    const actions = await toucheToAction(key);
+    const actions = await callToucheApi(key);
     // si on est en mouvement, mais d'autre action prévue, on note la suivante
     if(MOUVEMENT) {
         ACTION_SUIVANTE = actions;
@@ -210,9 +201,11 @@ async function touche(key) {
 }
 
 function appliquerAction(actions) {
+    console.log("aapliquer", actions);
     if(actions === null) {return ;}
 
     for(let action of actions) {
+        console.log("type ?", action.type);
         switch (action.type) {
             case "GRAPHISME":
                 if(action.id === 'hero') {
@@ -224,6 +217,25 @@ function appliquerAction(actions) {
                     document.getElementById(action.id+'-foreground').style.left= action.x+'em';
                 }
                 break;
+
+            case "TIMER":
+                if(action.duree > 0) {
+                    TIMERS[action.id] = setTimeout(function(){
+                        callTimerApi(action.id).then(function (actions) {
+                            appliquerAction(actions);
+                        });
+                    }, action.duree * 100);
+                } else {
+                    clearTimeout(TIMERS[action.id]);
+                }
+                break;
+
+            case "GAME_OVER":
+                document.getElementById("fenetre").classList.add("gameOver");
+
+                break;
+
+
         }
 
     }

@@ -21,7 +21,7 @@ public class Controller {
         this.creerMondeService = creerMondeService;
     }
 
-    @PostMapping
+    @PostMapping(value = "touche")
     public List<Map<String, String>> action(@RequestBody Map<String, String> body) {
         String key = body.get("touche");
         if (key == null) {
@@ -43,6 +43,21 @@ public class Controller {
         }
 
         List<Action> actions = service.action(touche);
+        return actionsToMap(actions);
+    }
+
+    @PostMapping(value = "timer")
+    public List<Map<String, String>> timer(@RequestBody Map<String, String> body) {
+        String timer = body.get("timer");
+        if (timer == null) {
+            return new ArrayList<>();
+        }
+
+        List<Action> actions = service.timer(timer);
+        return actionsToMap(actions);
+    }
+
+    private List<Map<String, String>> actionsToMap(List<Action> actions) {
         List<Map<String, String>> list = actions.stream().map(action -> {
             Map<String, String> map = new HashMap<>();
             map.put("id", action.id);
