@@ -36,7 +36,7 @@ function fetchApi(url, params) {
             return response.json()})
         .then(function(data)
         {
-            data = data.map(value => new Action(value.type, value.id, parseInt(value.x), parseInt(value.y), parseInt(value.duree)));
+            data = data.map(value => new Action(value.type, value.id, parseInt(value.x), parseInt(value.y), parseInt(value.duree), parseInt(value.inventaire)));
             console.log(data);
             return data;
         }).catch(error => console.error('Error:', error));
@@ -59,15 +59,13 @@ let MOUVEMENT = false;
 let ACTION_SUIVANTE = null;
 
 const TIMERS = {};
+const INVENTAIRE = [];
 
 
 function creerPlateau() {
 
-    PLATEAU = document.createElement('div');
-    PLATEAU.setAttribute('id', 'plateau');
-
-    document.getElementById("fenetre").appendChild(PLATEAU);
-
+    PLATEAU = document.getElementById('plateau');
+    document.getElementById("inventaire").style.width = LARGEUR_FENETRE+'em';
 
     return fetch('http://localhost:8080/game', {
         headers: {
@@ -95,25 +93,14 @@ function creerPlateau() {
                 creerElement('decors', a.id, a.x, a.y, 'ascenseur');
             }
 
+            for(let index in data.objets) {
+                const o = data.objets[index];
+                creerElement('objet', o.id, o.x, o.y, o.graphisme);
+            }
+
 
             return data;
         }).catch(error => console.error('Error:', error));
-
-/*
-    for(let i = 0; i<LARGEUR; i++) {
-        for(let j = 0; j <9; j++) {
-            creerTile(i,j,'roche');
-        }
-        creerTile(i,9, 'sol');
-    }
-
-    creerSalle(8, 8, 5, 5, true, true);
-    creerElement('tile', 'tile-9-9', 9, 9, 'carreau');
-
-    creerElement('decors', 'ascenseur1', 9, 9, 'ascenseur');
-
-    */
-
 
 }
 
@@ -131,8 +118,14 @@ document.addEventListener('DOMContentLoaded', function() {
 }, false);
 
 function creerElement(base, id, i,j,clazz) {
-    creerImage(id+'-background', i, j, base+' background '+clazz);
-    creerImage(id+'-foreground', i, j, base+' foreground '+clazz);
+    if(base === "objet") {
+        creerImage(id, i, j, base+' '+clazz);
+
+    } else {
+        creerImage(id+'-background', i, j, base+' background '+clazz);
+        creerImage(id+'-foreground', i, j, base+' foreground '+clazz);
+    }
+
 }
 function creerImage(id, i,j,clazz) {
     let tile = document.getElementById(id);
@@ -166,7 +159,28 @@ function recentrerPlateau() {
     HERO.style.left = POSITION_X+'em';
     HERO.style.bottom = POSITION_Y+'em';
 
+    document.getElementById("inventaire").style.bottom= -offsetY+'em';
+    document.getElementById("inventaire").style.left= -offsetX+'em';
+
+    for(let i=0; i<10; i++) {
+        if(INVENTAIRE[i]) {
+            recentrerInventaire(document.getElementById(INVENTAIRE[i]), i);
+        }
+    }
+
+
 }
+
+function recentrerInventaire(element, index) {
+
+    const offsetX = (LARGEUR_FENETRE -1)/2 - POSITION_X;
+    const offsetY = (HAUTEUR_FENETRE -1)/2 - POSITION_Y;
+
+    element.style.bottom= (-offsetY)+'em';
+    element.style.left= (-offsetX+index)+'em';
+}
+
+
 
 function creerHero() {
     HERO = document.createElement('div');
@@ -179,13 +193,13 @@ function creerHero() {
 
 
 document.addEventListener('keydown', function(e) {
-
-    console.log(e.code, e.key);
     touche(e.code);
 
 }, false);
 
 async function touche(key) {
+    console.log(key);
+
     // si on est en mouvement, et qu'il y a déjà une action suivante de prévue, on ne fait rien
     if(MOUVEMENT && ACTION_SUIVANTE !== null) {
         return;
@@ -208,8 +222,17 @@ function appliquerAction(actions) {
         console.log("type ?", action.type);
         switch (action.type) {
             case "GRAPHISME":
+                const index = INVENTAIRE.indexOf(action.id);
+                console.log("graph", action.id, index);
                 if(action.id === 'hero') {
                     deplacerHero(action.x, action.y);
+                } else if(index > -1) {
+                    document.getElementById(action.id).style.bottom= action.y+'em';
+                    document.getElementById(action.id).style.left= action.x+'em';
+                    setTimeout(function () {
+                        document.getElementById(action.id).classList.remove('inventaire');
+                    }, 500)
+                    INVENTAIRE[index] = null;
                 } else {
                     document.getElementById(action.id+'-background').style.bottom= action.y+'em';
                     document.getElementById(action.id+'-background').style.left= action.x+'em';
@@ -219,19 +242,43 @@ function appliquerAction(actions) {
                 break;
 
             case "TIMER":
+                let elem = document.getElementById(action.id + '-timer');
+                if(elem) {
+                    elem.remove();
+                }
                 if(action.duree > 0) {
+                    elem = document.createElement('div');
+                    elem.setAttribute('id', action.id + '-timer');
+                    elem.classList.add('timer');
+                    elem.style.animationDuration = action.duree + 's';
+                    elem.classList.add('launched');
+                    document.getElementById(action.id+'-foreground').appendChild(elem);
+
                     TIMERS[action.id] = setTimeout(function(){
                         callTimerApi(action.id).then(function (actions) {
                             appliquerAction(actions);
                         });
-                    }, action.duree * 100);
+                    }, action.duree *  1000);
                 } else {
                     clearTimeout(TIMERS[action.id]);
                 }
                 break;
 
+            case "INVENTAIRE":
+                let objet = document.getElementById(action.id);
+                if(!objet) {
+                    creerElement('objet', action.id, 0, 0, action.graphisme);
+                    objet = document.getElementById(action.id);
+                }
+                objet.classList.add('inventaire');
+                INVENTAIRE[action.inventaire] = action.id;
+                recentrerInventaire(objet, action.inventaire);
+
+                break;
+
             case "GAME_OVER":
-                document.getElementById("fenetre").classList.add("gameOver");
+                document.getElementById("gameover").style.opacity = "1";
+
 
                 break;
 
@@ -274,51 +321,15 @@ class Action {
     y;
     type;
     duree;
+    inventaire;
 
 
-    constructor(type, id, x, y, duree) {
+    constructor(type, id, x, y, duree, inventaire) {
         this.id = id;
         this.x = x;
         this.y = y;
         this.type = type;
         this.duree = duree;
+        this.inventaire = inventaire;
     }
-}
-
-
-function creerSalle(x,y, largeur, hauteur, porteGauche, porteDroite) {
-
-    // colonne de gauche
-    creerTile(x,y, 'mur6');
-    if(porteGauche) {
-        creerTile(x,y+1, 'porte');
-    } else {
-        creerTile(x,y+1, 'mur4');
-    }
-    for(let j = y+2; j<y+hauteur-1; j++) {
-        creerTile(x,j, 'mur4');
-    }
-    creerTile(x,y+hauteur-1, 'mur1');
-
-    //colonnes à l'interieur de la salle
-    for(let i = x+1; i < x+largeur-1; i++) {
-        creerTile(i,y, 'mur7');
-        creerTile(i,y+1, 'dalle');
-        for(let j = y+2; j<y+hauteur-1; j++) {
-            creerTile(i,j, 'carreau');
-        }
-        creerTile(i, y+hauteur-1, 'mur2');
-    }
-
-    // colonne de droite
-    creerTile(x+largeur-1,y, 'mur8');
-    if(porteDroite) {
-        creerTile(x+largeur-1,y+1, 'porte');
-    } else {
-        creerTile(x+largeur-1,y+1, 'mur5');
-    }
-    for(let j = y+2; j<y+hauteur-1; j++) {
-        creerTile(x+largeur-1,j, 'mur5');
-    }
-    creerTile(x+largeur-1,y+hauteur-1, 'mur3');
 }

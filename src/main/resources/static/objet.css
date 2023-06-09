@@ -1,0 +1,17 @@
+
+
+.objet {
+    position: absolute;
+    width: 1em;
+    height: 1em;
+    background-size: contain;
+    z-index: 4;
+}
+.objet.inventaire {
+    z-index: 29;
+}
+
+
+.objet.bouteille {
+    background-image: url("img/bouteille.png");
+}

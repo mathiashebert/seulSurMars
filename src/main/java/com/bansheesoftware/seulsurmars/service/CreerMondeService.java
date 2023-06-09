@@ -16,6 +16,10 @@ public class CreerMondeService {
 
         creerAscenseur(monde, "ascenseur1", 5, 5, 1, 5);
 
+        monde.objets.add(new Objet("bouteille1", 4, 5, Objet.GRAPHISME.bouteille));
+        monde.objets.add(new Objet("bouteille2", 3, 5, Objet.GRAPHISME.bouteille));
+        monde.objets.add(new Objet("bouteille3", 2, 5, Objet.GRAPHISME.bouteille));
+
         return monde;
     }
 

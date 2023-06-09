@@ -2,17 +2,19 @@
     border: solid;
     position: relative;
     overflow: hidden;
-    transition: opacity 1s linear;
-    background: black;
-
-
-}
-#fenetre.gameOver {
-    opacity: 0;
 }
 
 #fenetre.ready * {
-    transition: left 0.5s linear, bottom 0.5s ease-in-out;
+    transition: left 0.5s linear, bottom 0.5s ease-in-out,  opacity 2s ease-in-out;
+}
+
+#gameover {
+    width: 100%;
+    height: 100%;
+    background: black;
+    z-index: 30;
+    position: absolute;
+    opacity: 0;
 }
 
 #plateau {
@@ -40,4 +42,154 @@
 }
 #hero.left {
     transform: scaleX(-1);
+}
+
+#oxygen-foreground {
+    width: 1em;
+    height: 1em;
+    position: absolute;
+    top: 0;
+    right: 0;
+    border:0.1em  solid transparent;
+    z-index: 20;
+}
+
+#inventaire {
+    width: 100%;
+    height: 1em;
+    border: solid 1px;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    background-color: white;
+    z-index: 28;
+}
+
+
+.timer {
+    width: 1em;
+    height: 1em;
+    border-radius: 50%;
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: white;
+    border:0.1em  solid transparent;
+    background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 0%, 0, green ) border-box;
+    animation-duration: 100s;
+    animation-fill-mode: forwards;
+}
+
+.timer.launched {
+    animation-name: timer_keyframe;
+}
+
+@keyframes timer_keyframe {
+    from {
+        background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 0%, 0, green ) border-box;
+    }
+    1% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 1%, 0, green ) border-box; }
+    2% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 2%, 0, green ) border-box; }
+    3% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 3%, 0, green ) border-box; }
+    4% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 4%, 0, green ) border-box; }
+    5% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 5%, 0, green ) border-box; }
+    6% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 6%, 0, green ) border-box; }
+    7% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 7%, 0, green ) border-box; }
+    8% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 8%, 0, green ) border-box; }
+    9% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 9%, 0, green ) border-box; }
+    10% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 10%, 0, green ) border-box; }
+    11% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 11%, 0, green ) border-box; }
+    12% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 12%, 0, green ) border-box; }
+    13% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 13%, 0, green ) border-box; }
+    14% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 14%, 0, green ) border-box; }
+    15% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 15%, 0, green ) border-box; }
+    16% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 16%, 0, green ) border-box; }
+    17% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 17%, 0, green ) border-box; }
+    18% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 18%, 0, green ) border-box; }
+    19% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 19%, 0, green ) border-box; }
+    20% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 20%, 0, green ) border-box; }
+    21% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 21%, 0, green ) border-box; }
+    22% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 22%, 0, green ) border-box; }
+    23% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 23%, 0, green ) border-box; }
+    24% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 24%, 0, green ) border-box; }
+    25% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 25%, 0, green ) border-box; }
+    26% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 26%, 0, green ) border-box; }
+    27% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 27%, 0, green ) border-box; }
+    28% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 28%, 0, green ) border-box; }
+    29% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 29%, 0, green ) border-box; }
+    30% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 30%, 0, green ) border-box; }
+    31% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 31%, 0, green ) border-box; }
+    32% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 32%, 0, green ) border-box; }
+    33% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 33%, 0, green ) border-box; }
+    34% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 34%, 0, green ) border-box; }
+    35% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 35%, 0, green ) border-box; }
+    36% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 36%, 0, green ) border-box; }
+    37% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 37%, 0, green ) border-box; }
+    38% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 38%, 0, green ) border-box; }
+    39% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 39%, 0, green ) border-box; }
+    40% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 40%, 0, green ) border-box; }
+    40% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 40%, 0, green ) border-box; }
+    41% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 41%, 0, green ) border-box; }
+    42% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 42%, 0, green ) border-box; }
+    43% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 43%, 0, green ) border-box; }
+    44% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 44%, 0, green ) border-box; }
+    45% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 45%, 0, green ) border-box; }
+    46% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 46%, 0, green ) border-box; }
+    47% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 47%, 0, green ) border-box; }
+    48% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 48%, 0, green ) border-box; }
+    49% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 49%, 0, green ) border-box; }
+    50% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 50%, 0, green ) border-box; }
+    51% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 51%, 0, green ) border-box; }
+    52% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 52%, 0, green ) border-box; }
+    53% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 53%, 0, green ) border-box; }
+    54% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 54%, 0, green ) border-box; }
+    55% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 55%, 0, green ) border-box; }
+    56% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 56%, 0, green ) border-box; }
+    57% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 57%, 0, green ) border-box; }
+    58% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 58%, 0, green ) border-box; }
+    59% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 59%, 0, green ) border-box; }
+    60% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 60%, 0, green ) border-box; }
+    61% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 61%, 0, green ) border-box; }
+    62% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 62%, 0, green ) border-box; }
+    63% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 63%, 0, green ) border-box; }
+    64% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 64%, 0, green ) border-box; }
+    65% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 65%, 0, green ) border-box; }
+    66% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 66%, 0, green ) border-box; }
+    67% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 67%, 0, green ) border-box; }
+    68% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 68%, 0, green ) border-box; }
+    69% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 69%, 0, green ) border-box; }
+    70% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 70%, 0, green ) border-box; }
+    71% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 71%, 0, green ) border-box; }
+    72% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 72%, 0, green ) border-box; }
+    73% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 73%, 0, green ) border-box; }
+    74% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 74%, 0, green ) border-box; }
+    75% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 75%, 0, green ) border-box;}
+    76% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 76%, 0, green ) border-box;}
+    77% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 77%, 0, green ) border-box;}
+    78% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 78%, 0, green ) border-box;}
+    79% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 79%, 0, green ) border-box;}
+    80% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 80%, 0, green ) border-box;}
+    81% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 81%, 0, green ) border-box;}
+    82% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 82%, 0, green ) border-box;}
+    83% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 83%, 0, green ) border-box;}
+    84% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 84%, 0, green ) border-box;}
+    85% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 85%, 0, green ) border-box;}
+    86% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 86%, 0, green ) border-box;}
+    87% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 87%, 0, green ) border-box;}
+    88% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 88%, 0, green ) border-box;}
+    89% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 89%, 0, green ) border-box;}
+    90% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 90%, 0, green ) border-box;}
+    91% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 91%, 0, green ) border-box;}
+    92% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 92%, 0, green ) border-box;}
+    93% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 93%, 0, green ) border-box;}
+    94% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 94%, 0, green ) border-box;}
+    95% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 95%, 0, green ) border-box;}
+    96% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 96%, 0, green ) border-box;}
+    97% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 97%, 0, green ) border-box;}
+    98% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 98%, 0, green ) border-box;}
+    99% { background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 99%, 0, green ) border-box;}
+
+    to {
+        background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 100%, 0, green ) border-box;
+    }
 }

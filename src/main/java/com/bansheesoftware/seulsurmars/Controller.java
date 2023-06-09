@@ -22,7 +22,7 @@ public class Controller {
     }
 
     @PostMapping(value = "touche")
-    public List<Map<String, String>> action(@RequestBody Map<String, String> body) {
+    public List<Action> action(@RequestBody Map<String, String> body) {
         String key = body.get("touche");
         if (key == null) {
             return new ArrayList<>();
@@ -38,23 +38,53 @@ public class Controller {
             case "Space":
                 touche = Service.Touche.SPACE;
                 break;
+            case "Digit1":
+                touche = Service.Touche.DIGIT1;
+                break;
+            case "Digit2":
+                touche = Service.Touche.DIGIT2;
+                break;
+            case "Digit3":
+                touche = Service.Touche.DIGIT3;
+                break;
+            case "Digit4":
+                touche = Service.Touche.DIGIT4;
+                break;
+            case "Digit5":
+                touche = Service.Touche.DIGIT5;
+                break;
+            case "Digit6":
+                touche = Service.Touche.DIGIT6;
+                break;
+            case "Digit7":
+                touche = Service.Touche.DIGIT7;
+                break;
+            case "Digit8":
+                touche = Service.Touche.DIGIT8;
+                break;
+            case "Digit9":
+                touche = Service.Touche.DIGIT9;
+                break;
+            case "Digit0":
+                touche = Service.Touche.DIGIT0;
+                break;
             default:
                 return new ArrayList<>();
         }
 
         List<Action> actions = service.action(touche);
-        return actionsToMap(actions);
+        return (actions);
     }
 
     @PostMapping(value = "timer")
-    public List<Map<String, String>> timer(@RequestBody Map<String, String> body) {
+    public List<Action> timer(@RequestBody Map<String, String> body) {
         String timer = body.get("timer");
         if (timer == null) {
             return new ArrayList<>();
         }
 
         List<Action> actions = service.timer(timer);
-        return actionsToMap(actions);
+        return (actions);
     }
 
     private List<Map<String, String>> actionsToMap(List<Action> actions) {

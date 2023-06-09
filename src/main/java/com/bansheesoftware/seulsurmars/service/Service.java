@@ -9,9 +9,9 @@ public class Service {
 
     private int POSITION_Y;
     private int POSITION_X;
+    private Objet[] inventaire = new Objet[10];
 
     Monde monde; // package pour pouvoir être modifié dans les tests
-    private int numTimer = 1;
     private Map<String, String> timers = new HashMap<>();
 
     public Service(CreerMondeService creerMondeService) {
@@ -22,7 +22,8 @@ public class Service {
     }
 
     public enum Touche {
-        LEFT, RIGHT, SPACE
+        LEFT, RIGHT, SPACE,
+        DIGIT1, DIGIT2, DIGIT3, DIGIT4, DIGIT5, DIGIT6, DIGIT7, DIGIT8, DIGIT9, DIGIT0
     }
 
     public List<Action> action(Touche touche) {
@@ -64,15 +65,45 @@ public class Service {
                 }
 
                 break;
+            case DIGIT0:
+                deposerObjet(0).ifPresent(action -> list.add(action));
+                break;
+            case DIGIT1:
+                deposerObjet(1).ifPresent(action -> list.add(action));
+                break;
+            case DIGIT2:
+                deposerObjet(2).ifPresent(action -> list.add(action));
+                break;
+            case DIGIT3:
+                deposerObjet(3).ifPresent(action -> list.add(action));
+                break;
+            case DIGIT4:
+                deposerObjet(4).ifPresent(action -> list.add(action));
+                break;
+            case DIGIT5:
+                deposerObjet(5).ifPresent(action -> list.add(action));
+                break;
+            case DIGIT6:
+                deposerObjet(6).ifPresent(action -> list.add(action));
+                break;
+            case DIGIT7:
+                deposerObjet(7).ifPresent(action -> list.add(action));
+                break;
+            case DIGIT8:
+                deposerObjet(8).ifPresent(action -> list.add(action));
+                break;
+            case DIGIT9:
+                deposerObjet(9).ifPresent(action -> list.add(action));
+                break;
             default:
                 return new ArrayList<>();
         }
 
         if(oldY != POSITION_Y || oldX != POSITION_X) {
+            // gérer l'oxygène
             if(isInterieur(oldX, oldY) && !isInterieur(POSITION_X, POSITION_Y)) {
-                String id = "timer"+numTimer;
-                ++numTimer;
-                list.add(Action.timer(id, 60));
+                String id = "oxygen";
+                list.add(Action.timer(id, 30));
                 timers.put(id, "oxygen");
             }
             else if(!isInterieur(oldX, oldY) && isInterieur(POSITION_X, POSITION_Y)) {
@@ -82,6 +113,23 @@ public class Service {
                         timers.remove(key);
                         list.add(Action.timer(key, 0));
                     }
+                }
+            }
+
+            // ramasser un objet
+            Objet objet = trouverObjet(POSITION_X, POSITION_Y);
+            if(objet != null) {
+                Integer index = null;
+                for(int i=0; i<10; i++) {
+                    if(inventaire[i] == null) {
+                        index = i;
+                        break;
+                    }
+                }
+                if(index != null) {
+                    inventaire[index] = objet;
+                    list.add(Action.inventaire(objet.id, index));
+                    monde.objets.remove(objet);
                 }
             }
         }
@@ -100,6 +148,9 @@ public class Service {
     private Ascenseur trouverAscenseur(int x, int y) {
         return monde.ascenseurs.stream().filter(ascenseur -> ascenseur.x == x && ascenseur.y == y).findAny().orElse(null);
     }
+    private Objet trouverObjet(int x, int y) {
+        return monde.objets.stream().filter(objet -> objet.x == x && objet.y == y).findAny().orElse(null);
+    }
 
     private boolean isInterieur(int x, int y) {
         for(Salle salle : monde.salles) {
@@ -108,5 +159,17 @@ public class Service {
             }
         }
         return false;
+    }
+
+    private Optional<Action> deposerObjet(int index) {
+        if(inventaire[index] != null && trouverObjet(POSITION_X, POSITION_Y) == null) {
+            Objet o = inventaire[index];
+            o.x = POSITION_X;
+            o.y = POSITION_Y;
+            monde.objets.add(o);
+            inventaire[index] = null;
+            return Optional.of(Action.graphique(o.id, POSITION_X, POSITION_Y));
+        }
+        return Optional.empty();
     }
 }

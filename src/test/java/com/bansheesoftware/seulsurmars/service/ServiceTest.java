@@ -2,6 +2,7 @@ package com.bansheesoftware.seulsurmars.service;
 
 import com.bansheesoftware.seulsurmars.domain.Action;
 import com.bansheesoftware.seulsurmars.domain.Monde;
+import com.bansheesoftware.seulsurmars.domain.Objet;
 import com.bansheesoftware.seulsurmars.domain.Position;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -37,6 +38,11 @@ class ServiceTest {
     }
     private void verifierActionGameOver(Action action) {
         Assertions.assertEquals(Action.ActionType.GAME_OVER, action.type);
+    }
+    private void verifierActionInventaire(Action action, String id, int inventaire) {
+        Assertions.assertEquals(Action.ActionType.INVENTAIRE, action.type);
+        Assertions.assertEquals(   id, action.id);
+        Assertions.assertEquals(   inventaire, action.inventaire);
     }
 
     @Test
@@ -193,14 +199,14 @@ class ServiceTest {
         actions = service.action(Service.Touche.RIGHT);
         Assertions.assertEquals(2, actions.size());
         verifierActionGraphique(actions.get(0), "hero", 3, 1);
-        verifierActionTimer(actions.get(1), "timer1", 60);
+        verifierActionTimer(actions.get(1), "oxygen", 30);
 
         actions = service.action(Service.Touche.LEFT);
         Assertions.assertEquals(2, actions.size());
         verifierActionGraphique(actions.get(0), "hero", 2, 1);
-        verifierActionTimer(actions.get(1), "timer1", 0);
+        verifierActionTimer(actions.get(1), "oxygen", 0);
 
-        actions = service.timer("timer1");
+        actions = service.timer("oxygen");
         Assertions.assertEquals(0, actions.size());
     }
 
@@ -215,11 +221,120 @@ class ServiceTest {
         actions = service.action(Service.Touche.RIGHT);
         Assertions.assertEquals(2, actions.size());
         verifierActionGraphique(actions.get(0), "hero", 3, 1);
-        verifierActionTimer(actions.get(1), "timer1", 60);
+        verifierActionTimer(actions.get(1), "oxygen", 30);
 
-        actions = service.timer("timer1");
+        actions = service.timer("oxygen");
         Assertions.assertEquals(1, actions.size());
         verifierActionGameOver(actions.get(0));
+    }
+
+
+    private Service creerService4() {
+        CreerMondeService creerMondeService = new CreerMondeService() {
+            public Monde creerMonde() {
+                Monde monde = creerMonde(5, 1, 0, 0, 0);
+                monde.objets.add(new Objet("bouteille1", 2, 0, Objet.GRAPHISME.bouteille));
+                monde.objets.add(new Objet("bouteille2", 3, 0, Objet.GRAPHISME.bouteille));
+                return monde;
+            }
+        };
+        return new Service(creerMondeService);
+    }
+
+    @Test
+    public void inventaire1() {
+        Service service = creerService4();
+        List< Action> actions = service.action(Service.Touche.RIGHT);
+        Assertions.assertEquals(1, actions.size());
+        verifierActionGraphique(actions.get(0), "hero", 1, 0);
+
+        actions = service.action(Service.Touche.RIGHT);
+        Assertions.assertEquals(2, actions.size());
+        verifierActionGraphique(actions.get(0), "hero", 2, 0);
+        verifierActionInventaire(actions.get(1), "bouteille1", 0);
+
+        actions = service.action(Service.Touche.LEFT);
+        Assertions.assertEquals(1, actions.size());
+        verifierActionGraphique(actions.get(0), "hero", 1, 0);
+
+        actions = service.action(Service.Touche.RIGHT);
+        Assertions.assertEquals(1, actions.size());
+        verifierActionGraphique(actions.get(0), "hero", 2, 0);
+
+        actions = service.action(Service.Touche.LEFT);
+        Assertions.assertEquals(1, actions.size());
+        verifierActionGraphique(actions.get(0), "hero", 1, 0);
+
+        actions = service.action(Service.Touche.DIGIT0);
+        Assertions.assertEquals(1, actions.size());
+        verifierActionGraphique(actions.get(0), "bouteille1", 1, 0);
+
+        actions = service.action(Service.Touche.LEFT);
+        Assertions.assertEquals(1, actions.size());
+        verifierActionGraphique(actions.get(0), "hero", 0, 0);
+
+        actions = service.action(Service.Touche.DIGIT0);
+        Assertions.assertEquals(0, actions.size());
+
+        actions = service.action(Service.Touche.RIGHT);
+        Assertions.assertEquals(2, actions.size());
+        verifierActionGraphique(actions.get(0), "hero", 1, 0);
+        verifierActionInventaire(actions.get(1), "bouteille1", 0);
+
+        actions = service.action(Service.Touche.RIGHT);
+        Assertions.assertEquals(1, actions.size());
+        verifierActionGraphique(actions.get(0), "hero", 2, 0);
+
+        actions = service.action(Service.Touche.DIGIT0);
+        Assertions.assertEquals(1, actions.size());
+        verifierActionGraphique(actions.get(0), "bouteille1", 2, 0);
+
+    }
+
+    @Test
+    public void inventaire2() {
+        Service service = creerService4();
+        List< Action> actions = service.action(Service.Touche.RIGHT);
+        Assertions.assertEquals(1, actions.size());
+        verifierActionGraphique(actions.get(0), "hero", 1, 0);
+
+        actions = service.action(Service.Touche.RIGHT);
+        Assertions.assertEquals(2, actions.size());
+        verifierActionGraphique(actions.get(0), "hero", 2, 0);
+        verifierActionInventaire(actions.get(1), "bouteille1", 0);
+
+        actions = service.action(Service.Touche.RIGHT);
+        Assertions.assertEquals(2, actions.size());
+        verifierActionGraphique(actions.get(0), "hero", 3, 0);
+        verifierActionInventaire(actions.get(1), "bouteille2", 1);
+
+        actions = service.action(Service.Touche.DIGIT0);
+        Assertions.assertEquals(1, actions.size());
+        verifierActionGraphique(actions.get(0), "bouteille1", 3, 0);
+
+        actions = service.action(Service.Touche.DIGIT1);
+        Assertions.assertEquals(0, actions.size());
+
+        actions = service.action(Service.Touche.LEFT);
+        Assertions.assertEquals(1, actions.size());
+        verifierActionGraphique(actions.get(0), "hero", 2, 0);
+
+        actions = service.action(Service.Touche.DIGIT1);
+        Assertions.assertEquals(1, actions.size());
+        verifierActionGraphique(actions.get(0), "bouteille2", 2, 0);
+
+        actions = service.action(Service.Touche.RIGHT);
+        Assertions.assertEquals(2, actions.size());
+        verifierActionGraphique(actions.get(0), "hero", 3, 0);
+        verifierActionInventaire(actions.get(1), "bouteille1", 0);
+
+        actions = service.action(Service.Touche.LEFT);
+        Assertions.assertEquals(2, actions.size());
+        verifierActionGraphique(actions.get(0), "hero", 2, 0);
+        verifierActionInventaire(actions.get(1), "bouteille2", 1);
+
+
+
     }
 
 
