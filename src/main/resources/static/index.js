@@ -36,7 +36,7 @@ function fetchApi(url, params) {
             return response.json()})
         .then(function(data)
         {
-            data = data.map(value => new Action(value.type, value.id, parseInt(value.x), parseInt(value.y), parseInt(value.duree), parseInt(value.inventaire)));
+            data = data.map(value => new Action(value.type, value.id, parseInt(value.x), parseInt(value.y), parseInt(value.duree), parseInt(value.inventaire), value.graphisme));
             console.log(data);
             return data;
         }).catch(error => console.error('Error:', error));
@@ -88,9 +88,10 @@ function creerPlateau() {
                 }
             }
 
-            for(let index in data.ascenseurs) {
-                const a = data.ascenseurs[index];
-                creerElement('decors', a.id, a.x, a.y, 'ascenseur');
+            for(let index in data.decors) {
+                const a = data.decors[index];
+                console.log(a);
+                creerElement('decors', a.id, a.x, a.y, a.graphisme);
             }
 
             for(let index in data.objets) {
@@ -221,7 +222,7 @@ function appliquerAction(actions) {
     for(let action of actions) {
         console.log("type ?", action.type);
         switch (action.type) {
-            case "GRAPHISME":
+            case "DEPLACER":
                 const index = INVENTAIRE.indexOf(action.id);
                 console.log("graph", action.id, index);
                 if(action.id === 'hero') {
@@ -282,6 +283,13 @@ function appliquerAction(actions) {
 
                 break;
 
+            case "AJOUTER":
+                creerElement('objet', action.id, action.x, action.y, action.graphisme);
+                document.getElementById(action.id).style.bottom= action.y+'em';
+                document.getElementById(action.id).style.left= action.x+'em';
+
+                break;
+
 
         }
 
@@ -322,14 +330,16 @@ class Action {
     type;
     duree;
     inventaire;
+    graphisme;
 
 
-    constructor(type, id, x, y, duree, inventaire) {
+    constructor(type, id, x, y, duree, inventaire, graphisme) {
         this.id = id;
         this.x = x;
         this.y = y;
         this.type = type;
         this.duree = duree;
         this.inventaire = inventaire;
+        this.graphisme = graphisme;
     }
 }

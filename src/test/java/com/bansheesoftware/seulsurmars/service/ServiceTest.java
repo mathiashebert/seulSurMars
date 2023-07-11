@@ -25,8 +25,8 @@ class ServiceTest {
         return new Service(creerMondeService);
     }
 
-    private void verifierActionGraphique(Action action, String id, int x, int y) {
-        Assertions.assertEquals(Action.ActionType.GRAPHISME, action.type);
+    private void verifierActionDeplacer(Action action, String id, int x, int y) {
+        Assertions.assertEquals(Action.ActionType.DEPLACER, action.type);
         Assertions.assertEquals(   id, action.id);
         Assertions.assertEquals(   x, action.x);
         Assertions.assertEquals(   y, action.y);
@@ -46,43 +46,43 @@ class ServiceTest {
     }
 
     @Test
-    public void left() {
+    public void gauche() {
         List<Action> actions = creerService1().action(Service.Touche.LEFT);
         Assertions.assertEquals(1, actions.size());
-        verifierActionGraphique(actions.get(0), "hero", 0, 0);
+        verifierActionDeplacer(actions.get(0), "hero", 0, 0);
     }
 
     @Test
-    public void right() {
+    public void droite() {
         List< Action> actions = creerService1().action(Service.Touche.RIGHT);
         Assertions.assertEquals(1, actions.size());
-        verifierActionGraphique(actions.get(0), "hero", 2, 0);
+        verifierActionDeplacer(actions.get(0), "hero", 2, 0);
     }
 
     @Test
-    public void left_boundary() {
+    public void gauche_limite() {
         Service service = creerService1();
         List< Action> actions = service.action(Service.Touche.LEFT);
         Assertions.assertEquals(1, actions.size());
-        verifierActionGraphique(actions.get(0), "hero", 0, 0);
+        verifierActionDeplacer(actions.get(0), "hero", 0, 0);
 
         actions = service.action(Service.Touche.LEFT);
         Assertions.assertEquals(0, actions.size());
     }
 
     @Test
-    public void right_boudary() {
+    public void droite_limite() {
         Service service = creerService1();
         List< Action> actions = service.action(Service.Touche.RIGHT);
         Assertions.assertEquals(1, actions.size());
-        verifierActionGraphique(actions.get(0), "hero", 2, 0);
+        verifierActionDeplacer(actions.get(0), "hero", 2, 0);
 
         actions = service.action(Service.Touche.RIGHT);
         Assertions.assertEquals(0, actions.size());
     }
 
     @Test
-    public void left_sol() {
+    public void gauche_sol() {
         Service service = creerService1();
         service.monde.position(0, 0, Position.POSTION_TYPE.VIDE, Position.GRAPHISME.vide);
         List< Action> actions = service.action(Service.Touche.LEFT);
@@ -90,7 +90,7 @@ class ServiceTest {
     }
 
     @Test
-    public void right_sol() {
+    public void droite_sol() {
         Service service = creerService1();
         service.monde.position(2, 0, Position.POSTION_TYPE.VIDE, Position.GRAPHISME.vide);
         List< Action> actions = service.action(Service.Touche.RIGHT);
@@ -115,12 +115,12 @@ class ServiceTest {
 
         List< Action> actions = service.action(Service.Touche.LEFT);
         Assertions.assertEquals(1, actions.size());
-        verifierActionGraphique(actions.get(0), "hero", 0, 1);
+        verifierActionDeplacer(actions.get(0), "hero", 0, 1);
 
         actions = service.action(Service.Touche.SPACE);
         Assertions.assertEquals(2, actions.size());
-        verifierActionGraphique(actions.get(0), "hero", 0, 0);
-        verifierActionGraphique(actions.get(1), "mon_ascenseur", 0, 0);
+        verifierActionDeplacer(actions.get(0), "hero", 0, 0);
+        verifierActionDeplacer(actions.get(1), "mon_ascenseur", 0, 0);
     }
 
     @Test
@@ -129,13 +129,12 @@ class ServiceTest {
 
         List< Action> actions = service.action(Service.Touche.RIGHT);
         Assertions.assertEquals(1, actions.size());
-        Assertions.assertEquals(Action.ActionType.GRAPHISME, actions.get(0).type);
-        verifierActionGraphique(actions.get(0), "hero", 2, 1);
+        verifierActionDeplacer(actions.get(0), "hero", 2, 1);
 
         actions = service.action(Service.Touche.SPACE);
         Assertions.assertEquals(2, actions.size());
-        verifierActionGraphique(actions.get(0), "hero", 2, 2);
-        verifierActionGraphique(actions.get(1), "mon_ascenseur", 2, 2);
+        verifierActionDeplacer(actions.get(0), "hero", 2, 2);
+        verifierActionDeplacer(actions.get(1), "mon_ascenseur", 2, 2);
     }
 
     @Test
@@ -144,17 +143,17 @@ class ServiceTest {
 
         List< Action> actions = service.action(Service.Touche.LEFT);
         Assertions.assertEquals(1, actions.size());
-        verifierActionGraphique(actions.get(0), "hero", 0, 1);
+        verifierActionDeplacer(actions.get(0), "hero", 0, 1);
 
         actions = service.action(Service.Touche.SPACE);
         Assertions.assertEquals(2, actions.size());
-        verifierActionGraphique(actions.get(0), "hero", 0, 0);
-        verifierActionGraphique(actions.get(1), "mon_ascenseur", 0, 0);
+        verifierActionDeplacer(actions.get(0), "hero", 0, 0);
+        verifierActionDeplacer(actions.get(1), "mon_ascenseur", 0, 0);
 
         actions = service.action(Service.Touche.SPACE);
         Assertions.assertEquals(2, actions.size());
-        verifierActionGraphique(actions.get(0), "hero", 0, 1);
-        verifierActionGraphique(actions.get(1), "mon_ascenseur", 0, 1);
+        verifierActionDeplacer(actions.get(0), "hero", 0, 1);
+        verifierActionDeplacer(actions.get(1), "mon_ascenseur", 0, 1);
     }
 
     @Test
@@ -163,17 +162,17 @@ class ServiceTest {
 
         List< Action> actions = service.action(Service.Touche.RIGHT);
         Assertions.assertEquals(1, actions.size());
-        verifierActionGraphique(actions.get(0), "hero", 2, 1);
+        verifierActionDeplacer(actions.get(0), "hero", 2, 1);
 
         actions = service.action(Service.Touche.SPACE);
         Assertions.assertEquals(2, actions.size());
-        verifierActionGraphique(actions.get(0), "hero", 2, 2);
-        verifierActionGraphique(actions.get(1), "mon_ascenseur", 2, 2);
+        verifierActionDeplacer(actions.get(0), "hero", 2, 2);
+        verifierActionDeplacer(actions.get(1), "mon_ascenseur", 2, 2);
 
         actions = service.action(Service.Touche.SPACE);
         Assertions.assertEquals(2, actions.size());
-        verifierActionGraphique(actions.get(0), "hero", 2, 1);
-        verifierActionGraphique(actions.get(1), "mon_ascenseur", 2, 1);
+        verifierActionDeplacer(actions.get(0), "hero", 2, 1);
+        verifierActionDeplacer(actions.get(1), "mon_ascenseur", 2, 1);
     }
 
     private Service creerService3() {
@@ -194,16 +193,16 @@ class ServiceTest {
 
         List< Action> actions = service.action(Service.Touche.RIGHT);
         Assertions.assertEquals(1, actions.size());
-        verifierActionGraphique(actions.get(0), "hero", 2, 1);
+        verifierActionDeplacer(actions.get(0), "hero", 2, 1);
 
         actions = service.action(Service.Touche.RIGHT);
         Assertions.assertEquals(2, actions.size());
-        verifierActionGraphique(actions.get(0), "hero", 3, 1);
+        verifierActionDeplacer(actions.get(0), "hero", 3, 1);
         verifierActionTimer(actions.get(1), "oxygen", 30);
 
         actions = service.action(Service.Touche.LEFT);
         Assertions.assertEquals(2, actions.size());
-        verifierActionGraphique(actions.get(0), "hero", 2, 1);
+        verifierActionDeplacer(actions.get(0), "hero", 2, 1);
         verifierActionTimer(actions.get(1), "oxygen", 0);
 
         actions = service.timer("oxygen");
@@ -216,11 +215,11 @@ class ServiceTest {
 
         List< Action> actions = service.action(Service.Touche.RIGHT);
         Assertions.assertEquals(1, actions.size());
-        verifierActionGraphique(actions.get(0), "hero", 2, 1);
+        verifierActionDeplacer(actions.get(0), "hero", 2, 1);
 
         actions = service.action(Service.Touche.RIGHT);
         Assertions.assertEquals(2, actions.size());
-        verifierActionGraphique(actions.get(0), "hero", 3, 1);
+        verifierActionDeplacer(actions.get(0), "hero", 3, 1);
         verifierActionTimer(actions.get(1), "oxygen", 30);
 
         actions = service.timer("oxygen");
@@ -246,48 +245,48 @@ class ServiceTest {
         Service service = creerService4();
         List< Action> actions = service.action(Service.Touche.RIGHT);
         Assertions.assertEquals(1, actions.size());
-        verifierActionGraphique(actions.get(0), "hero", 1, 0);
+        verifierActionDeplacer(actions.get(0), "hero", 1, 0);
 
         actions = service.action(Service.Touche.RIGHT);
         Assertions.assertEquals(2, actions.size());
-        verifierActionGraphique(actions.get(0), "hero", 2, 0);
+        verifierActionDeplacer(actions.get(0), "hero", 2, 0);
         verifierActionInventaire(actions.get(1), "bouteille1", 0);
 
         actions = service.action(Service.Touche.LEFT);
         Assertions.assertEquals(1, actions.size());
-        verifierActionGraphique(actions.get(0), "hero", 1, 0);
+        verifierActionDeplacer(actions.get(0), "hero", 1, 0);
 
         actions = service.action(Service.Touche.RIGHT);
         Assertions.assertEquals(1, actions.size());
-        verifierActionGraphique(actions.get(0), "hero", 2, 0);
+        verifierActionDeplacer(actions.get(0), "hero", 2, 0);
 
         actions = service.action(Service.Touche.LEFT);
         Assertions.assertEquals(1, actions.size());
-        verifierActionGraphique(actions.get(0), "hero", 1, 0);
+        verifierActionDeplacer(actions.get(0), "hero", 1, 0);
 
-        actions = service.action(Service.Touche.DIGIT0);
+        actions = service.action(Service.Touche.DIGIT1);
         Assertions.assertEquals(1, actions.size());
-        verifierActionGraphique(actions.get(0), "bouteille1", 1, 0);
+        verifierActionDeplacer(actions.get(0), "bouteille1", 1, 0);
 
         actions = service.action(Service.Touche.LEFT);
         Assertions.assertEquals(1, actions.size());
-        verifierActionGraphique(actions.get(0), "hero", 0, 0);
+        verifierActionDeplacer(actions.get(0), "hero", 0, 0);
 
-        actions = service.action(Service.Touche.DIGIT0);
+        actions = service.action(Service.Touche.DIGIT1);
         Assertions.assertEquals(0, actions.size());
 
         actions = service.action(Service.Touche.RIGHT);
         Assertions.assertEquals(2, actions.size());
-        verifierActionGraphique(actions.get(0), "hero", 1, 0);
+        verifierActionDeplacer(actions.get(0), "hero", 1, 0);
         verifierActionInventaire(actions.get(1), "bouteille1", 0);
 
         actions = service.action(Service.Touche.RIGHT);
         Assertions.assertEquals(1, actions.size());
-        verifierActionGraphique(actions.get(0), "hero", 2, 0);
+        verifierActionDeplacer(actions.get(0), "hero", 2, 0);
 
-        actions = service.action(Service.Touche.DIGIT0);
+        actions = service.action(Service.Touche.DIGIT1);
         Assertions.assertEquals(1, actions.size());
-        verifierActionGraphique(actions.get(0), "bouteille1", 2, 0);
+        verifierActionDeplacer(actions.get(0), "bouteille1", 2, 0);
 
     }
 
@@ -296,45 +295,42 @@ class ServiceTest {
         Service service = creerService4();
         List< Action> actions = service.action(Service.Touche.RIGHT);
         Assertions.assertEquals(1, actions.size());
-        verifierActionGraphique(actions.get(0), "hero", 1, 0);
+        verifierActionDeplacer(actions.get(0), "hero", 1, 0);
 
         actions = service.action(Service.Touche.RIGHT);
         Assertions.assertEquals(2, actions.size());
-        verifierActionGraphique(actions.get(0), "hero", 2, 0);
+        verifierActionDeplacer(actions.get(0), "hero", 2, 0);
         verifierActionInventaire(actions.get(1), "bouteille1", 0);
 
         actions = service.action(Service.Touche.RIGHT);
         Assertions.assertEquals(2, actions.size());
-        verifierActionGraphique(actions.get(0), "hero", 3, 0);
+        verifierActionDeplacer(actions.get(0), "hero", 3, 0);
         verifierActionInventaire(actions.get(1), "bouteille2", 1);
 
-        actions = service.action(Service.Touche.DIGIT0);
-        Assertions.assertEquals(1, actions.size());
-        verifierActionGraphique(actions.get(0), "bouteille1", 3, 0);
-
         actions = service.action(Service.Touche.DIGIT1);
+        Assertions.assertEquals(1, actions.size());
+        verifierActionDeplacer(actions.get(0), "bouteille1", 3, 0);
+
+        actions = service.action(Service.Touche.DIGIT2);
         Assertions.assertEquals(0, actions.size());
 
         actions = service.action(Service.Touche.LEFT);
         Assertions.assertEquals(1, actions.size());
-        verifierActionGraphique(actions.get(0), "hero", 2, 0);
+        verifierActionDeplacer(actions.get(0), "hero", 2, 0);
 
-        actions = service.action(Service.Touche.DIGIT1);
+        actions = service.action(Service.Touche.DIGIT2);
         Assertions.assertEquals(1, actions.size());
-        verifierActionGraphique(actions.get(0), "bouteille2", 2, 0);
+        verifierActionDeplacer(actions.get(0), "bouteille2", 2, 0);
 
         actions = service.action(Service.Touche.RIGHT);
         Assertions.assertEquals(2, actions.size());
-        verifierActionGraphique(actions.get(0), "hero", 3, 0);
+        verifierActionDeplacer(actions.get(0), "hero", 3, 0);
         verifierActionInventaire(actions.get(1), "bouteille1", 0);
 
         actions = service.action(Service.Touche.LEFT);
         Assertions.assertEquals(2, actions.size());
-        verifierActionGraphique(actions.get(0), "hero", 2, 0);
+        verifierActionDeplacer(actions.get(0), "hero", 2, 0);
         verifierActionInventaire(actions.get(1), "bouteille2", 1);
-
-
-
     }
 
 

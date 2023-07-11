@@ -19,6 +19,10 @@ public class CreerMondeService {
         monde.objets.add(new Objet("bouteille1", 4, 5, Objet.GRAPHISME.bouteille));
         monde.objets.add(new Objet("bouteille2", 3, 5, Objet.GRAPHISME.bouteille));
         monde.objets.add(new Objet("bouteille3", 2, 5, Objet.GRAPHISME.bouteille));
+        monde.objets.add(new Objet("oxygene1", 4, 1, Objet.GRAPHISME.oxygene));
+
+        monde.decors.add(new Decors("potager1", 6, 5, Decors.GRAPHISME.potager));
+        monde.decors.add(new Decors("hydrazine1", 6, 1, Decors.GRAPHISME.hydrazine));
 
         return monde;
     }
@@ -43,6 +47,7 @@ public class CreerMondeService {
         monde.ascenseur(id, x, y, hauteurBas, hauteurHaut);
         monde.position(x, hauteurBas, Position.POSTION_TYPE.VIDE, Position.GRAPHISME.carreau);
         monde.position(x, hauteurHaut, Position.POSTION_TYPE.VIDE, Position.GRAPHISME.carreau);
+        monde.decors.add(new Decors(id, x, y, Decors.GRAPHISME.ascenseur));
     }
 
     public void creerSalle(Monde monde, int x, int y, int largeur, int hauteur, boolean porteGauche, boolean porteDroite) {

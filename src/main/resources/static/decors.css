@@ -20,3 +20,16 @@
 .decors.ascenseur.foreground {
     background-image: url("./img/ascenseur.png");
 }
+
+.decors.potager.background {
+    background-image: url("./img/potager_b.png");
+}
+.decors.potager.foreground {
+    background-image: url("./img/potager_f.png");
+}
+
+.decors.hydrazine.background {
+    background-image: url("./img/h2n4.png");
+}
+.decors.hydrazine.foreground {
+}

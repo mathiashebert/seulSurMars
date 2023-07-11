@@ -15,3 +15,9 @@
 .objet.bouteille {
     background-image: url("img/bouteille.png");
 }
+.objet.oxygene {
+    background-image: url("img/oxygen.png");
+}
+.objet.tomate {
+    background-image: url("img/tomate.png");
+}

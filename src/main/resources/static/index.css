@@ -67,17 +67,18 @@
 
 
 .timer {
-    width: 1em;
-    height: 1em;
+    width: 0.8em;
+    height: 0.8em;
     border-radius: 50%;
     position: absolute;
-    top: 0;
-    right: 0;
+    bottom: 0;
+    left: 0;
     background: white;
     border:0.1em  solid transparent;
     background:linear-gradient(white, white) content-box no-repeat, conic-gradient(red 0%, 0, green ) border-box;
     animation-duration: 100s;
     animation-fill-mode: forwards;
+    opacity: 0.5;
 }
 
 .timer.launched {

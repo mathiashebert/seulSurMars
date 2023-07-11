@@ -3,7 +3,7 @@ package com.bansheesoftware.seulsurmars.domain;
 public class Action {
 
     public enum ActionType {
-        GRAPHISME, TIMER, GAME_OVER, INVENTAIRE
+        DEPLACER, TIMER, GAME_OVER, INVENTAIRE, AJOUTER
     }
 
     public ActionType type;
@@ -12,14 +12,15 @@ public class Action {
     public int y;
     public int duree;
     public int inventaire;
+    public String graphisme;
 
 
     private Action() {
 
     }
-    public static Action graphique(String id, int x, int y) {
+    public static Action deplacer(String id, int x, int y) {
         Action action = new Action();
-        action.type = ActionType.GRAPHISME;
+        action.type = ActionType.DEPLACER;
         action.id = id;
         action.x = x;
         action.y = y;
@@ -43,6 +44,15 @@ public class Action {
         Action action = new Action();
         action.type = ActionType.GAME_OVER;
         action.id = ActionType.GAME_OVER.toString();
+        return action;
+    }
+    public static Action ajouter(String id, int x, int y, String graphisme) {
+        Action action = new Action();
+        action.type = ActionType.AJOUTER;
+        action.id = id;
+        action.x = x;
+        action.y = y;
+        action.graphisme = graphisme;
         return action;
     }
 }

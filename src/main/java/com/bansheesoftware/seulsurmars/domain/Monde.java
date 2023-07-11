@@ -15,6 +15,7 @@ public class Monde {
 
     public List<Ascenseur> ascenseurs = new ArrayList<>();
     public List<Objet> objets = new ArrayList<>();
+    public List<Decors> decors = new ArrayList<>();
 
     public List<Salle> salles = new ArrayList<>();
 

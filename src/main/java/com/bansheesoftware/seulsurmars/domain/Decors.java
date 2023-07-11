@@ -1,16 +1,16 @@
 package com.bansheesoftware.seulsurmars.domain;
 
-public class Objet {
+public class Decors {
     public String id;
     public int x;
     public int y;
     public GRAPHISME graphisme;
 
     public enum GRAPHISME {
-        bouteille, oxygene, tomate, hydrogene
+        ascenseur, potager, hydrazine
     }
 
-    public Objet(String id, int x, int y, GRAPHISME graphisme) {
+    public Decors(String id, int x, int y, GRAPHISME graphisme) {
         this.id = id;
         this.x = x;
         this.y = y;
