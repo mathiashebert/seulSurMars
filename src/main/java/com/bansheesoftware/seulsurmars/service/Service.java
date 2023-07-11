@@ -147,7 +147,12 @@ public class Service {
     }
 
     private Ascenseur trouverAscenseur(int x, int y) {
-        return monde.ascenseurs.stream().filter(ascenseur -> ascenseur.x == x && ascenseur.y == y).findAny().orElse(null);
+        return monde.decors.stream()
+                .filter(ascenseur -> ascenseur.x == x && ascenseur.y == y)
+                .filter(decors -> decors.graphisme.equals(Decors.GRAPHISME.ascenseur))
+                .filter(decors -> decors instanceof Ascenseur)
+                .map(decors -> (Ascenseur) decors)
+                .findAny().orElse(null);
     }
     private Decors trouverDecors(int x, int y) {
         return monde.decors.stream().filter(decors -> decors.x == x && decors.y == y).findAny().orElse(null);

@@ -44,10 +44,9 @@ public class CreerMondeService {
     }
 
     public void creerAscenseur(Monde monde, String id, int x, int y, int hauteurBas, int hauteurHaut) {
-        monde.ascenseur(id, x, y, hauteurBas, hauteurHaut);
         monde.position(x, hauteurBas, Position.POSTION_TYPE.VIDE, Position.GRAPHISME.carreau);
         monde.position(x, hauteurHaut, Position.POSTION_TYPE.VIDE, Position.GRAPHISME.carreau);
-        monde.decors.add(new Decors(id, x, y, Decors.GRAPHISME.ascenseur));
+        monde.decors.add(new Ascenseur(id, x, y, hauteurBas, hauteurHaut));
     }
 
     public void creerSalle(Monde monde, int x, int y, int largeur, int hauteur, boolean porteGauche, boolean porteDroite) {

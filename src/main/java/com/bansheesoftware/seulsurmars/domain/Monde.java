@@ -13,7 +13,7 @@ public class Monde {
     public int positionX = 2;
     public int positionY = 2;
 
-    public List<Ascenseur> ascenseurs = new ArrayList<>();
+    // public List<Ascenseur> ascenseurs = new ArrayList<>();
     public List<Objet> objets = new ArrayList<>();
     public List<Decors> decors = new ArrayList<>();
 
@@ -36,11 +36,6 @@ public class Monde {
     public Monde position(int x, int y, Position.POSTION_TYPE type, Position.GRAPHISME graphisme) {
         positions.get(x).get(y).type = type;
         positions.get(x).get(y).graphisme = graphisme;
-        return this;
-    }
-
-    public Monde ascenseur(String id, int x, int y, int hauteurBas, int hauteurHaut) {
-        ascenseurs.add(new Ascenseur(id, x,y, hauteurBas, hauteurHaut));
         return this;
     }
 }
