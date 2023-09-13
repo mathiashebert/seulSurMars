@@ -3,7 +3,7 @@ package com.bansheesoftware.seulsurmars;
 import com.bansheesoftware.seulsurmars.domain.Action;
 import com.bansheesoftware.seulsurmars.domain.Monde;
 import com.bansheesoftware.seulsurmars.service.CreerMondeService;
-import com.bansheesoftware.seulsurmars.service.Service;
+import com.bansheesoftware.seulsurmars.service.GameService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -11,13 +11,13 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("game")
-public class Controller {
+public class GameController {
 
-    private final Service service;
+    private final GameService gameService;
     private final CreerMondeService creerMondeService;
 
-    public Controller(Service service, CreerMondeService creerMondeService) {
-        this.service = service;
+    public GameController(GameService gameService, CreerMondeService creerMondeService) {
+        this.gameService = gameService;
         this.creerMondeService = creerMondeService;
     }
 
@@ -27,52 +27,49 @@ public class Controller {
         if (key == null) {
             return new ArrayList<>();
         }
-        Service.Touche touche = null;
+        GameService.Touche touche = null;
         switch (key) {
             case "ArrowLeft":
-                touche = Service.Touche.LEFT;
+                touche = GameService.Touche.LEFT;
                 break;
             case "ArrowRight":
-                touche = Service.Touche.RIGHT;
+                touche = GameService.Touche.RIGHT;
                 break;
             case "Space":
-                touche = Service.Touche.SPACE;
+                touche = GameService.Touche.SPACE;
                 break;
             case "Digit1":
-                touche = Service.Touche.DIGIT1;
+                touche = GameService.Touche.DIGIT1;
                 break;
             case "Digit2":
-                touche = Service.Touche.DIGIT2;
+                touche = GameService.Touche.DIGIT2;
                 break;
             case "Digit3":
-                touche = Service.Touche.DIGIT3;
+                touche = GameService.Touche.DIGIT3;
                 break;
             case "Digit4":
-                touche = Service.Touche.DIGIT4;
+                touche = GameService.Touche.DIGIT4;
                 break;
             case "Digit5":
-                touche = Service.Touche.DIGIT5;
+                touche = GameService.Touche.DIGIT5;
                 break;
             case "Digit6":
-                touche = Service.Touche.DIGIT6;
+                touche = GameService.Touche.DIGIT6;
                 break;
             case "Digit7":
-                touche = Service.Touche.DIGIT7;
+                touche = GameService.Touche.DIGIT7;
                 break;
             case "Digit8":
-                touche = Service.Touche.DIGIT8;
+                touche = GameService.Touche.DIGIT8;
                 break;
             case "Digit9":
-                touche = Service.Touche.DIGIT9;
-                break;
-            case "Digit0":
-                touche = Service.Touche.DIGIT0;
+                touche = GameService.Touche.DIGIT9;
                 break;
             default:
                 return new ArrayList<>();
         }
 
-        List<Action> actions = service.action(touche);
+        List<Action> actions = gameService.action(touche);
         return (actions);
     }
 
@@ -83,7 +80,7 @@ public class Controller {
             return new ArrayList<>();
         }
 
-        List<Action> actions = service.timer(timer);
+        List<Action> actions = gameService.timer(timer);
         return (actions);
     }
 

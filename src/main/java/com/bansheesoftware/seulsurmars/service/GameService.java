@@ -5,7 +5,7 @@ import com.bansheesoftware.seulsurmars.domain.*;
 import java.util.*;
 
 @org.springframework.stereotype.Service
-public class Service {
+public class GameService {
 
     private int POSITION_Y;
     private int POSITION_X;
@@ -14,7 +14,7 @@ public class Service {
     Monde monde; // package pour pouvoir être modifié dans les tests
     private Map<String, String> timers = new HashMap<>();
 
-    public Service(CreerMondeService creerMondeService) {
+    public GameService(CreerMondeService creerMondeService) {
         monde = creerMondeService.creerMonde();
 
         POSITION_X = monde.positionX;
@@ -23,7 +23,7 @@ public class Service {
 
     public enum Touche {
         LEFT, RIGHT, SPACE,
-        DIGIT1, DIGIT2, DIGIT3, DIGIT4, DIGIT5, DIGIT6, DIGIT7, DIGIT8, DIGIT9, DIGIT0
+        DIGIT1, DIGIT2, DIGIT3, DIGIT4, DIGIT5, DIGIT6, DIGIT7, DIGIT8, DIGIT9
     }
 
     public List<Action> action(Touche touche) {

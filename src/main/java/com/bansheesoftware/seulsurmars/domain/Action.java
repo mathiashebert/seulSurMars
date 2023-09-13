@@ -3,7 +3,8 @@ package com.bansheesoftware.seulsurmars.domain;
 public class Action {
 
     public enum ActionType {
-        DEPLACER, TIMER, GAME_OVER, INVENTAIRE, AJOUTER
+        AJOUTER, DEPLACER, RETIRER,
+        TIMER, GAME_OVER, INVENTAIRE
     }
 
     public ActionType type;
