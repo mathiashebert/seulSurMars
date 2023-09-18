@@ -22,10 +22,10 @@ public class GameController {
     }
 
     @PostMapping(value = "touche")
-    public List<Action> action(@RequestBody Map<String, String> body) {
+    public Map<String, Action> action(@RequestBody Map<String, String> body) {
         String key = body.get("touche");
         if (key == null) {
-            return new ArrayList<>();
+            return new HashMap<>();
         }
         GameService.Touche touche = null;
         switch (key) {
@@ -66,35 +66,22 @@ public class GameController {
                 touche = GameService.Touche.DIGIT9;
                 break;
             default:
-                return new ArrayList<>();
+                return new HashMap<>();
         }
 
-        List<Action> actions = gameService.action(touche);
+        Map<String, Action> actions = gameService.action(touche);
         return (actions);
     }
 
     @PostMapping(value = "timer")
-    public List<Action> timer(@RequestBody Map<String, String> body) {
+    public Map<String, Action> timer(@RequestBody Map<String, String> body) {
         String timer = body.get("timer");
         if (timer == null) {
-            return new ArrayList<>();
+            return new HashMap<>();
         }
 
-        List<Action> actions = gameService.timer(timer);
+        Map<String, Action> actions = gameService.timer(timer);
         return (actions);
-    }
-
-    private List<Map<String, String>> actionsToMap(List<Action> actions) {
-        List<Map<String, String>> list = actions.stream().map(action -> {
-            Map<String, String> map = new HashMap<>();
-            map.put("id", action.id);
-            map.put("x", String.valueOf(action.x));
-            map.put("y", String.valueOf(action.y));
-            map.put("type", String.valueOf(action.type));
-            map.put("duree", String.valueOf(action.duree));
-            return map;
-        }).collect(Collectors.toList());
-        return list;
     }
 
     @GetMapping

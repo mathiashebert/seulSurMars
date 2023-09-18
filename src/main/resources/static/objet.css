@@ -18,6 +18,9 @@
 .objet.oxygene {
     background-image: url("img/oxygen.png");
 }
+.objet.hydrogene {
+    background-image: url("img/h2.png");
+}
 .objet.tomate {
     background-image: url("img/tomate.png");
 }

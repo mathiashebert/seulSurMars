@@ -36,9 +36,12 @@ function fetchApi(url, params) {
             return response.json()})
         .then(function(data)
         {
-            data = data.map(value => new Action(value.type, value.id, parseInt(value.x), parseInt(value.y), parseInt(value.duree), parseInt(value.inventaire), value.graphisme));
-            console.log(data);
-            return data;
+            const actions = [];
+            for (let [key, value] of Object.entries(data)) {
+                actions.push(new Action(value.type, key, parseInt(value.x), parseInt(value.y), parseInt(value.duree), parseInt(value.inventaire), value.graphisme))
+            }
+            console.log(actions);
+            return actions;
         }).catch(error => console.error('Error:', error));
 }
 
@@ -221,9 +224,9 @@ function appliquerAction(actions) {
 
     for(let action of actions) {
         console.log("type ?", action.type);
+        const index = INVENTAIRE.indexOf(action.id);
         switch (action.type) {
             case "DEPLACER":
-                const index = INVENTAIRE.indexOf(action.id);
                 console.log("graph", action.id, index);
                 if(action.id === 'hero') {
                     deplacerHero(action.x, action.y);
@@ -288,6 +291,13 @@ function appliquerAction(actions) {
                 document.getElementById(action.id).style.bottom= action.y+'em';
                 document.getElementById(action.id).style.left= action.x+'em';
 
+                break;
+
+            case "RETIRER":
+                if(index > -1) {
+                    INVENTAIRE[index] = null;
+                }
+                document.getElementById(action.id).remove();
                 break;
 
 

@@ -9,10 +9,8 @@ public class GameService {
 
     private int POSITION_Y;
     private int POSITION_X;
-    private Objet[] inventaire = new Objet[10];
 
     Monde monde; // package pour pouvoir être modifié dans les tests
-    private Map<String, String> timers = new HashMap<>();
 
     public GameService(CreerMondeService creerMondeService) {
         monde = creerMondeService.creerMonde();
@@ -26,8 +24,8 @@ public class GameService {
         DIGIT1, DIGIT2, DIGIT3, DIGIT4, DIGIT5, DIGIT6, DIGIT7, DIGIT8, DIGIT9
     }
 
-    public List<Action> action(Touche touche) {
-        List<Action> list = new ArrayList<>();
+    public Map<String, Action> action(Touche touche) {
+        Map<String, Action> resultat = new HashMap<>();
         int oldY = POSITION_Y;
         int oldX = POSITION_X;
         switch (touche) {
@@ -35,7 +33,7 @@ public class GameService {
                 if(POSITION_X > 0) {
                     if(monde.positions.get(POSITION_X-1).get(POSITION_Y).type.equals(Position.POSTION_TYPE.SOL) || trouverAscenseur(POSITION_X-1, POSITION_Y) != null) {
                         POSITION_X --;
-                        list.add(Action.deplacer("hero", POSITION_X, POSITION_Y));
+                        resultat.put("hero", Action.deplacer(POSITION_X, POSITION_Y));
                     }
                 }
                 break;
@@ -43,7 +41,7 @@ public class GameService {
                 if(POSITION_X < monde.largeur -1) {
                     if(monde.positions.get(POSITION_X+1).get(POSITION_Y).type.equals(Position.POSTION_TYPE.SOL) || trouverAscenseur(POSITION_X+1, POSITION_Y) != null) {
                         POSITION_X ++;
-                        list.add(Action.deplacer("hero", POSITION_X, POSITION_Y));
+                        resultat.put("hero", Action.deplacer(POSITION_X, POSITION_Y));
                     }
                 }
                 break;
@@ -60,61 +58,61 @@ public class GameService {
                             }
                             ascenseur.y = POSITION_Y;
                             decors.y = ascenseur.y;
-                            list.add(Action.deplacer("hero", POSITION_X, POSITION_Y));
-                            list.add(Action.deplacer(ascenseur.id, POSITION_X, POSITION_Y));
+                            resultat.put("hero", Action.deplacer(POSITION_X, POSITION_Y));
+                            resultat.put(ascenseur.id, Action.deplacer(POSITION_X, POSITION_Y));
                         }
                         break;
                     case hydrazine:
                         Objet objet = new Objet("hydrogen", POSITION_X, POSITION_Y, Objet.GRAPHISME.hydrogene);
-                        ajouterObjetDansInventaire(objet, list);
+                        ajouterObjetDansInventaire(objet, resultat);
                         break;
                 }
 
                 break;
             case DIGIT1:
-                deposerObjet(0).ifPresent(action -> list.add(action));
+                resultat.putAll(deposerObjet(0));
                 break;
             case DIGIT2:
-                deposerObjet(1).ifPresent(action -> list.add(action));
+                resultat.putAll(deposerObjet(1));
                 break;
             case DIGIT3:
-                deposerObjet(2).ifPresent(action -> list.add(action));
+                resultat.putAll(deposerObjet(2));
                 break;
             case DIGIT4:
-                deposerObjet(3).ifPresent(action -> list.add(action));
+                resultat.putAll(deposerObjet(3));
                 break;
             case DIGIT5:
-                deposerObjet(4).ifPresent(action -> list.add(action));
+                resultat.putAll(deposerObjet(4));
                 break;
             case DIGIT6:
-                deposerObjet(5).ifPresent(action -> list.add(action));
+                resultat.putAll(deposerObjet(5));
                 break;
             case DIGIT7:
-                deposerObjet(6).ifPresent(action -> list.add(action));
+                resultat.putAll(deposerObjet(6));
                 break;
             case DIGIT8:
-                deposerObjet(7).ifPresent(action -> list.add(action));
+                resultat.putAll(deposerObjet(7));
                 break;
             case DIGIT9:
-                deposerObjet(8).ifPresent(action -> list.add(action));
+                resultat.putAll(deposerObjet(8));
                 break;
             default:
-                return new ArrayList<>();
+                return new HashMap<>();
         }
 
         if(oldY != POSITION_Y || oldX != POSITION_X) {
             // gérer l'oxygène
             if(isInterieur(oldX, oldY) && !isInterieur(POSITION_X, POSITION_Y)) {
                 String id = "oxygen";
-                list.add(Action.timer(id, 30));
-                timers.put(id, "oxygen");
+                resultat.put(id, Action.timer(30));
+                monde.timers.put(id, "oxygen");
             }
             else if(!isInterieur(oldX, oldY) && isInterieur(POSITION_X, POSITION_Y)) {
-                Set<String> keys = timers.keySet();
+                Set<String> keys = monde.timers.keySet();
                 for(String key : keys) {
-                    if(timers.get(key).equals("oxygen")) {
-                        timers.remove(key);
-                        list.add(Action.timer(key, 0));
+                    if(monde.timers.get(key).equals("oxygen")) {
+                        monde.timers.remove(key);
+                        resultat.put(key, Action.timer(0));
                     }
                 }
             }
@@ -122,28 +120,34 @@ public class GameService {
             // ramasser un objet
             Objet objet = trouverObjet(POSITION_X, POSITION_Y);
             if(objet != null) {
-                ajouterObjetDansInventaire(objet, list);
+                ajouterObjetDansInventaire(objet, resultat);
             }
         }
 
-        return list;
+        return resultat;
     }
 
-    public List<Action> timer(String id) {
-        List list = new ArrayList<>();
-        if(timers.containsKey(id) && timers.get(id).equals("oxygen")) {
-            list.add(Action.gameOver());
+    public Map<String, Action> timer(String id) {
+        Map<String, Action> resultat = new HashMap<>();
+        if(!monde.timers.containsKey(id)) {
+            return  resultat;
         }
-        if(timers.containsKey(id) && timers.get(id).equals("tomate")) {
+        if(monde.timers.get(id).equals("oxygen")) {
+            resultat.put("hero", Action.gameOver());
+        }
+        if(monde.timers.get(id).equals("tomate")) {
             Decors d = monde.decors.stream().filter(decors -> decors.id.equals(id)).findAny().orElse(null);
             if(d != null) {
-                monde.objets.add(new Objet("tomate", d.x, d.y, Objet.GRAPHISME.tomate));
-                list.add(Action.timer(id, 0));
-                list.add(Optional.of(Action.ajouter("tomate", d.x, d.y, Objet.GRAPHISME.tomate.name())));
+                if(trouverObjet(d.x, d.y) == null) {
+                    Objet objet = new Objet("tomate"+monde.increment(), d.x, d.y, Objet.GRAPHISME.tomate);
+                    monde.objets.add(objet);
+                    resultat.put(objet.id, Action.ajouter(d.x, d.y, Objet.GRAPHISME.tomate.name()));
+                }
+                resultat.put(id, Action.timer(0));
             }
 
         }
-        return list;
+        return resultat;
     }
 
     private Ascenseur trouverAscenseur(int x, int y) {
@@ -170,43 +174,50 @@ public class GameService {
         return false;
     }
 
-    private Optional<Action> deposerObjet(int index) {
-        if(inventaire[index] != null && trouverObjet(POSITION_X, POSITION_Y) == null) {
-            Objet o = inventaire[index];
+    private Map<String, Action> deposerObjet(int index) {
+        Map<String, Action> actions = new HashMap<>();
+        if(this.monde.inventaire[index] != null) {
+            Objet o = this.monde.inventaire[index];
 
             Decors decors = trouverDecors(POSITION_X, POSITION_Y);
             if(o.graphisme.equals(Objet.GRAPHISME.bouteille) && decors !=null && decors.graphisme.equals(Decors.GRAPHISME.potager)) {
-                timers.put(decors.id, "tomate");
-                return Optional.of(Action.timer(decors.id, 10));
+                if(monde.timers.containsKey(decors.id)) {
+                    return new HashMap<>();
+                }
+                monde.timers.put(decors.id, "tomate");
+                actions.put(o.id, Action.retirer());
+                actions.put(decors.id, Action.timer(10));
+                return actions;
             }
-
-            o.x = POSITION_X;
-            o.y = POSITION_Y;
-            monde.objets.add(o);
-            inventaire[index] = null;
-            return Optional.of(Action.deplacer(o.id, POSITION_X, POSITION_Y));
+            if(trouverObjet(POSITION_X, POSITION_Y) == null) {
+                o.x = POSITION_X;
+                o.y = POSITION_Y;
+                monde.objets.add(o);
+                this.monde.inventaire[index] = null;
+                actions.put(o.id, Action.deplacer(POSITION_X, POSITION_Y));
+            }
         }
-        return Optional.empty();
+        return actions;
     }
 
-    private void ajouterObjetDansInventaire(Objet objet, List<Action> list) {
+    private void ajouterObjetDansInventaire(Objet objet, Map<String, Action> map) {
         Integer index = null;
         for(int i=0; i<9; i++) {
-            if(inventaire[i] == null) {
+            if(this.monde.inventaire[i] == null) {
                 index = i;
                 break;
             }
         }
         if(index != null) {
-            inventaire[index] = objet;
+            this.monde.inventaire[index] = objet;
 
             if(monde.objets.indexOf(objet) > -1) {
                 monde.objets.remove(objet);
             } else {
-                list.add(Action.ajouter(objet.id, objet.x, objet.y, objet.graphisme.name()));
+                map.put(objet.id, Action.ajouter(objet.x, objet.y, objet.graphisme.name()));
             }
 
-            list.add(Action.inventaire(objet.id, index));
+            map.put(objet.id, Action.inventaire(index));
         }
     }
 }

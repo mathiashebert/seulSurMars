@@ -1,7 +1,9 @@
 package com.bansheesoftware.seulsurmars.domain;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Monde {
     public int largeur;
@@ -18,6 +20,15 @@ public class Monde {
     public List<Decors> decors = new ArrayList<>();
 
     public List<Salle> salles = new ArrayList<>();
+
+    public Objet[] inventaire = new Objet[9];
+    public Map<String, String> timers = new HashMap<>();
+
+    private int increment = 0;
+
+    public int increment() {
+        return ++increment;
+    }
 
 
     public Monde(int largeur, int hauteur) {

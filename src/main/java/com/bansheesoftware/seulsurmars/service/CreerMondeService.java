@@ -20,6 +20,7 @@ public class CreerMondeService {
         monde.objets.add(new Objet("bouteille2", 3, 5, Objet.GRAPHISME.bouteille));
         monde.objets.add(new Objet("bouteille3", 2, 5, Objet.GRAPHISME.bouteille));
         monde.objets.add(new Objet("oxygene1", 4, 1, Objet.GRAPHISME.oxygene));
+        monde.objets.add(new Objet("hydrogene1", 6, 1, Objet.GRAPHISME.hydrogene));
 
         monde.decors.add(new Decors("potager1", 6, 5, Decors.GRAPHISME.potager));
         monde.decors.add(new Decors("hydrazine1", 6, 1, Decors.GRAPHISME.hydrazine));

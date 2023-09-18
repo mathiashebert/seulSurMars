@@ -8,7 +8,6 @@ public class Action {
     }
 
     public ActionType type;
-    public String id;
     public int x;
     public int y;
     public int duree;
@@ -19,41 +18,41 @@ public class Action {
     private Action() {
 
     }
-    public static Action deplacer(String id, int x, int y) {
+    public static Action deplacer(int x, int y) {
         Action action = new Action();
         action.type = ActionType.DEPLACER;
-        action.id = id;
         action.x = x;
         action.y = y;
         return action;
     }
-    public static Action timer(String id, int duree) {
+    public static Action timer(int duree) {
         Action action = new Action();
         action.type = ActionType.TIMER;
-        action.id = id;
         action.duree = duree;
         return action;
     }
-    public static Action inventaire(String id, int inventaire) {
+    public static Action inventaire(int inventaire) {
         Action action = new Action();
         action.type = ActionType.INVENTAIRE;
-        action.id = id;
         action.inventaire = inventaire;
         return action;
     }
     public static Action gameOver() {
         Action action = new Action();
         action.type = ActionType.GAME_OVER;
-        action.id = ActionType.GAME_OVER.toString();
         return action;
     }
-    public static Action ajouter(String id, int x, int y, String graphisme) {
+    public static Action ajouter(int x, int y, String graphisme) {
         Action action = new Action();
         action.type = ActionType.AJOUTER;
-        action.id = id;
         action.x = x;
         action.y = y;
         action.graphisme = graphisme;
+        return action;
+    }
+    public static Action retirer() {
+        Action action = new Action();
+        action.type = ActionType.RETIRER;
         return action;
     }
 }
