@@ -428,6 +428,7 @@ class GameServiceTest {
         GameService gameService = creerService1();
         gameService.monde.decors.add(new Decors("potager", 1, 0, Decors.GRAPHISME.potager));
         gameService.monde.inventaire[0] = new Objet("bouteille", 0, 0, Objet.GRAPHISME.bouteille);
+        gameService.monde.inventaire[1] = new Objet("bouteille-2", 0, 0, Objet.GRAPHISME.bouteille);
         Map<String, Action> actions = gameService.action(GameService.Touche.DIGIT1);
         Assertions.assertEquals(2, actions.size());
         verifierActionRetirer(actions, "bouteille");
@@ -437,6 +438,34 @@ class GameServiceTest {
         Assertions.assertEquals(2, actions.size());
         verifierActionAjouter(actions, "tomate1", 1, 0);
         verifierActionTimer(actions, "potager", 0);
+
+        actions = gameService.action(GameService.Touche.LEFT);
+        Assertions.assertEquals(1, actions.size());
+        verifierActionDeplacer(actions, "hero", 0, 0);
+
+        actions = gameService.action(GameService.Touche.RIGHT);
+        Assertions.assertEquals(2, actions.size());
+        verifierActionDeplacer(actions, "hero", 1, 0);
+        verifierActionInventaire(actions, "tomate1", 0);
+
+        actions = gameService.action(GameService.Touche.DIGIT2);
+        Assertions.assertEquals(2, actions.size());
+        verifierActionRetirer(actions, "bouteille-2");
+        verifierActionTimer(actions, "potager", 10);
+
+        actions = gameService.timer("potager");
+        Assertions.assertEquals(2, actions.size());
+        verifierActionAjouter(actions, "tomate2", 1, 0);
+        verifierActionTimer(actions, "potager", 0);
+
+        actions = gameService.action(GameService.Touche.LEFT);
+        Assertions.assertEquals(1, actions.size());
+        verifierActionDeplacer(actions, "hero", 0, 0);
+
+        actions = gameService.action(GameService.Touche.RIGHT);
+        Assertions.assertEquals(2, actions.size());
+        verifierActionDeplacer(actions, "hero", 1, 0);
+        verifierActionInventaire(actions, "tomate2", 1);
     }
 
     @Test
@@ -463,6 +492,58 @@ class GameServiceTest {
         actions = gameService.timer("potager");
         Assertions.assertEquals(1, actions.size());
         verifierActionTimer(actions, "potager", 0);
+    }
+
+    @Test
+    public void hydrazine() {
+        GameService gameService = creerService1();
+        gameService.monde.decors.add(new Decors("hydrazine", 1, 0, Decors.GRAPHISME.hydrazine));
+        Map<String, Action> actions = gameService.action(GameService.Touche.SPACE);
+        Assertions.assertEquals(1, actions.size());
+        verifierActionInventaire(actions, "hydrogene1", 0);
+    }
+
+    @Test
+    public void hydrazineInventairePlein() {
+        GameService gameService = creerService1();
+        gameService.monde.decors.add(new Decors("hydrazine", 1, 0, Decors.GRAPHISME.hydrazine));
+        gameService.monde.inventaire[0] = new Objet("objet1", 0, 0, Objet.GRAPHISME.bouteille);
+        gameService.monde.inventaire[1] = new Objet("objet2", 0, 0, Objet.GRAPHISME.bouteille);
+        gameService.monde.inventaire[2] = new Objet("objet3", 0, 0, Objet.GRAPHISME.bouteille);
+        gameService.monde.inventaire[3] = new Objet("objet4", 0, 0, Objet.GRAPHISME.bouteille);
+        gameService.monde.inventaire[4] = new Objet("objet5", 0, 0, Objet.GRAPHISME.bouteille);
+        gameService.monde.inventaire[5] = new Objet("objet6", 0, 0, Objet.GRAPHISME.bouteille);
+        gameService.monde.inventaire[6] = new Objet("objet7", 0, 0, Objet.GRAPHISME.bouteille);
+        gameService.monde.inventaire[7] = new Objet("objet8", 0, 0, Objet.GRAPHISME.bouteille);
+        gameService.monde.inventaire[8] = new Objet("objet9", 0, 0, Objet.GRAPHISME.bouteille);
+        Map<String, Action> actions = gameService.action(GameService.Touche.SPACE);
+        Assertions.assertEquals(0, actions.size());
+    }
+
+    @Test
+    public void fontaine() {
+        GameService gameService = creerService1();
+        gameService.monde.decors.add(new Decors("fontaine", 1, 0, Decors.GRAPHISME.fontaine));
+        Map<String, Action> actions = gameService.action(GameService.Touche.SPACE);
+        Assertions.assertEquals(1, actions.size());
+        verifierActionInventaire(actions, "bouteille1", 0);
+    }
+
+    @Test
+    public void fontaineInventairePlein() {
+        GameService gameService = creerService1();
+        gameService.monde.decors.add(new Decors("fontaine", 1, 0, Decors.GRAPHISME.fontaine));
+        gameService.monde.inventaire[0] = new Objet("objet1", 0, 0, Objet.GRAPHISME.bouteille);
+        gameService.monde.inventaire[1] = new Objet("objet2", 0, 0, Objet.GRAPHISME.bouteille);
+        gameService.monde.inventaire[2] = new Objet("objet3", 0, 0, Objet.GRAPHISME.bouteille);
+        gameService.monde.inventaire[3] = new Objet("objet4", 0, 0, Objet.GRAPHISME.bouteille);
+        gameService.monde.inventaire[4] = new Objet("objet5", 0, 0, Objet.GRAPHISME.bouteille);
+        gameService.monde.inventaire[5] = new Objet("objet6", 0, 0, Objet.GRAPHISME.bouteille);
+        gameService.monde.inventaire[6] = new Objet("objet7", 0, 0, Objet.GRAPHISME.bouteille);
+        gameService.monde.inventaire[7] = new Objet("objet8", 0, 0, Objet.GRAPHISME.bouteille);
+        gameService.monde.inventaire[8] = new Objet("objet9", 0, 0, Objet.GRAPHISME.bouteille);
+        Map<String, Action> actions = gameService.action(GameService.Touche.SPACE);
+        Assertions.assertEquals(0, actions.size());
     }
 
 

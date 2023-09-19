@@ -33,3 +33,9 @@
 }
 .decors.hydrazine.foreground {
 }
+
+.decors.fontaine.background {
+    background-image: url("./img/fontaine_b.png");
+}
+.decors.fontaine.foreground {
+}

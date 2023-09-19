@@ -28,6 +28,7 @@ public class GameService {
         Map<String, Action> resultat = new HashMap<>();
         int oldY = POSITION_Y;
         int oldX = POSITION_X;
+        Objet objet;
         switch (touche) {
             case LEFT:
                 if(POSITION_X > 0) {
@@ -63,7 +64,11 @@ public class GameService {
                         }
                         break;
                     case hydrazine:
-                        Objet objet = new Objet("hydrogen", POSITION_X, POSITION_Y, Objet.GRAPHISME.hydrogene);
+                        objet = new Objet("hydrogene"+monde.increment(), POSITION_X, POSITION_Y, Objet.GRAPHISME.hydrogene);
+                        ajouterObjetDansInventaire(objet, resultat);
+                        break;
+                    case fontaine:
+                        objet = new Objet("bouteille"+monde.increment(), POSITION_X, POSITION_Y, Objet.GRAPHISME.bouteille);
                         ajouterObjetDansInventaire(objet, resultat);
                         break;
                 }
@@ -118,7 +123,7 @@ public class GameService {
             }
 
             // ramasser un objet
-            Objet objet = trouverObjet(POSITION_X, POSITION_Y);
+            objet = trouverObjet(POSITION_X, POSITION_Y);
             if(objet != null) {
                 ajouterObjetDansInventaire(objet, resultat);
             }
@@ -141,7 +146,8 @@ public class GameService {
                 if(trouverObjet(d.x, d.y) == null) {
                     Objet objet = new Objet("tomate"+monde.increment(), d.x, d.y, Objet.GRAPHISME.tomate);
                     monde.objets.add(objet);
-                    resultat.put(objet.id, Action.ajouter(d.x, d.y, Objet.GRAPHISME.tomate.name()));
+                    resultat.put(objet.id, Action.ajouter(objet));
+                    monde.timers.remove(id);
                 }
                 resultat.put(id, Action.timer(0));
             }
@@ -185,6 +191,7 @@ public class GameService {
                     return new HashMap<>();
                 }
                 monde.timers.put(decors.id, "tomate");
+                this.monde.inventaire[index] = null;
                 actions.put(o.id, Action.retirer());
                 actions.put(decors.id, Action.timer(10));
                 return actions;
@@ -213,11 +220,10 @@ public class GameService {
 
             if(monde.objets.indexOf(objet) > -1) {
                 monde.objets.remove(objet);
+                map.put(objet.id, Action.inventaire(index));
             } else {
-                map.put(objet.id, Action.ajouter(objet.x, objet.y, objet.graphisme.name()));
+                map.put(objet.id, Action.ajouter(objet, index));
             }
-
-            map.put(objet.id, Action.inventaire(index));
         }
     }
 }

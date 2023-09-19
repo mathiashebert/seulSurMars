@@ -42,12 +42,19 @@ public class Action {
         action.type = ActionType.GAME_OVER;
         return action;
     }
-    public static Action ajouter(int x, int y, String graphisme) {
+    public static Action ajouter(Objet objet) {
         Action action = new Action();
         action.type = ActionType.AJOUTER;
-        action.x = x;
-        action.y = y;
-        action.graphisme = graphisme;
+        action.x = objet.x;
+        action.y = objet.y;
+        action.graphisme = objet.graphisme.name();
+        return action;
+    }
+    public static Action ajouter(Objet objet, int inventaire) {
+        Action action = new Action();
+        action.type = ActionType.INVENTAIRE;
+        action.inventaire = inventaire;
+        action.graphisme = objet.graphisme.name();
         return action;
     }
     public static Action retirer() {
