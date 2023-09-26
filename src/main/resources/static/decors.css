@@ -39,3 +39,8 @@
 }
 .decors.fontaine.foreground {
 }
+.decors.recycleurAir.background {
+    background-image: url("./img/air-recycling.png");
+}
+.decors.recycleurAir.foreground {
+}

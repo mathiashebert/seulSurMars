@@ -28,12 +28,6 @@ class GameServiceTest {
         Assertions.assertEquals(   y, action.y);
     }
 
-    private void verifierActionAjouter(Map<String, Action> actions, String id, int x, int y) {
-        Action action = actions.get(id);
-        Assertions.assertEquals(Action.ActionType.AJOUTER, action.type);
-        Assertions.assertEquals(   x, action.x);
-        Assertions.assertEquals(   y, action.y);
-    }
     private void verifierActionRetirer(Map<String, Action> actions, String id) {
         Action action = actions.get(id);
         Assertions.assertEquals(Action.ActionType.RETIRER, action.type);
@@ -47,9 +41,13 @@ class GameServiceTest {
         Action action = actions.get("hero");
         Assertions.assertEquals(Action.ActionType.GAME_OVER, action.type);
     }
-    private void verifierActionInventaire(Map<String, Action> actions, String id, int inventaire) {
+
+    private void verifierActionDessiner(Map<String, Action> actions, String id, int x, int y, String graphisme, int inventaire) {
         Action action = actions.get(id);
-        Assertions.assertEquals(Action.ActionType.INVENTAIRE, action.type);
+        Assertions.assertEquals(Action.ActionType.DESSINER, action.type);
+        Assertions.assertEquals(   x, action.x);
+        Assertions.assertEquals(   y, action.y);
+        Assertions.assertEquals(   graphisme, action.graphisme);
         Assertions.assertEquals(   inventaire, action.inventaire);
     }
 
@@ -258,7 +256,8 @@ class GameServiceTest {
         actions = gameService.action(GameService.Touche.RIGHT);
         Assertions.assertEquals(2, actions.size());
         verifierActionDeplacer(actions, "hero", 2, 0);
-        verifierActionInventaire(actions, "bouteille1", 0);
+        verifierActionDessiner(actions, "bouteille1", 2, 0, Objet.GRAPHISME.bouteille.name(), 0);
+
     }
     @Test
     public void ramasserPosition1() {
@@ -272,7 +271,7 @@ class GameServiceTest {
         actions = gameService.action(GameService.Touche.RIGHT);
         Assertions.assertEquals(2, actions.size());
         verifierActionDeplacer(actions, "hero", 2, 0);
-        verifierActionInventaire(actions, "bouteille1", 1);
+        verifierActionDessiner(actions, "bouteille1", 2, 0, Objet.GRAPHISME.bouteille.name(), 1);
     }
     @Test
     public void ramasserPosition0() {
@@ -286,7 +285,7 @@ class GameServiceTest {
         actions = gameService.action(GameService.Touche.RIGHT);
         Assertions.assertEquals(2, actions.size());
         verifierActionDeplacer(actions, "hero", 2, 0);
-        verifierActionInventaire(actions, "bouteille1", 0);
+        verifierActionDessiner(actions, "bouteille1", 2, 0, Objet.GRAPHISME.bouteille.name(), 0);
     }
     @Test
     public void ramasserInventairePlein() {
@@ -317,7 +316,7 @@ class GameServiceTest {
 
         Map<String, Action> actions = gameService.action(GameService.Touche.DIGIT1);
         Assertions.assertEquals(1, actions.size());
-        verifierActionDeplacer(actions, "objet1", 0, 0);
+        verifierActionDessiner(actions, "objet1", 0, 0, Objet.GRAPHISME.bouteille.name(), -1);
     }
 
     @Test
@@ -340,7 +339,7 @@ class GameServiceTest {
         actions = gameService.action(GameService.Touche.RIGHT);
         Assertions.assertEquals(2, actions.size());
         verifierActionDeplacer(actions, "hero", 2, 0);
-        verifierActionInventaire(actions, "bouteille1", 0);
+        verifierActionDessiner(actions, "bouteille1", 2, 0, Objet.GRAPHISME.bouteille.name(), 0);
 
         actions = gameService.action(GameService.Touche.LEFT);
         Assertions.assertEquals(1, actions.size());
@@ -356,7 +355,7 @@ class GameServiceTest {
 
         actions = gameService.action(GameService.Touche.DIGIT1);
         Assertions.assertEquals(1, actions.size());
-        verifierActionDeplacer(actions, "bouteille1", 1, 0);
+        verifierActionDessiner(actions, "bouteille1", 1, 0, Objet.GRAPHISME.bouteille.name(), -1);
 
         actions = gameService.action(GameService.Touche.LEFT);
         Assertions.assertEquals(1, actions.size());
@@ -368,7 +367,7 @@ class GameServiceTest {
         actions = gameService.action(GameService.Touche.RIGHT);
         Assertions.assertEquals(2, actions.size());
         verifierActionDeplacer(actions, "hero", 1, 0);
-        verifierActionInventaire(actions, "bouteille1", 0);
+        verifierActionDessiner(actions, "bouteille1", 1, 0, Objet.GRAPHISME.bouteille.name(), 0);
 
         actions = gameService.action(GameService.Touche.RIGHT);
         Assertions.assertEquals(1, actions.size());
@@ -376,7 +375,7 @@ class GameServiceTest {
 
         actions = gameService.action(GameService.Touche.DIGIT1);
         Assertions.assertEquals(1, actions.size());
-        verifierActionDeplacer(actions, "bouteille1", 2, 0);
+        verifierActionDessiner(actions, "bouteille1", 2, 0, Objet.GRAPHISME.bouteille.name(), -1);
 
     }
 
@@ -390,16 +389,16 @@ class GameServiceTest {
         actions = gameService.action(GameService.Touche.RIGHT);
         Assertions.assertEquals(2, actions.size());
         verifierActionDeplacer(actions, "hero", 2, 0);
-        verifierActionInventaire(actions, "bouteille1", 0);
+        verifierActionDessiner(actions, "bouteille1", 2, 0, Objet.GRAPHISME.bouteille.name(), 0);
 
         actions = gameService.action(GameService.Touche.RIGHT);
         Assertions.assertEquals(2, actions.size());
         verifierActionDeplacer(actions, "hero", 3, 0);
-        verifierActionInventaire(actions, "bouteille2", 1);
+        verifierActionDessiner(actions, "bouteille2", 3, 0, Objet.GRAPHISME.bouteille.name(), 1);
 
         actions = gameService.action(GameService.Touche.DIGIT1);
         Assertions.assertEquals(1, actions.size());
-        verifierActionDeplacer(actions, "bouteille1", 3, 0);
+        verifierActionDessiner(actions, "bouteille1", 3, 0, Objet.GRAPHISME.bouteille.name(), -1);
 
         actions = gameService.action(GameService.Touche.DIGIT2);
         Assertions.assertEquals(0, actions.size());
@@ -410,17 +409,18 @@ class GameServiceTest {
 
         actions = gameService.action(GameService.Touche.DIGIT2);
         Assertions.assertEquals(1, actions.size());
-        verifierActionDeplacer(actions, "bouteille2", 2, 0);
+        verifierActionDessiner(actions, "bouteille2", 2, 0, Objet.GRAPHISME.bouteille.name(), -1);
 
         actions = gameService.action(GameService.Touche.RIGHT);
         Assertions.assertEquals(2, actions.size());
         verifierActionDeplacer(actions, "hero", 3, 0);
-        verifierActionInventaire(actions, "bouteille1", 0);
+        verifierActionDessiner(actions, "bouteille1", 3, 0, Objet.GRAPHISME.bouteille.name(), 0);
+
 
         actions = gameService.action(GameService.Touche.LEFT);
         Assertions.assertEquals(2, actions.size());
         verifierActionDeplacer(actions, "hero", 2, 0);
-        verifierActionInventaire(actions, "bouteille2", 1);
+        verifierActionDessiner(actions, "bouteille2", 2, 0, Objet.GRAPHISME.bouteille.name(), 1);
     }
 
     @Test
@@ -436,7 +436,7 @@ class GameServiceTest {
 
         actions = gameService.timer("potager");
         Assertions.assertEquals(2, actions.size());
-        verifierActionAjouter(actions, "tomate1", 1, 0);
+        verifierActionDessiner(actions, "tomate1", 1, 0, Objet.GRAPHISME.tomate.name(), -1);
         verifierActionTimer(actions, "potager", 0);
 
         actions = gameService.action(GameService.Touche.LEFT);
@@ -446,7 +446,7 @@ class GameServiceTest {
         actions = gameService.action(GameService.Touche.RIGHT);
         Assertions.assertEquals(2, actions.size());
         verifierActionDeplacer(actions, "hero", 1, 0);
-        verifierActionInventaire(actions, "tomate1", 0);
+        verifierActionDessiner(actions, "tomate1", 1, 0, Objet.GRAPHISME.tomate.name(), 0);
 
         actions = gameService.action(GameService.Touche.DIGIT2);
         Assertions.assertEquals(2, actions.size());
@@ -455,7 +455,8 @@ class GameServiceTest {
 
         actions = gameService.timer("potager");
         Assertions.assertEquals(2, actions.size());
-        verifierActionAjouter(actions, "tomate2", 1, 0);
+        verifierActionDessiner(actions, "tomate2", 1, 0, Objet.GRAPHISME.tomate.name(), -1);
+
         verifierActionTimer(actions, "potager", 0);
 
         actions = gameService.action(GameService.Touche.LEFT);
@@ -465,7 +466,7 @@ class GameServiceTest {
         actions = gameService.action(GameService.Touche.RIGHT);
         Assertions.assertEquals(2, actions.size());
         verifierActionDeplacer(actions, "hero", 1, 0);
-        verifierActionInventaire(actions, "tomate2", 1);
+        verifierActionDessiner(actions, "tomate2", 1, 0, Objet.GRAPHISME.tomate.name(), 1);
     }
 
     @Test
@@ -500,7 +501,7 @@ class GameServiceTest {
         gameService.monde.decors.add(new Decors("hydrazine", 1, 0, Decors.GRAPHISME.hydrazine));
         Map<String, Action> actions = gameService.action(GameService.Touche.SPACE);
         Assertions.assertEquals(1, actions.size());
-        verifierActionInventaire(actions, "hydrogene1", 0);
+        verifierActionDessiner(actions, "hydrogene1", 1, 0, Objet.GRAPHISME.hydrogene.name(), 0);
     }
 
     @Test
@@ -526,13 +527,39 @@ class GameServiceTest {
         gameService.monde.decors.add(new Decors("fontaine", 1, 0, Decors.GRAPHISME.fontaine));
         Map<String, Action> actions = gameService.action(GameService.Touche.SPACE);
         Assertions.assertEquals(1, actions.size());
-        verifierActionInventaire(actions, "bouteille1", 0);
+        verifierActionDessiner(actions, "bouteille1", 1, 0, Objet.GRAPHISME.bouteille.name(), 0);
     }
 
     @Test
     public void fontaineInventairePlein() {
         GameService gameService = creerService1();
         gameService.monde.decors.add(new Decors("fontaine", 1, 0, Decors.GRAPHISME.fontaine));
+        gameService.monde.inventaire[0] = new Objet("objet1", 0, 0, Objet.GRAPHISME.bouteille);
+        gameService.monde.inventaire[1] = new Objet("objet2", 0, 0, Objet.GRAPHISME.bouteille);
+        gameService.monde.inventaire[2] = new Objet("objet3", 0, 0, Objet.GRAPHISME.bouteille);
+        gameService.monde.inventaire[3] = new Objet("objet4", 0, 0, Objet.GRAPHISME.bouteille);
+        gameService.monde.inventaire[4] = new Objet("objet5", 0, 0, Objet.GRAPHISME.bouteille);
+        gameService.monde.inventaire[5] = new Objet("objet6", 0, 0, Objet.GRAPHISME.bouteille);
+        gameService.monde.inventaire[6] = new Objet("objet7", 0, 0, Objet.GRAPHISME.bouteille);
+        gameService.monde.inventaire[7] = new Objet("objet8", 0, 0, Objet.GRAPHISME.bouteille);
+        gameService.monde.inventaire[8] = new Objet("objet9", 0, 0, Objet.GRAPHISME.bouteille);
+        Map<String, Action> actions = gameService.action(GameService.Touche.SPACE);
+        Assertions.assertEquals(0, actions.size());
+    }
+
+    @Test
+    public void air() {
+        GameService gameService = creerService1();
+        gameService.monde.decors.add(new Decors("air", 1, 0, Decors.GRAPHISME.recycleurAir));
+        Map<String, Action> actions = gameService.action(GameService.Touche.SPACE);
+        Assertions.assertEquals(1, actions.size());
+        verifierActionDessiner(actions, "oxygene1", 1, 0, Objet.GRAPHISME.oxygene.name(), 0);
+    }
+
+    @Test
+    public void airInventairePlein() {
+        GameService gameService = creerService1();
+        gameService.monde.decors.add(new Decors("air", 1, 0, Decors.GRAPHISME.fontaine));
         gameService.monde.inventaire[0] = new Objet("objet1", 0, 0, Objet.GRAPHISME.bouteille);
         gameService.monde.inventaire[1] = new Objet("objet2", 0, 0, Objet.GRAPHISME.bouteille);
         gameService.monde.inventaire[2] = new Objet("objet3", 0, 0, Objet.GRAPHISME.bouteille);

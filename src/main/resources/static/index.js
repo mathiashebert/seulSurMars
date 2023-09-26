@@ -300,6 +300,33 @@ function appliquerAction(actions) {
                 document.getElementById(action.id).remove();
                 break;
 
+            case "DESSINER":
+                let dessin = document.getElementById(action.id);
+                if(!dessin) {
+                    creerElement('objet', action.id, action.x, action.y, action.graphisme);
+                    dessin = document.getElementById(action.id);
+                } else {
+                    dessin.style.bottom= action.y+'em';
+                    dessin.style.left= action.x+'em';
+                }
+                if(action.inventaire > -1) {
+                    setTimeout(function(){
+                        dessin.classList.add('inventaire');
+                        INVENTAIRE[action.inventaire] = action.id;
+                        recentrerInventaire(dessin, action.inventaire);
+                    }, 100);
+                } else {
+                    if (index > -1) {
+                        setTimeout(function () {
+                            document.getElementById(action.id).classList.remove('inventaire');
+                        }, 500)
+                        INVENTAIRE[index] = null;
+                    }
+                }
+
+
+                break;
+
 
         }
 

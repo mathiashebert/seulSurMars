@@ -71,6 +71,10 @@ public class GameService {
                         objet = new Objet("bouteille"+monde.increment(), POSITION_X, POSITION_Y, Objet.GRAPHISME.bouteille);
                         ajouterObjetDansInventaire(objet, resultat);
                         break;
+                    case recycleurAir:
+                        objet = new Objet("oxygene"+monde.increment(), POSITION_X, POSITION_Y, Objet.GRAPHISME.oxygene);
+                        ajouterObjetDansInventaire(objet, resultat);
+                        break;
                 }
 
                 break;
@@ -146,7 +150,7 @@ public class GameService {
                 if(trouverObjet(d.x, d.y) == null) {
                     Objet objet = new Objet("tomate"+monde.increment(), d.x, d.y, Objet.GRAPHISME.tomate);
                     monde.objets.add(objet);
-                    resultat.put(objet.id, Action.ajouter(objet));
+                    resultat.put(objet.id, Action.dessiner(objet));
                     monde.timers.remove(id);
                 }
                 resultat.put(id, Action.timer(0));
@@ -201,7 +205,7 @@ public class GameService {
                 o.y = POSITION_Y;
                 monde.objets.add(o);
                 this.monde.inventaire[index] = null;
-                actions.put(o.id, Action.deplacer(POSITION_X, POSITION_Y));
+                actions.put(o.id, Action.dessiner(o));
             }
         }
         return actions;
@@ -220,10 +224,8 @@ public class GameService {
 
             if(monde.objets.indexOf(objet) > -1) {
                 monde.objets.remove(objet);
-                map.put(objet.id, Action.inventaire(index));
-            } else {
-                map.put(objet.id, Action.ajouter(objet, index));
             }
+            map.put(objet.id, Action.dessiner(objet, index));
         }
     }
 }
