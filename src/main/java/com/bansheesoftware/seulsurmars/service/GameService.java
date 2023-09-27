@@ -190,7 +190,13 @@ public class GameService {
             Objet o = this.monde.inventaire[index];
 
             Decors decors = trouverDecors(POSITION_X, POSITION_Y);
-            if(o.graphisme.equals(Objet.GRAPHISME.bouteille) && decors !=null && decors.graphisme.equals(Decors.GRAPHISME.potager)) {
+            Decors.GRAPHISME dGraphisme = decors == null ? null : decors.graphisme;
+            Objet objet = trouverObjet(POSITION_X, POSITION_Y);
+            Objet.GRAPHISME oGraphisme = objet == null ? null : objet.graphisme;
+
+
+            // combiner potager + bouteille
+            if(o.graphisme.equals(Objet.GRAPHISME.bouteille) && Decors.GRAPHISME.potager.equals(dGraphisme)) {
                 if(monde.timers.containsKey(decors.id)) {
                     return new HashMap<>();
                 }
@@ -200,7 +206,22 @@ public class GameService {
                 actions.put(decors.id, Action.timer(10));
                 return actions;
             }
-            if(trouverObjet(POSITION_X, POSITION_Y) == null) {
+
+            // combiner hydrogen + oxygen (ou inverse)
+            if(o.graphisme.equals(Objet.GRAPHISME.oxygene) && Objet.GRAPHISME.hydrogene.equals(oGraphisme)
+            || o.graphisme.equals(Objet.GRAPHISME.hydrogene) && Objet.GRAPHISME.oxygene.equals(oGraphisme)) {
+                this.monde.inventaire[index] = null;
+                actions.put(o.id, Action.retirer());
+                actions.put(objet.id, Action.retirer());
+                Objet inflammable = new Objet("inflammable"+monde.increment(), POSITION_X, POSITION_Y, Objet.GRAPHISME.inflammable);
+                actions.put(inflammable.id, Action.dessiner(inflammable));
+                monde.objets.add(inflammable);
+                monde.objets.remove(objet);
+                return actions;
+            }
+
+            // cas par défaut : deposer l'objet à condition que la case soit libre
+            if(objet == null) {
                 o.x = POSITION_X;
                 o.y = POSITION_Y;
                 monde.objets.add(o);

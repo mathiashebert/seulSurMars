@@ -24,3 +24,6 @@
 .objet.tomate {
     background-image: url("img/tomate.png");
 }
+.objet.inflammable {
+    background-image: url("img/inflammable.png");
+}
