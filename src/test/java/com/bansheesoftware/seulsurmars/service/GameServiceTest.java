@@ -229,8 +229,9 @@ class GameServiceTest {
         verifierActionTimer(actions, "oxygen", 30);
 
         actions = gameService.timer("oxygen");
-        Assertions.assertEquals(1, actions.size());
+        Assertions.assertEquals(2, actions.size());
         verifierActionGameOver(actions);
+        verifierActionTimer(actions, "oxygen", 0);
     }
 
 
@@ -424,78 +425,6 @@ class GameServiceTest {
     }
 
     @Test
-    public void potager() {
-        GameService gameService = creerService1();
-        gameService.monde.decors.add(new Decors("potager", 1, 0, Decors.GRAPHISME.potager));
-        gameService.monde.inventaire[0] = new Objet("bouteille", 0, 0, Objet.GRAPHISME.bouteille);
-        gameService.monde.inventaire[1] = new Objet("bouteille-2", 0, 0, Objet.GRAPHISME.bouteille);
-        Map<String, Action> actions = gameService.action(GameService.Touche.DIGIT1);
-        Assertions.assertEquals(2, actions.size());
-        verifierActionRetirer(actions, "bouteille");
-        verifierActionTimer(actions, "potager", 10);
-
-        actions = gameService.timer("potager");
-        Assertions.assertEquals(2, actions.size());
-        verifierActionDessiner(actions, "tomate1", 1, 0, Objet.GRAPHISME.tomate.name(), -1);
-        verifierActionTimer(actions, "potager", 0);
-
-        actions = gameService.action(GameService.Touche.LEFT);
-        Assertions.assertEquals(1, actions.size());
-        verifierActionDeplacer(actions, "hero", 0, 0);
-
-        actions = gameService.action(GameService.Touche.RIGHT);
-        Assertions.assertEquals(2, actions.size());
-        verifierActionDeplacer(actions, "hero", 1, 0);
-        verifierActionDessiner(actions, "tomate1", 1, 0, Objet.GRAPHISME.tomate.name(), 0);
-
-        actions = gameService.action(GameService.Touche.DIGIT2);
-        Assertions.assertEquals(2, actions.size());
-        verifierActionRetirer(actions, "bouteille-2");
-        verifierActionTimer(actions, "potager", 10);
-
-        actions = gameService.timer("potager");
-        Assertions.assertEquals(2, actions.size());
-        verifierActionDessiner(actions, "tomate2", 1, 0, Objet.GRAPHISME.tomate.name(), -1);
-
-        verifierActionTimer(actions, "potager", 0);
-
-        actions = gameService.action(GameService.Touche.LEFT);
-        Assertions.assertEquals(1, actions.size());
-        verifierActionDeplacer(actions, "hero", 0, 0);
-
-        actions = gameService.action(GameService.Touche.RIGHT);
-        Assertions.assertEquals(2, actions.size());
-        verifierActionDeplacer(actions, "hero", 1, 0);
-        verifierActionDessiner(actions, "tomate2", 1, 0, Objet.GRAPHISME.tomate.name(), 1);
-    }
-
-    @Test
-    public void potagerEnCours() {
-        GameService gameService = creerService1();
-        gameService.monde.decors.add(new Decors("potager", 1, 0, Decors.GRAPHISME.potager));
-        gameService.monde.inventaire[0] = new Objet("bouteille", 0, 0, Objet.GRAPHISME.bouteille);
-        gameService.monde.timers.put("potager", "tomate1");
-        Map<String, Action> actions = gameService.action(GameService.Touche.DIGIT1);
-        Assertions.assertEquals(0, actions.size());
-    }
-
-    @Test
-    public void potagerOccupe() {
-        GameService gameService = creerService1();
-        gameService.monde.decors.add(new Decors("potager", 1, 0, Decors.GRAPHISME.potager));
-        gameService.monde.inventaire[0] = new Objet("bouteille", 0, 0, Objet.GRAPHISME.bouteille);
-        gameService.monde.objets.add(new Objet("tomate", 1, 0, Objet.GRAPHISME.tomate));
-        Map<String, Action> actions = gameService.action(GameService.Touche.DIGIT1);
-        Assertions.assertEquals(2, actions.size());
-        verifierActionRetirer(actions, "bouteille");
-        verifierActionTimer(actions, "potager", 10);
-
-        actions = gameService.timer("potager");
-        Assertions.assertEquals(1, actions.size());
-        verifierActionTimer(actions, "potager", 0);
-    }
-
-    @Test
     public void hydrazine() {
         GameService gameService = creerService1();
         gameService.monde.decors.add(new Decors("hydrazine", 1, 0, Decors.GRAPHISME.hydrazine));
@@ -625,6 +554,137 @@ class GameServiceTest {
 
     }
 
+    @Test
+    public void four() {
+        GameService gameService = creerService1();
+        gameService.monde.decors.add(new Decors("four", 1, 0, Decors.GRAPHISME.four));
+        gameService.monde.inventaire[0] = new Objet("sucre-1", 0, 0, Objet.GRAPHISME.sucre);
+        gameService.monde.inventaire[1] = new Objet("sucre-2", 0, 0, Objet.GRAPHISME.sucre);
+        gameService.monde.inventaire[2] = new Objet("sucre-3", 0, 0, Objet.GRAPHISME.sucre);
+
+        // première utilisation du four
+        Map<String, Action> actions = gameService.action(GameService.Touche.DIGIT1);
+        Assertions.assertEquals(2, actions.size());
+        verifierActionRetirer(actions, "sucre-1");
+        verifierActionTimer(actions, "four", 5);
+
+        // le four est encore en cours
+        actions = gameService.action(GameService.Touche.DIGIT2);
+        Assertions.assertEquals(0, actions.size());
+
+        // fin du premier timer
+        actions = gameService.timer("four");
+        Assertions.assertEquals(2, actions.size());
+        verifierActionDessiner(actions, "cupcake1", 1, 0, Objet.GRAPHISME.cupcake.name(), -1);
+        verifierActionTimer(actions, "four", 0);
+
+        // le four est plein
+        actions = gameService.action(GameService.Touche.DIGIT2);
+        Assertions.assertEquals(2, actions.size());
+        verifierActionRetirer(actions, "sucre-2");
+        verifierActionTimer(actions, "four", 5);
+
+        // fin de la deuxième utilisation
+        actions = gameService.timer("four");
+        Assertions.assertEquals(1, actions.size());
+        verifierActionTimer(actions, "four", 0);
+
+        // ramasser le cupcake
+        actions = gameService.action(GameService.Touche.LEFT);
+        Assertions.assertEquals(1, actions.size());
+        verifierActionDeplacer(actions, "hero", 0, 0);
+
+        actions = gameService.action(GameService.Touche.RIGHT);
+        Assertions.assertEquals(2, actions.size());
+        verifierActionDeplacer(actions, "hero", 1, 0);
+        verifierActionDessiner(actions, "cupcake1", 1, 0, Objet.GRAPHISME.cupcake.name(), 0);
+
+        // troisième utilisation
+        actions = gameService.action(GameService.Touche.DIGIT3);
+        Assertions.assertEquals(2, actions.size());
+        verifierActionRetirer(actions, "sucre-3");
+        verifierActionTimer(actions, "four", 5);
+
+        actions = gameService.timer("four");
+        Assertions.assertEquals(2, actions.size());
+        verifierActionDessiner(actions, "cupcake2", 1, 0, Objet.GRAPHISME.cupcake.name(), -1);
+        verifierActionTimer(actions, "four", 0);
+
+        actions = gameService.action(GameService.Touche.LEFT);
+        Assertions.assertEquals(1, actions.size());
+        verifierActionDeplacer(actions, "hero", 0, 0);
+
+        actions = gameService.action(GameService.Touche.RIGHT);
+        Assertions.assertEquals(2, actions.size());
+        verifierActionDeplacer(actions, "hero", 1, 0);
+        verifierActionDessiner(actions, "cupcake2", 1, 0, Objet.GRAPHISME.cupcake.name(), 1);
+    }
+
+    @Test
+    public void potager() {
+        GameService gameService = creerService1();
+        gameService.monde.decors.add(new Decors("potager", 1, 0, Decors.GRAPHISME.potager));
+        gameService.monde.inventaire[0] = new Objet("bouteille-1", 0, 0, Objet.GRAPHISME.bouteille);
+        gameService.monde.inventaire[1] = new Objet("bouteille-2", 0, 0, Objet.GRAPHISME.bouteille);
+        gameService.monde.inventaire[2] = new Objet("bouteille-3", 0, 0, Objet.GRAPHISME.bouteille);
+
+        // première utilisation du potager
+        Map<String, Action> actions = gameService.action(GameService.Touche.DIGIT1);
+        Assertions.assertEquals(2, actions.size());
+        verifierActionRetirer(actions, "bouteille-1");
+        verifierActionTimer(actions, "potager", 10);
+
+        // le potager est encore en cours
+        actions = gameService.action(GameService.Touche.DIGIT2);
+        Assertions.assertEquals(0, actions.size());
+
+        // fin du premier timer
+        actions = gameService.timer("potager");
+        Assertions.assertEquals(2, actions.size());
+        verifierActionDessiner(actions, "tomate1", 1, 0, Objet.GRAPHISME.tomate.name(), -1);
+        verifierActionTimer(actions, "potager", 0);
+
+        // le potager est plein
+        actions = gameService.action(GameService.Touche.DIGIT2);
+        Assertions.assertEquals(2, actions.size());
+        verifierActionRetirer(actions, "bouteille-2");
+        verifierActionTimer(actions, "potager", 10);
+
+        // fin de la deuxième utilisation
+        actions = gameService.timer("potager");
+        Assertions.assertEquals(1, actions.size());
+        verifierActionTimer(actions, "potager", 0);
+
+        // ramasser la tomate
+        actions = gameService.action(GameService.Touche.LEFT);
+        Assertions.assertEquals(1, actions.size());
+        verifierActionDeplacer(actions, "hero", 0, 0);
+
+        actions = gameService.action(GameService.Touche.RIGHT);
+        Assertions.assertEquals(2, actions.size());
+        verifierActionDeplacer(actions, "hero", 1, 0);
+        verifierActionDessiner(actions, "tomate1", 1, 0, Objet.GRAPHISME.tomate.name(), 0);
+
+        // troisième utilisation
+        actions = gameService.action(GameService.Touche.DIGIT3);
+        Assertions.assertEquals(2, actions.size());
+        verifierActionRetirer(actions, "bouteille-3");
+        verifierActionTimer(actions, "potager", 10);
+
+        actions = gameService.timer("potager");
+        Assertions.assertEquals(2, actions.size());
+        verifierActionDessiner(actions, "tomate2", 1, 0, Objet.GRAPHISME.tomate.name(), -1);
+        verifierActionTimer(actions, "potager", 0);
+
+        actions = gameService.action(GameService.Touche.LEFT);
+        Assertions.assertEquals(1, actions.size());
+        verifierActionDeplacer(actions, "hero", 0, 0);
+
+        actions = gameService.action(GameService.Touche.RIGHT);
+        Assertions.assertEquals(2, actions.size());
+        verifierActionDeplacer(actions, "hero", 1, 0);
+        verifierActionDessiner(actions, "tomate2", 1, 0, Objet.GRAPHISME.tomate.name(), 1);
+    }
 
 
 }

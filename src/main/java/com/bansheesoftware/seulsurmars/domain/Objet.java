@@ -7,7 +7,7 @@ public class Objet {
     public GRAPHISME graphisme;
 
     public enum GRAPHISME {
-        bouteille, oxygene, tomate, hydrogene, inflammable
+        bouteille, oxygene, tomate, hydrogene, inflammable, sucre, cupcake, explosif
     }
 
     public Objet(String id, int x, int y, GRAPHISME graphisme) {

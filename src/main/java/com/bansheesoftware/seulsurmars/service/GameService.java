@@ -151,12 +151,21 @@ public class GameService {
                     Objet objet = new Objet("tomate"+monde.increment(), d.x, d.y, Objet.GRAPHISME.tomate);
                     monde.objets.add(objet);
                     resultat.put(objet.id, Action.dessiner(objet));
-                    monde.timers.remove(id);
                 }
-                resultat.put(id, Action.timer(0));
             }
-
         }
+        if(monde.timers.get(id).equals("cupcake")) {
+            Decors d = monde.decors.stream().filter(decors -> decors.id.equals(id)).findAny().orElse(null);
+            if(d != null) {
+                if(trouverObjet(d.x, d.y) == null) {
+                    Objet objet = new Objet("cupcake"+monde.increment(), d.x, d.y, Objet.GRAPHISME.cupcake);
+                    monde.objets.add(objet);
+                    resultat.put(objet.id, Action.dessiner(objet));
+                }
+            }
+        }
+        resultat.put(id, Action.timer(0));
+        monde.timers.remove(id);
         return resultat;
     }
 
@@ -204,6 +213,18 @@ public class GameService {
                 this.monde.inventaire[index] = null;
                 actions.put(o.id, Action.retirer());
                 actions.put(decors.id, Action.timer(10));
+                return actions;
+            }
+
+            // combiner four + sucre
+            if(o.graphisme.equals(Objet.GRAPHISME.sucre) && Decors.GRAPHISME.four.equals(dGraphisme)) {
+                if(monde.timers.containsKey(decors.id)) {
+                    return new HashMap<>();
+                }
+                monde.timers.put(decors.id, "cupcake");
+                this.monde.inventaire[index] = null;
+                actions.put(o.id, Action.retirer());
+                actions.put(decors.id, Action.timer(5));
                 return actions;
             }
 

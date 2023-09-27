@@ -44,3 +44,9 @@
 }
 .decors.recycleurAir.foreground {
 }
+
+.decors.four.background {
+    background-image: url("./img/four.png");
+}
+.decors.four.foreground {
+}

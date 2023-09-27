@@ -27,3 +27,12 @@
 .objet.inflammable {
     background-image: url("img/inflammable.png");
 }
+.objet.sucre {
+    background-image: url("img/sucre.png");
+}
+.objet.cupcake {
+    background-image: url("img/cupcake.png");
+}
+.objet.explosif {
+    background-image: url("img/explosif.png");
+}

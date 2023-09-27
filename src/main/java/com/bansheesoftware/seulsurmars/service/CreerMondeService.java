@@ -16,13 +16,13 @@ public class CreerMondeService {
 
         creerAscenseur(monde, "ascenseur1", 5, 5, 1, 5);
 
-        monde.objets.add(new Objet("bouteille-1", 4, 5, Objet.GRAPHISME.bouteille));
+        monde.objets.add(new Objet("bouteille-1", 4, 5, Objet.GRAPHISME.sucre));
         monde.objets.add(new Objet("bouteille-2", 3, 5, Objet.GRAPHISME.bouteille));
         monde.objets.add(new Objet("bouteille-3", 2, 5, Objet.GRAPHISME.bouteille));
         monde.objets.add(new Objet("oxygene-1", 4, 1, Objet.GRAPHISME.oxygene));
         monde.objets.add(new Objet("hydrogene-1", 6, 1, Objet.GRAPHISME.hydrogene));
 
-        monde.decors.add(new Decors("potager-1", 6, 5, Decors.GRAPHISME.recycleurAir));
+        monde.decors.add(new Decors("potager-1", 6, 5, Decors.GRAPHISME.four));
         monde.decors.add(new Decors("hydrazine-1", 1, 5, Decors.GRAPHISME.hydrazine));
 
         return monde;
