@@ -85,6 +85,11 @@ function creerPlateau() {
             POSITION_X = data.positionX;
             POSITION_Y = data.positionY;
 
+            for(let index in data.salles) {
+                const a = data.salles[index];
+                creerSalle(a.x, a.y, a.largeur, a.hauteur);
+            }
+
             for(let i=0; i<data.largeur; i++) {
                 for(let j=0; j<data.hauteur; j++) {
                     creerTile(i,j,data.positions[i][j].graphisme);
@@ -93,7 +98,6 @@ function creerPlateau() {
 
             for(let index in data.decors) {
                 const a = data.decors[index];
-                console.log(a);
                 creerElement('decors', a.id, a.x, a.y, a.graphisme);
             }
 
@@ -120,6 +124,24 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
 }, false);
+
+function creerSalle(i, j, largeur, hauteur) {
+    let tile = document.createElement('div');
+    tile.setAttribute('id', 'salle-'+i+'-'+j);
+    PLATEAU.appendChild(tile);
+    tile.style.bottom = (j+1) + 'em';
+    tile.style.left = (i+1) + 'em';
+    tile.style.width = (largeur-2) + 'em';
+    tile.style.height = (hauteur-2) + 'em';
+    tile.classList.add('salle');
+
+    let inside = document.createElement('div');
+    tile.appendChild(inside);
+    inside.style.width = LARGEUR_FENETRE + 'em';
+    inside.style.height = HAUTEUR_FENETRE + 'em';
+    inside.classList.add('effet-salle');
+    inside.style.background = 'radial-gradient(circle at '+(LARGEUR_FENETRE/2)+'em '+(HAUTEUR_FENETRE/2)+'em, transparent, black 1.5em, black)';
+}
 
 function creerElement(base, id, i,j,clazz) {
     if(base === "objet") {
@@ -157,12 +179,15 @@ function recentrerPlateau() {
     const offsetX = (LARGEUR_FENETRE -1)/2 - POSITION_X;
     const offsetY = (HAUTEUR_FENETRE -1)/2 - POSITION_Y;
 
+    // recentrer le plateau
     document.getElementById("plateau").style.bottom= offsetY+'em';
     document.getElementById("plateau").style.left= offsetX+'em';
 
+    // replacer le hero
     HERO.style.left = POSITION_X+'em';
     HERO.style.bottom = POSITION_Y+'em';
 
+    // repositionner l'inventaire
     document.getElementById("inventaire").style.bottom= -offsetY+'em';
     document.getElementById("inventaire").style.left= -offsetX+'em';
 
@@ -171,6 +196,14 @@ function recentrerPlateau() {
             recentrerInventaire(document.getElementById(INVENTAIRE[i]), i);
         }
     }
+
+    // repositionner les effets de salle
+    Array.from(document.getElementsByClassName('effet-salle')).forEach((el) => {
+        const salle = el.parentNode;
+        el.style.bottom = (-parseInt(salle.style.bottom) -offsetY) + 'em';
+        el.style.left = (-parseInt(salle.style.left) -offsetX) + 'em';
+    });
+
 
 
 }

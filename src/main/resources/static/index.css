@@ -24,6 +24,15 @@
     left: 0;
 }
 
+.salle {
+    position: absolute;
+    z-index: 20;
+    overflow: hidden;
+}
+.effet-salle {
+    position: absolute;
+}
+
 #hero {
     position: absolute;
     width: 1em;
