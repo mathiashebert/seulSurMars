@@ -686,5 +686,56 @@ class GameServiceTest {
         verifierActionDessiner(actions, "tomate2", 1, 0, Objet.GRAPHISME.tomate.name(), 1);
     }
 
+    @Test
+    public void combinerOxygenSucre() {
+        GameService gameService = creerService1();
+        gameService.monde.inventaire[0] = new Objet("objet1", 0, 0, Objet.GRAPHISME.oxygene);
+        gameService.monde.inventaire[1] = new Objet("objet2", 0, 0, Objet.GRAPHISME.sucre);
+        Map<String, Action> actions = gameService.action(GameService.Touche.DIGIT1);
+        Assertions.assertEquals(1, actions.size());
+        verifierActionDessiner(actions, "objet1", 1, 0, Objet.GRAPHISME.oxygene.name(), -1);
+
+        actions = gameService.action(GameService.Touche.DIGIT2);
+        Assertions.assertEquals(3, actions.size());
+        verifierActionRetirer(actions, "objet1");
+        verifierActionRetirer(actions, "objet2");
+        verifierActionDessiner(actions, "explosif1", 1, 0, Objet.GRAPHISME.explosif.name(), -1);
+
+        actions = gameService.action(GameService.Touche.LEFT);
+        Assertions.assertEquals(1, actions.size());
+        verifierActionDeplacer(actions, "hero", 0, 0);
+
+        actions = gameService.action(GameService.Touche.RIGHT);
+        Assertions.assertEquals(2, actions.size());
+        verifierActionDeplacer(actions, "hero", 1, 0);
+        verifierActionDessiner(actions, "explosif1", 1, 0, Objet.GRAPHISME.explosif.name(), 0);
+    }
+
+    @Test
+    public void combinerSucreOxygen() {
+        GameService gameService = creerService1();
+        gameService.monde.inventaire[0] = new Objet("objet1", 0, 0, Objet.GRAPHISME.oxygene);
+        gameService.monde.inventaire[1] = new Objet("objet2", 0, 0, Objet.GRAPHISME.sucre);
+        Map<String, Action> actions = gameService.action(GameService.Touche.DIGIT2);
+        Assertions.assertEquals(1, actions.size());
+        verifierActionDessiner(actions, "objet2", 1, 0, Objet.GRAPHISME.sucre.name(), -1);
+
+        actions = gameService.action(GameService.Touche.DIGIT1);
+        Assertions.assertEquals(3, actions.size());
+        verifierActionRetirer(actions, "objet1");
+        verifierActionRetirer(actions, "objet2");
+        verifierActionDessiner(actions, "explosif1", 1, 0, Objet.GRAPHISME.explosif.name(), -1);
+
+        actions = gameService.action(GameService.Touche.LEFT);
+        Assertions.assertEquals(1, actions.size());
+        verifierActionDeplacer(actions, "hero", 0, 0);
+
+        actions = gameService.action(GameService.Touche.RIGHT);
+        Assertions.assertEquals(2, actions.size());
+        verifierActionDeplacer(actions, "hero", 1, 0);
+        verifierActionDessiner(actions, "explosif1", 1, 0, Objet.GRAPHISME.explosif.name(), 0);
+
+    }
+
 
 }

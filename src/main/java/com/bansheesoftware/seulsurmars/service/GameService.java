@@ -241,6 +241,19 @@ public class GameService {
                 return actions;
             }
 
+            // combiner sucre + oxygen (ou inverse)
+            if(o.graphisme.equals(Objet.GRAPHISME.oxygene) && Objet.GRAPHISME.sucre.equals(oGraphisme)
+                    || o.graphisme.equals(Objet.GRAPHISME.sucre) && Objet.GRAPHISME.oxygene.equals(oGraphisme)) {
+                this.monde.inventaire[index] = null;
+                actions.put(o.id, Action.retirer());
+                actions.put(objet.id, Action.retirer());
+                Objet inflammable = new Objet("explosif"+monde.increment(), POSITION_X, POSITION_Y, Objet.GRAPHISME.explosif);
+                actions.put(inflammable.id, Action.dessiner(inflammable));
+                monde.objets.add(inflammable);
+                monde.objets.remove(objet);
+                return actions;
+            }
+
             // cas par défaut : deposer l'objet à condition que la case soit libre
             if(objet == null) {
                 o.x = POSITION_X;
