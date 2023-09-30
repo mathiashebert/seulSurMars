@@ -9,21 +9,23 @@ import java.util.List;
 public class CreerMondeService {
 
     public Monde creerMonde() {
-        Monde monde = creerMonde(10, 10, 5, 5, 5);
+        Monde monde = creerMonde(10, 10, 6, 6, 6);
 
-        creerSalle(monde, 3,4, 6, 4, true, true);
-        creerSalle(monde, 3,0, 6, 3, false, false);
+        creerSalle(monde, 3,5, 6, 4, true, true);
+        creerSalle(monde, 3,0, 6, 4, false, false);
 
-        creerAscenseur(monde, "ascenseur1", 5, 5, 1, 5);
+        creerAscenseur(monde, "decors-1", 5, 6, 1, 6);
 
-        monde.objets.add(new Objet("bouteille-1", 4, 5, Objet.GRAPHISME.sucre));
-        monde.objets.add(new Objet("bouteille-2", 3, 5, Objet.GRAPHISME.bouteille));
-        monde.objets.add(new Objet("bouteille-3", 2, 5, Objet.GRAPHISME.bouteille));
-        monde.objets.add(new Objet("oxygene-1", 4, 1, Objet.GRAPHISME.oxygene));
-        monde.objets.add(new Objet("hydrogene-1", 6, 1, Objet.GRAPHISME.hydrogene));
+        monde.objets.add(new Objet("objet-1", 4, 6, Objet.GRAPHISME.sucre));
+        monde.objets.add(new Objet("objet-2", 3, 6, Objet.GRAPHISME.bouteille));
+        monde.objets.add(new Objet("objet-3", 2, 6, Objet.GRAPHISME.bouteille));
+        monde.objets.add(new Objet("objet-4", 4, 1, Objet.GRAPHISME.oxygene));
+        monde.objets.add(new Objet("objet-5", 6, 1, Objet.GRAPHISME.hydrogene));
 
-        monde.decors.add(new Decors("potager-1", 6, 5, Decors.GRAPHISME.four));
-        monde.decors.add(new Decors("hydrazine-1", 1, 5, Decors.GRAPHISME.hydrazine));
+        monde.decors.add(new Decors("decors-2", 0, 6, Decors.GRAPHISME.potager));
+        monde.decors.add(new Decors("decors-3", 4, 1, Decors.GRAPHISME.ampouleAllumee));
+        monde.decors.add(new Decors("decors-4", 1, 6, Decors.GRAPHISME.hydrazine));
+        monde.decors.add(new Decors("decors-5", 6, 1, Decors.GRAPHISME.recycleurAir));
 
         return monde;
     }

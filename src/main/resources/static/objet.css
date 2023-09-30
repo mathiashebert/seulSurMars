@@ -36,3 +36,9 @@
 .objet.explosif {
     background-image: url("img/explosif.png");
 }
+.objet.electrique {
+    background-image: url("img/electrique.png");
+}
+.objet.feu {
+    background-image: url("img/feu.gif");
+}

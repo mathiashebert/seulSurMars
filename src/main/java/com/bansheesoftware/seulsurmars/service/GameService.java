@@ -64,16 +64,27 @@ public class GameService {
                         }
                         break;
                     case hydrazine:
-                        objet = new Objet("hydrogene"+monde.increment(), POSITION_X, POSITION_Y, Objet.GRAPHISME.hydrogene);
+                        objet = new Objet("objet"+monde.increment(), POSITION_X, POSITION_Y, Objet.GRAPHISME.hydrogene);
                         ajouterObjetDansInventaire(objet, resultat);
                         break;
                     case fontaine:
-                        objet = new Objet("bouteille"+monde.increment(), POSITION_X, POSITION_Y, Objet.GRAPHISME.bouteille);
+                        objet = new Objet("objet"+monde.increment(), POSITION_X, POSITION_Y, Objet.GRAPHISME.bouteille);
                         ajouterObjetDansInventaire(objet, resultat);
                         break;
                     case recycleurAir:
-                        objet = new Objet("oxygene"+monde.increment(), POSITION_X, POSITION_Y, Objet.GRAPHISME.oxygene);
+                        objet = new Objet("objet"+monde.increment(), POSITION_X, POSITION_Y, Objet.GRAPHISME.oxygene);
                         ajouterObjetDansInventaire(objet, resultat);
+                        break;
+                    case ampouleAllumee:
+                        objet = new Objet("objet"+monde.increment(), POSITION_X, POSITION_Y, Objet.GRAPHISME.electrique);
+                        ajouterObjetDansInventaire(objet, resultat);
+                        decors.graphisme = Decors.GRAPHISME.ampouleEteinte;
+                        resultat.put(decors.id, Action.dessiner(decors));
+                        Salle salle = trouverSalle(POSITION_X, POSITION_Y);
+                        if(salle != null) {
+                            salle.graphisme = Salle.GRAPHISME.SOMBRE;
+                            resultat.put(salle.id(), Action.dessiner(salle));
+                        }
                         break;
                 }
 
@@ -117,7 +128,7 @@ public class GameService {
                 monde.timers.put(id, "oxygen");
             }
             else if(!isInterieur(oldX, oldY) && isInterieur(POSITION_X, POSITION_Y)) {
-                Set<String> keys = monde.timers.keySet();
+                Set<String> keys = new HashSet<>(monde.timers.keySet());
                 for(String key : keys) {
                     if(monde.timers.get(key).equals("oxygen")) {
                         monde.timers.remove(key);
@@ -128,7 +139,7 @@ public class GameService {
 
             // ramasser un objet
             objet = trouverObjet(POSITION_X, POSITION_Y);
-            if(objet != null) {
+            if(objet != null && !objet.ancre) {
                 ajouterObjetDansInventaire(objet, resultat);
             }
         }
@@ -141,31 +152,47 @@ public class GameService {
         if(!monde.timers.containsKey(id)) {
             return  resultat;
         }
-        if(monde.timers.get(id).equals("oxygen")) {
+        else if(monde.timers.get(id).equals("oxygen")) {
             resultat.put("hero", Action.gameOver());
+            resultat.put(id, Action.timer(0));
+            monde.timers.remove(id);
         }
-        if(monde.timers.get(id).equals("tomate")) {
+        else if(monde.timers.get(id).equals("tomate")) {
+            resultat.put(id, Action.timer(0));
+            monde.timers.remove(id);
             Decors d = monde.decors.stream().filter(decors -> decors.id.equals(id)).findAny().orElse(null);
             if(d != null) {
                 if(trouverObjet(d.x, d.y) == null) {
-                    Objet objet = new Objet("tomate"+monde.increment(), d.x, d.y, Objet.GRAPHISME.tomate);
+                    Objet objet = new Objet("objet"+monde.increment(), d.x, d.y, Objet.GRAPHISME.tomate);
                     monde.objets.add(objet);
                     resultat.put(objet.id, Action.dessiner(objet));
                 }
             }
         }
-        if(monde.timers.get(id).equals("cupcake")) {
+        else if(monde.timers.get(id).equals("cupcake")) {
+            resultat.put(id, Action.timer(0));
+            monde.timers.remove(id);
             Decors d = monde.decors.stream().filter(decors -> decors.id.equals(id)).findAny().orElse(null);
             if(d != null) {
                 if(trouverObjet(d.x, d.y) == null) {
-                    Objet objet = new Objet("cupcake"+monde.increment(), d.x, d.y, Objet.GRAPHISME.cupcake);
+                    Objet objet = new Objet("objet"+monde.increment(), d.x, d.y, Objet.GRAPHISME.cupcake);
                     monde.objets.add(objet);
                     resultat.put(objet.id, Action.dessiner(objet));
                 }
             }
         }
-        resultat.put(id, Action.timer(0));
-        monde.timers.remove(id);
+        else if(monde.timers.get(id).equals("flamme")) {
+            Objet o = monde.objets.stream().filter(objet -> objet.id.equals(id)).findAny().orElse(null);
+            if(o != null) {
+                o.graphisme = Objet.GRAPHISME.feu;
+                resultat.put(o.id, Action.dessiner(o));
+                resultat.get(o.id).duree = -1.3;
+                monde.timers.put(o.id, "retirer");
+            }
+        }
+        else if(monde.timers.get(id).equals("retirer")) {
+            resultat.put(id, Action.retirer());
+        }
         return resultat;
     }
 
@@ -183,14 +210,12 @@ public class GameService {
     private Objet trouverObjet(int x, int y) {
         return monde.objets.stream().filter(objet -> objet.x == x && objet.y == y).findAny().orElse(null);
     }
+    private Salle trouverSalle(int x, int y) {
+        return monde.salles.stream().filter(salle -> x >= salle.x && x < salle.x + salle.largeur && y >= salle.y && y < salle.y + salle.hauteur).findAny().orElse(null);
+    }
 
     private boolean isInterieur(int x, int y) {
-        for(Salle salle : monde.salles) {
-            if(x >= salle.x && x < salle.x + salle.largeur && y >= salle.y && y < salle.y + salle.hauteur ) {
-                return true;
-            }
-        }
-        return false;
+        return trouverSalle(x, y) != null;
     }
 
     private Map<String, Action> deposerObjet(int index) {
@@ -228,13 +253,27 @@ public class GameService {
                 return actions;
             }
 
+            // combiner ampoule eteinte + fil electrique
+            if(o.graphisme.equals(Objet.GRAPHISME.electrique) && Decors.GRAPHISME.ampouleEteinte.equals(dGraphisme)) {
+                this.monde.inventaire[index] = null;
+                actions.put(o.id, Action.retirer());
+                decors.graphisme = Decors.GRAPHISME.ampouleAllumee;
+                actions.put(decors.id, Action.dessiner(decors));
+                Salle salle = trouverSalle(POSITION_X, POSITION_Y);
+                if(salle != null) {
+                    salle.graphisme = Salle.GRAPHISME.NORMALE;
+                    actions.put(salle.id(), Action.dessiner(salle));
+                }
+                return actions;
+            }
+
             // combiner hydrogen + oxygen (ou inverse)
             if(o.graphisme.equals(Objet.GRAPHISME.oxygene) && Objet.GRAPHISME.hydrogene.equals(oGraphisme)
             || o.graphisme.equals(Objet.GRAPHISME.hydrogene) && Objet.GRAPHISME.oxygene.equals(oGraphisme)) {
                 this.monde.inventaire[index] = null;
                 actions.put(o.id, Action.retirer());
                 actions.put(objet.id, Action.retirer());
-                Objet inflammable = new Objet("inflammable"+monde.increment(), POSITION_X, POSITION_Y, Objet.GRAPHISME.inflammable);
+                Objet inflammable = new Objet("objet"+monde.increment(), POSITION_X, POSITION_Y, Objet.GRAPHISME.inflammable);
                 actions.put(inflammable.id, Action.dessiner(inflammable));
                 monde.objets.add(inflammable);
                 monde.objets.remove(objet);
@@ -247,10 +286,24 @@ public class GameService {
                 this.monde.inventaire[index] = null;
                 actions.put(o.id, Action.retirer());
                 actions.put(objet.id, Action.retirer());
-                Objet inflammable = new Objet("explosif"+monde.increment(), POSITION_X, POSITION_Y, Objet.GRAPHISME.explosif);
+                Objet inflammable = new Objet("objet"+monde.increment(), POSITION_X, POSITION_Y, Objet.GRAPHISME.explosif);
                 actions.put(inflammable.id, Action.dessiner(inflammable));
                 monde.objets.add(inflammable);
                 monde.objets.remove(objet);
+                return actions;
+            }
+
+
+            // combiner electrique + inflammable
+            if(o.graphisme.equals(Objet.GRAPHISME.electrique) && Objet.GRAPHISME.inflammable.equals(oGraphisme)) {
+                if(monde.timers.containsKey(objet.id)) {
+                    return new HashMap<>();
+                }
+                monde.timers.put(objet.id, "flamme");
+                this.monde.inventaire[index] = null;
+                actions.put(o.id, Action.retirer());
+                objet.ancre = true;
+                actions.put(objet.id, Action.timer(3));
                 return actions;
             }
 

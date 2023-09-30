@@ -31,22 +31,22 @@
 .decors.hydrazine.background {
     background-image: url("./img/h2n4.png");
 }
-.decors.hydrazine.foreground {
-}
 
 .decors.fontaine.background {
     background-image: url("./img/fontaine_b.png");
 }
-.decors.fontaine.foreground {
-}
 .decors.recycleurAir.background {
     background-image: url("./img/air-recycling.png");
-}
-.decors.recycleurAir.foreground {
 }
 
 .decors.four.background {
     background-image: url("./img/four.png");
 }
-.decors.four.foreground {
+
+.decors.ampouleAllumee.background {
+    background-image: url("./img/ampouleAllumee.png");
+}
+
+.decors.ampouleEteinte.background {
+    background-image: url("./img/ampouleEteinte.png");
 }

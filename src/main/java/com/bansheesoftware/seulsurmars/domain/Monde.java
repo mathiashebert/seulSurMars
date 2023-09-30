@@ -29,6 +29,9 @@ public class Monde {
     public int increment() {
         return ++increment;
     }
+    public int initIncrement(int i) {
+        return increment = i;
+    }
 
 
     public Monde(int largeur, int hauteur) {

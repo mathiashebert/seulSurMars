@@ -140,7 +140,7 @@ function creerSalle(i, j, largeur, hauteur) {
     inside.style.width = LARGEUR_FENETRE + 'em';
     inside.style.height = HAUTEUR_FENETRE + 'em';
     inside.classList.add('effet-salle');
-    inside.style.background = 'radial-gradient(circle at '+(LARGEUR_FENETRE/2)+'em '+(HAUTEUR_FENETRE/2)+'em, transparent, black 1.5em, black)';
+    // inside.style.background = 'radial-gradient(circle at '+(LARGEUR_FENETRE/2)+'em '+(HAUTEUR_FENETRE/2)+'em, transparent, black 1.5em, black)';
 }
 
 function creerElement(base, id, i,j,clazz) {
@@ -248,28 +248,32 @@ async function touche(key) {
         return;
     }
     // si on n'est pas en mouvement
-    appliquerAction(actions);
+    appliquerAction(actions, true);
 }
 
-function appliquerAction(actions) {
-    console.log("aapliquer", actions);
+function appliquerAction(actions, block) {
     if(actions === null) {return ;}
 
+    const deplacements = actions.filter(a => a.type === 'DEPLACER' && a.id === 'hero');
+    if(deplacements && deplacements.length && deplacements[0]) {
+        deplacerHero(deplacements[0].x, deplacements[0].y);
+    } else if(block) {
+        deplacerHero(POSITION_X, POSITION_Y);
+    }
+
     for(let action of actions) {
-        console.log("type ?", action.type);
         const index = INVENTAIRE.indexOf(action.id);
         switch (action.type) {
             case "DEPLACER":
-                console.log("graph", action.id, index);
                 if(action.id === 'hero') {
-                    deplacerHero(action.x, action.y);
+              //      deplacerHero(action.x, action.y);
                 } else if(index > -1) {
-                    document.getElementById(action.id).style.bottom= action.y+'em';
-                    document.getElementById(action.id).style.left= action.x+'em';
-                    setTimeout(function () {
-                        document.getElementById(action.id).classList.remove('inventaire');
-                    }, 500)
-                    INVENTAIRE[index] = null;
+              //      document.getElementById(action.id).style.bottom= action.y+'em';
+              //      document.getElementById(action.id).style.left= action.x+'em';
+              //      setTimeout(function () {
+              //          document.getElementById(action.id).classList.remove('inventaire');
+              //      }, 500)
+              //      INVENTAIRE[index] = null;
                 } else {
                     document.getElementById(action.id+'-background').style.bottom= action.y+'em';
                     document.getElementById(action.id+'-background').style.left= action.x+'em';
@@ -279,51 +283,11 @@ function appliquerAction(actions) {
                 break;
 
             case "TIMER":
-                let elem = document.getElementById(action.id + '-timer');
-                if(elem) {
-                    elem.remove();
-                }
-                if(action.duree > 0) {
-                    elem = document.createElement('div');
-                    elem.setAttribute('id', action.id + '-timer');
-                    elem.classList.add('timer');
-                    elem.style.animationDuration = action.duree + 's';
-                    elem.classList.add('launched');
-                    document.getElementById(action.id+'-foreground').appendChild(elem);
-
-                    TIMERS[action.id] = setTimeout(function(){
-                        callTimerApi(action.id).then(function (actions) {
-                            appliquerAction(actions);
-                        });
-                    }, action.duree *  1000);
-                } else {
-                    clearTimeout(TIMERS[action.id]);
-                }
-                break;
-
-            case "INVENTAIRE":
-                let objet = document.getElementById(action.id);
-                if(!objet) {
-                    creerElement('objet', action.id, 0, 0, action.graphisme);
-                    objet = document.getElementById(action.id);
-                }
-                objet.classList.add('inventaire');
-                INVENTAIRE[action.inventaire] = action.id;
-                recentrerInventaire(objet, action.inventaire);
-
+                // dessinerTimer(action);
                 break;
 
             case "GAME_OVER":
                 document.getElementById("gameover").style.opacity = "1";
-
-
-                break;
-
-            case "AJOUTER":
-                creerElement('objet', action.id, action.x, action.y, action.graphisme);
-                document.getElementById(action.id).style.bottom= action.y+'em';
-                document.getElementById(action.id).style.left= action.x+'em';
-
                 break;
 
             case "RETIRER":
@@ -334,37 +298,73 @@ function appliquerAction(actions) {
                 break;
 
             case "DESSINER":
-                let dessin = document.getElementById(action.id);
-                if(!dessin) {
-                    creerElement('objet', action.id, action.x, action.y, action.graphisme);
-                    dessin = document.getElementById(action.id);
-                } else {
-                    dessin.style.bottom= action.y+'em';
-                    dessin.style.left= action.x+'em';
+                if(action.id.indexOf('objet') >= 0) {
+                    dessinerObjet(action, index);
+                } else if(action.id.indexOf('decors') >= 0) {
+                    dessinerDecors(action);
+                }  else if(action.id.indexOf('salle') >= 0) {
+                    dessinerSalle(action);
                 }
-                if(action.inventaire > -1) {
-                    setTimeout(function(){
-                        dessin.classList.add('inventaire');
-                        INVENTAIRE[action.inventaire] = action.id;
-                        recentrerInventaire(dessin, action.inventaire);
-                    }, 100);
-                } else {
-                    if (index > -1) {
-                        setTimeout(function () {
-                            document.getElementById(action.id).classList.remove('inventaire');
-                        }, 500)
-                        INVENTAIRE[index] = null;
-                    }
-                }
-
-
                 break;
 
 
         }
+        dessinerTimer(action);
 
     }
 
+}
+
+function dessinerObjet(action, index) {
+    let dessin = document.getElementById(action.id);
+    if(!dessin) {
+        creerElement('objet', action.id, action.x, action.y, action.graphisme);
+        dessin = document.getElementById(action.id);
+    } else {
+        dessin.style.bottom= action.y+'em';
+        dessin.style.left= action.x+'em';
+        dessin.className= 'objet '+action.graphisme;
+    }
+    if(action.inventaire > -1) {
+        setTimeout(function(){
+            dessin.classList.add('inventaire');
+            INVENTAIRE[action.inventaire] = action.id;
+            recentrerInventaire(dessin, action.inventaire);
+        }, 100);
+    } else {
+        if (index > -1) {
+            setTimeout(function () {
+                document.getElementById(action.id).classList.remove('inventaire');
+            }, 500)
+            INVENTAIRE[index] = null;
+        }
+    }
+}
+
+function dessinerDecors(action) {
+    let background = document.getElementById(action.id+'-background');
+    let foreground = document.getElementById(action.id+'-foreground');
+
+    background.className = 'decors '+action.graphisme+' background';
+    background.style.bottom= action.y+'em';
+    background.style.left= action.x+'em';
+
+    foreground.style.bottom= action.y+'em';
+    foreground.style.left= action.x+'em';
+    foreground.className = 'decors '+action.graphisme+' foreground';
+}
+
+function dessinerSalle(action) {
+    let effetSalle = document.getElementById(action.id).getElementsByClassName('effet-salle').item(0);
+    console.log("dessiner salle", action, effetSalle);
+
+    if(action.graphisme === 'SOMBRE') {
+        effetSalle.style.background = 'radial-gradient(circle at '+(LARGEUR_FENETRE/2)+'em '+(HAUTEUR_FENETRE/2)+'em, transparent, black 1.5em, black)';
+    } else if(action.graphisme === 'SOMBRE') {
+
+    } else {
+        effetSalle.style.background = 'transparent';
+    }
 }
 
 function deplacerHero(x, y) {
@@ -385,12 +385,45 @@ function deplacerHero(x, y) {
         MOUVEMENT = false;
         HERO.classList.remove('mouvement');
         if(ACTION_SUIVANTE !== null) {
-            appliquerAction(ACTION_SUIVANTE);
+            appliquerAction(ACTION_SUIVANTE, true);
             ACTION_SUIVANTE = null;
         }
     }, 500);
 
 
+}
+
+function dessinerTimer(action) {
+    let elem = document.getElementById(action.id + '-timer');
+    if(elem) {
+        elem.remove();
+    }
+    if(action.duree > 0) {
+        elem = document.createElement('div');
+        elem.setAttribute('id', action.id + '-timer');
+        elem.classList.add('timer');
+        elem.style.animationDuration = action.duree + 's';
+        elem.classList.add('launched');
+        let idPorteur = action.id;
+        if(idPorteur.indexOf("objet") < 0) {
+            idPorteur += '-foreground';
+        }
+        document.getElementById(idPorteur).appendChild(elem);
+
+        TIMERS[action.id] = setTimeout(function(){
+            callTimerApi(action.id).then(function (actions) {
+                appliquerAction(actions, false);
+            });
+        }, action.duree *  1000);
+    } else if(action.duree < 0) {
+        TIMERS[action.id] = setTimeout(function(){
+            callTimerApi(action.id).then(function (actions) {
+                appliquerAction(actions, false);
+            });
+        }, action.duree *  -1000);
+    } else {
+        clearTimeout(TIMERS[action.id]);
+    }
 }
 
 class Action {

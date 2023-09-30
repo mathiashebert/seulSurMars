@@ -5,9 +5,10 @@ public class Objet {
     public int x;
     public int y;
     public GRAPHISME graphisme;
+    public boolean ancre = false;
 
     public enum GRAPHISME {
-        bouteille, oxygene, tomate, hydrogene, inflammable, sucre, cupcake, explosif
+        bouteille, oxygene, tomate, hydrogene, inflammable, sucre, cupcake, explosif, electrique, feu
     }
 
     public Objet(String id, int x, int y, GRAPHISME graphisme) {
