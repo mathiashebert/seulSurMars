@@ -72,12 +72,21 @@ public class Action {
         return action;
     }
 
-    public static Action dessiner(Salle salle) {
+    public static Action dessiner(Salle salle, Monde monde) {
         Action action = new Action();
         action.type = ActionType.DESSINER;
         action.x = salle.x;
         action.y = salle.y;;
         action.graphisme = salle.graphisme.name();
+        if(salle.graphisme.equals(Salle.GRAPHISME.SOMBRE)) {
+            for(Objet objet : monde.objets) {
+                if(!objet.graphisme.equals(Objet.GRAPHISME.feu)) continue;
+                if(!(objet.x > salle.x && objet.y > salle.y && objet.x < salle.x+ salle.largeur && objet.y < salle.y+salle.hauteur)) continue;
+                double px = objet.x - salle.x -1+0.5;
+                double py = salle.hauteur-2 - (objet.y - salle.y)+0.5;
+                action.graphisme += " "+px+"-"+py;
+            }
+        }
         action.inventaire = -1;
         return action;
     }

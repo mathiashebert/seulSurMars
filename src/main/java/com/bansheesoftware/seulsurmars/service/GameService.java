@@ -83,7 +83,7 @@ public class GameService {
                         Salle salle = trouverSalle(POSITION_X, POSITION_Y);
                         if(salle != null) {
                             salle.graphisme = Salle.GRAPHISME.SOMBRE;
-                            resultat.put(salle.id(), Action.dessiner(salle));
+                            resultat.put(salle.id(), Action.dessiner(salle, monde));
                         }
                         break;
                 }
@@ -187,11 +187,26 @@ public class GameService {
                 o.graphisme = Objet.GRAPHISME.feu;
                 resultat.put(o.id, Action.dessiner(o));
                 resultat.get(o.id).duree = -1.3;
+                Salle salle = trouverSalle(o.x, o.y);
+                if(salle != null) {
+                    resultat.put(salle.id(), Action.dessiner(salle, monde));
+                }
                 monde.timers.put(o.id, "retirer");
             }
         }
         else if(monde.timers.get(id).equals("retirer")) {
             resultat.put(id, Action.retirer());
+            Objet o = monde.objets.stream().filter(objet -> objet.id.equals(id)).findAny().orElse(null);
+            if(o != null) {
+                monde.objets.remove(o);
+                if(o.graphisme.equals(Objet.GRAPHISME.feu)) {
+                    Salle salle = trouverSalle(o.x, o.y);
+                    if(salle != null) {
+                        resultat.put(salle.id(), Action.dessiner(salle, monde));
+                    }
+                }
+            }
+
         }
         return resultat;
     }
@@ -262,7 +277,7 @@ public class GameService {
                 Salle salle = trouverSalle(POSITION_X, POSITION_Y);
                 if(salle != null) {
                     salle.graphisme = Salle.GRAPHISME.NORMALE;
-                    actions.put(salle.id(), Action.dessiner(salle));
+                    actions.put(salle.id(), Action.dessiner(salle, monde));
                 }
                 return actions;
             }

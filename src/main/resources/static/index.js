@@ -355,12 +355,29 @@ function dessinerDecors(action) {
 }
 
 function dessinerSalle(action) {
-    let effetSalle = document.getElementById(action.id).getElementsByClassName('effet-salle').item(0);
+    const salle = document.getElementById(action.id);
+    const effetSalle = salle.getElementsByClassName('effet-salle').item(0);
     console.log("dessiner salle", action, effetSalle);
 
-    if(action.graphisme === 'SOMBRE') {
+    if(action.graphisme.includes('SOMBRE')) {
         effetSalle.style.background = 'radial-gradient(circle at '+(LARGEUR_FENETRE/2)+'em '+(HAUTEUR_FENETRE/2)+'em, transparent, black 1.5em, black)';
-    } else if(action.graphisme === 'SOMBRE') {
+        let mask = 'linear-gradient(rgb(0, 0, 0) 0px, rgb(0, 0, 0) 0px)';
+
+
+        const lights = action.graphisme.split(" ");
+        for(let i = 1; i< lights.length; i++) {
+            const position = lights[i];
+            const px = position.split("-")[0];
+            const py= position.split("-")[1];
+            console.log(position);
+            console.log(mask);
+            mask += ', radial-gradient(circle at '+px+'em '+py+'em, rgb(0, 0, 0) 0, rgba(0, 0, 0, 0) 1em) no-repeat';
+            console.log(mask);
+        }
+
+        salle.style['-webkit-mask'] = mask;
+        salle.style['-webkit-mask-composite'] = 'xor';
+    } else if(action.graphisme.includes('ALARME')) {
 
     } else {
         effetSalle.style.background = 'transparent';
