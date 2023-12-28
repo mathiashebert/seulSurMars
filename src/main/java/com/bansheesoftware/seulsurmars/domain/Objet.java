@@ -5,10 +5,9 @@ public class Objet {
     public int x;
     public int y;
     public GRAPHISME graphisme;
-    public boolean ancre = false;
 
     public enum GRAPHISME {
-        bouteille, oxygene, tomate, hydrogene, inflammable, sucre, cupcake, explosif, electrique, feu
+        bouteille, oxygene, tomate, hydrogene, inflammable, sucre, cupcake, explosif, electrique
     }
 
     public Objet(String id, int x, int y, GRAPHISME graphisme) {
@@ -16,5 +15,9 @@ public class Objet {
         this.x = x;
         this.y = y;
         this.graphisme = graphisme;
+    }
+
+    public Objet clone() {
+        return new Objet(id, x, y, graphisme);
     }
 }

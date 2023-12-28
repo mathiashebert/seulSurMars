@@ -3,30 +3,49 @@ package com.bansheesoftware.seulsurmars.service;
 import com.bansheesoftware.seulsurmars.domain.*;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @org.springframework.stereotype.Service
 public class GameService {
-
-    private int POSITION_Y;
-    private int POSITION_X;
-
     Monde monde; // package pour pouvoir être modifié dans les tests
+
+    List<Processor> processors = new ArrayList<>();
 
     public GameService(CreerMondeService creerMondeService) {
         monde = creerMondeService.creerMonde();
 
-        POSITION_X = monde.positionX;
-        POSITION_Y = monde.positionY;
+        processors.add(new Process1());
+        processors.add(new Process2());
+        processors.add(new Process3());
+        processors.add(new Process4());
+        processors.add(new Process5());
+        processors.add(new Process6());
+        processors.add(new Process7());
+        processors.add(new Process8());
+        processors.add(new Process9());
+        processors.add(new Process10());
+        processors.add(new Process11());
+        processors.add(new Process12());
     }
 
     public enum Touche {
-        LEFT, RIGHT, SPACE,
-        DIGIT1, DIGIT2, DIGIT3, DIGIT4, DIGIT5, DIGIT6, DIGIT7, DIGIT8, DIGIT9
+        LEFT, RIGHT, DECOR, OBJET,
     }
 
-    public Map<String, Action> action(Touche touche) {
-        Map<String, Action> resultat = new HashMap<>();
-        int oldY = POSITION_Y;
+    public Monde init() {
+        return monde;
+    }
+
+    public void action(Touche touche, Monde monde) {
+
+        for(Processor processor : processors) {
+            if(processor.process(touche, monde)) {
+                break;
+            }
+        }
+
+
+/*        int oldY = POSITION_Y;
         int oldX = POSITION_X;
         Objet objet;
         switch (touche) {
@@ -143,10 +162,9 @@ public class GameService {
                 ajouterObjetDansInventaire(objet, resultat);
             }
         }
-
-        return resultat;
+*/
     }
-
+/*
     public Map<String, Action> timer(String id) {
         Map<String, Action> resultat = new HashMap<>();
         if(!monde.timers.containsKey(id)) {
@@ -351,4 +369,6 @@ public class GameService {
             map.put(objet.id, Action.dessiner(objet, index));
         }
     }
+
+ */
 }

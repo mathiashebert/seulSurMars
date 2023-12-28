@@ -22,4 +22,10 @@ public class Salle {
     public String id() {
         return "salle-"+x+"-"+y;
     }
+
+    public Salle clone() {
+        Salle salle = new Salle(x, y, largeur, hauteur);
+        salle.graphisme = graphisme;
+        return salle;
+    }
 }

@@ -4,9 +4,12 @@ import com.bansheesoftware.seulsurmars.domain.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @org.springframework.stereotype.Service
 public class CreerMondeService {
+    private AtomicInteger increment = new AtomicInteger(0);
+
 
     public Monde creerMonde() {
         Monde monde = creerMonde(10, 10, 6, 6, 6);
@@ -31,7 +34,8 @@ public class CreerMondeService {
     }
 
     public Monde creerMonde(int largeur, int hauteur, int niveauSol, int positionX, int positionY) {
-        Monde monde = new Monde(largeur, hauteur);
+
+        Monde monde = new Monde(increment.getAndIncrement(), largeur, hauteur);
         monde.positionX = positionX;
         monde.positionY = positionY;
         for(int i=0; i<monde.largeur; i++) {

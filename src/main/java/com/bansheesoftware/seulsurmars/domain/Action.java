@@ -72,6 +72,7 @@ public class Action {
         return action;
     }
 
+    /*
     public static Action dessiner(Salle salle, Monde monde) {
         Action action = new Action();
         action.type = ActionType.DESSINER;
@@ -89,5 +90,5 @@ public class Action {
         }
         action.inventaire = -1;
         return action;
-    }
+    }*/
 }

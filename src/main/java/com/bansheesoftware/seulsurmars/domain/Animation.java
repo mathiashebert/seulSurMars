@@ -1,23 +1,23 @@
 package com.bansheesoftware.seulsurmars.domain;
 
-public class Decors {
+public class Animation {
     public String id;
     public int x;
     public int y;
     public GRAPHISME graphisme;
 
     public enum GRAPHISME {
-        ascenseur, potager, hydrazine, fontaine, recycleurAir, four, ampouleEteinte, ampouleAllumee
+        feu, explosion
     }
 
-    public Decors(String id, int x, int y, GRAPHISME graphisme) {
+    public Animation(String id, int x, int y, GRAPHISME graphisme) {
         this.id = id;
         this.x = x;
         this.y = y;
         this.graphisme = graphisme;
     }
 
-    public Decors clone() {
-        return new Decors(id, x, y, graphisme);
+    public Animation clone() {
+        return new Animation(id, x, y, graphisme);
     }
 }
