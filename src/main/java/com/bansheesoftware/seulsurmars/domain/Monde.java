@@ -18,7 +18,7 @@ public class Monde {
     public int positionY = 2;
 
     public List<Objet> objets = new ArrayList<>();
-    public List<Decors> decors = new ArrayList<>();
+    public List<Decor> decors = new ArrayList<>();
     public List<Animation> animations = new ArrayList<>();
 
     public List<Salle> salles = new ArrayList<>();

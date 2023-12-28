@@ -1,6 +1,6 @@
 package com.bansheesoftware.seulsurmars.domain;
 
-public class Ascenseur extends Decors {
+public class Ascenseur extends Decor {
     public int hauteurBas;
     public int hauteurHaut;
 

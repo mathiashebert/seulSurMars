@@ -1,6 +1,6 @@
 package com.bansheesoftware.seulsurmars.domain;
 
-public class Decors {
+public class Decor {
     public String id;
     public int x;
     public int y;
@@ -10,14 +10,14 @@ public class Decors {
         ascenseur, potager, hydrazine, fontaine, recycleurAir, four, ampouleEteinte, ampouleAllumee
     }
 
-    public Decors(String id, int x, int y, GRAPHISME graphisme) {
+    public Decor(String id, int x, int y, GRAPHISME graphisme) {
         this.id = id;
         this.x = x;
         this.y = y;
         this.graphisme = graphisme;
     }
 
-    public Decors clone() {
-        return new Decors(id, x, y, graphisme);
+    public Decor clone() {
+        return new Decor(id, x, y, graphisme);
     }
 }

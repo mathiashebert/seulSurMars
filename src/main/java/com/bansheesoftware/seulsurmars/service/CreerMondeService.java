@@ -25,10 +25,10 @@ public class CreerMondeService {
         monde.objets.add(new Objet("objet-4", 4, 1, Objet.GRAPHISME.oxygene));
         monde.objets.add(new Objet("objet-5", 6, 1, Objet.GRAPHISME.hydrogene));
 
-        monde.decors.add(new Decors("decors-2", 0, 6, Decors.GRAPHISME.potager));
-        monde.decors.add(new Decors("decors-3", 4, 1, Decors.GRAPHISME.ampouleAllumee));
-        monde.decors.add(new Decors("decors-4", 1, 6, Decors.GRAPHISME.hydrazine));
-        monde.decors.add(new Decors("decors-5", 6, 1, Decors.GRAPHISME.recycleurAir));
+        monde.decors.add(new Decor("decors-2", 0, 6, Decor.GRAPHISME.potager));
+        monde.decors.add(new Decor("decors-3", 4, 1, Decor.GRAPHISME.ampouleAllumee));
+        monde.decors.add(new Decor("decors-4", 1, 6, Decor.GRAPHISME.hydrazine));
+        monde.decors.add(new Decor("decors-5", 6, 1, Decor.GRAPHISME.recycleurAir));
 
         return monde;
     }

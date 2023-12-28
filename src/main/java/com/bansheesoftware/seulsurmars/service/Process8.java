@@ -1,6 +1,5 @@
 package com.bansheesoftware.seulsurmars.service;
 
-import com.bansheesoftware.seulsurmars.domain.Decors;
 import com.bansheesoftware.seulsurmars.domain.Monde;
 import com.bansheesoftware.seulsurmars.domain.Objet;
 

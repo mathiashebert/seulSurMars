@@ -15,7 +15,7 @@ public class Process2 implements Processor {
     public boolean process(GameService.Touche touche, Monde monde) {
         if(GameService.Touche.LEFT.equals(touche)) {
             if(monde.positionX > 0) {
-                Optional<Ascenseur> ascenseur = trouverDecors(monde, monde.positionX-1, monde.positionY)
+                Optional<Ascenseur> ascenseur = trouverDecor(monde, monde.positionX-1, monde.positionY)
                         .filter(decors1 -> decors1 instanceof Ascenseur)
                         .map(decors -> (Ascenseur) decors);
                 if(ascenseur.isPresent()) {
@@ -27,7 +27,7 @@ public class Process2 implements Processor {
         }
         if(GameService.Touche.RIGHT.equals(touche)) {
             if(monde.positionX < monde.largeur-1) {
-                Optional<Ascenseur> ascenseur = trouverDecors(monde, monde.positionX+1, monde.positionY)
+                Optional<Ascenseur> ascenseur = trouverDecor(monde, monde.positionX+1, monde.positionY)
                         .filter(decors1 -> decors1 instanceof Ascenseur)
                         .map(decors -> (Ascenseur) decors);
                 if(ascenseur.isPresent()) {
@@ -38,7 +38,7 @@ public class Process2 implements Processor {
 
         }
         if(GameService.Touche.DECOR.equals(touche)) {
-            Ascenseur ascenseur = trouverDecors(monde, monde.positionX, monde.positionY)
+            Ascenseur ascenseur = trouverDecor(monde, monde.positionX, monde.positionY)
                     .filter(decors1 -> decors1 instanceof Ascenseur)
                     .map(decors -> (Ascenseur) decors)
                     .orElse(null);
