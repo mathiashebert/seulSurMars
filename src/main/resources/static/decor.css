@@ -1,52 +1,52 @@
 
 
-.decors {
+.decor {
     position: absolute;
     width: 2em;
     height: 2em;
     background-size: contain;
 }
 
-.decors.background {
+.decor.background {
     z-index: 1;
 }
-.decors.foreground {
+.decor.foreground {
     z-index: 4;
 }
 
-.decors.ascenseur.background {
+.decor.ascenseur.background {
     background-image: url("./img/ascenseur_b.png");
 }
-.decors.ascenseur.foreground {
+.decor.ascenseur.foreground {
     background-image: url("./img/ascenseur.png");
 }
 
-.decors.potager.background {
+.decor.potager.background {
     background-image: url("./img/potager_b.png");
 }
-.decors.potager.foreground {
+.decor.potager.foreground {
     background-image: url("./img/potager_f.png");
 }
 
-.decors.hydrazine.background {
+.decor.hydrazine.background {
     background-image: url("./img/h2n4.png");
 }
 
-.decors.fontaine.background {
+.decor.fontaine.background {
     background-image: url("./img/fontaine_b.png");
 }
-.decors.recycleurAir.background {
+.decor.recycleurAir.background {
     background-image: url("./img/air-recycling.png");
 }
 
-.decors.four.background {
+.decor.four.background {
     background-image: url("./img/four.png");
 }
 
-.decors.ampouleAllumee.background {
+.decor.ampouleAllumee.background {
     background-image: url("./img/ampouleAllumee.png");
 }
 
-.decors.ampouleEteinte.background {
+.decor.ampouleEteinte.background {
     background-image: url("./img/ampouleEteinte.png");
 }

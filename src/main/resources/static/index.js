@@ -22,7 +22,7 @@ function callTimerApi(timer) {
     return fetchApi('http://localhost:8080/game/timer', {timer: timer});
 }
 function callToucheApi(touche) {
-    return fetchApi('http://localhost:8080/game/touche', {touche: touche});
+    return fetchApi('http://localhost:8080/game/touche', {id: ID, touche: touche});
 }
 function fetchApi(url, params) {
     return fetch(url, {
@@ -36,11 +36,12 @@ function fetchApi(url, params) {
             return response.json()})
         .then(function(data)
         {
-            const actions = [];
+            console.log(data);
+            const actions = [];/*
             for (let [key, value] of Object.entries(data)) {
                 actions.push(new Action(value.type, key, parseInt(value.x), parseInt(value.y), parseInt(value.duree), parseInt(value.inventaire), value.graphisme))
             }
-            console.log(actions);
+            console.log(actions);*/
             return actions;
         }).catch(error => console.error('Error:', error));
 }
@@ -57,6 +58,7 @@ let POSITION_X = 1;
 
 let PLATEAU;
 let HERO;
+let ID;
 
 let MOUVEMENT = false;
 let ACTION_SUIVANTE = null;
@@ -79,6 +81,7 @@ function creerPlateau() {
             return response.json()})
         .then(function(data)
         {
+            ID = data.id;
             PLATEAU.style.width = data.largeur+'em';
             PLATEAU.style.height = data.hauteur+'em';
 
@@ -98,7 +101,7 @@ function creerPlateau() {
 
             for(let index in data.decors) {
                 const a = data.decors[index];
-                creerElement('decors', a.id, a.x, a.y, a.graphisme);
+                creerElement('decor', a.id, a.x, a.y, a.graphisme);
             }
 
             for(let index in data.objets) {
@@ -300,8 +303,8 @@ function appliquerAction(actions, block) {
             case "DESSINER":
                 if(action.id.indexOf('objet') >= 0) {
                     dessinerObjet(action, index);
-                } else if(action.id.indexOf('decors') >= 0) {
-                    dessinerDecors(action);
+                } else if(action.id.indexOf('decor') >= 0) {
+                    dessinerDecor(action);
                 }  else if(action.id.indexOf('salle') >= 0) {
                     dessinerSalle(action);
                 }
@@ -341,17 +344,17 @@ function dessinerObjet(action, index) {
     }
 }
 
-function dessinerDecors(action) {
+function dessinerDecor(action) {
     let background = document.getElementById(action.id+'-background');
     let foreground = document.getElementById(action.id+'-foreground');
 
-    background.className = 'decors '+action.graphisme+' background';
+    background.className = 'decor '+action.graphisme+' background';
     background.style.bottom= action.y+'em';
     background.style.left= action.x+'em';
 
     foreground.style.bottom= action.y+'em';
     foreground.style.left= action.x+'em';
-    foreground.className = 'decors '+action.graphisme+' foreground';
+    foreground.className = 'decor '+action.graphisme+' foreground';
 }
 
 function dessinerSalle(action) {
