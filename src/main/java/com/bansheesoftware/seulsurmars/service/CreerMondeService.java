@@ -2,8 +2,6 @@ package com.bansheesoftware.seulsurmars.service;
 
 import com.bansheesoftware.seulsurmars.domain.*;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @org.springframework.stereotype.Service
@@ -47,6 +45,25 @@ public class CreerMondeService {
             }
         }
 
+        return monde;
+    }
+
+    public Monde creerMonde1() {
+        Monde monde = creerMonde(3, 1, 0, 1, 0);
+        return monde;
+    }
+
+
+    public Monde creerMonde2() {
+        Monde monde = creerMonde(3, 3, 1, 1, 1);
+        creerAscenseur(monde, "decors1", 0,1,0,1);
+        creerAscenseur(monde,"decors2", 2,1,1,2);
+        return monde;
+    }
+
+    public Monde creerMonde3() {
+        Monde monde = creerMonde(5, 5, 2, 2, 2);
+        creerSalle(monde, 2, 2, 3, 3, true, true);
         return monde;
     }
 

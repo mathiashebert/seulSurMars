@@ -3,11 +3,6 @@ package com.bansheesoftware.seulsurmars.service;
 import com.bansheesoftware.seulsurmars.domain.*;
 import org.junit.jupiter.api.*;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class GameServiceTest {
 
@@ -23,8 +18,8 @@ class GameServiceTest {
     @Test
     @Order(1)
     public void gauche() {
-        GameService gameService = creerService1();
-        Monde monde = gameService.init();
+        GameService gameService = new GameService();
+        Monde monde = new CreerMondeService().creerMonde1();
         Monde expected = monde.clone();
 
         gameService.action(GameService.Touche.LEFT, monde);
@@ -35,8 +30,8 @@ class GameServiceTest {
     @Test
     @Order(2)
     public void droite() {
-        GameService gameService = creerService1();
-        Monde monde = gameService.init();
+        GameService gameService = new GameService();
+        Monde monde = new CreerMondeService().creerMonde1();
         Monde expected = monde.clone();
 
         gameService.action(GameService.Touche.RIGHT, monde);
@@ -47,8 +42,8 @@ class GameServiceTest {
     @Test
     @Order(3)
     public void gauche_limite() {
-        GameService gameService = creerService1();
-        Monde monde = gameService.init();
+        GameService gameService = new GameService();
+        Monde monde = new CreerMondeService().creerMonde1();
         Monde expected = monde.clone();
 
         gameService.action(GameService.Touche.LEFT, monde);
@@ -62,8 +57,8 @@ class GameServiceTest {
     @Test
     @Order(4)
     public void droite_limite() {
-        GameService gameService = creerService1();
-        Monde monde = gameService.init();
+        GameService gameService = new GameService();
+        Monde monde = new CreerMondeService().creerMonde1();
         Monde expected = monde.clone();
 
         gameService.action(GameService.Touche.RIGHT, monde);
@@ -77,9 +72,9 @@ class GameServiceTest {
     @Test
     @Order(5)
     public void gauche_sol() {
-        GameService gameService = creerService1();
-        Monde monde = gameService.init();
-        gameService.monde.position(0, 0, Position.POSTION_TYPE.VIDE, Position.GRAPHISME.vide);
+        GameService gameService = new GameService();
+        Monde monde = new CreerMondeService().creerMonde1();
+        monde.position(0, 0, Position.POSTION_TYPE.VIDE, Position.GRAPHISME.vide);
         Monde expected = monde.clone();
 
         gameService.action(GameService.Touche.LEFT, monde);
@@ -89,9 +84,9 @@ class GameServiceTest {
     @Test
     @Order(6)
     public void droite_sol() {
-        GameService gameService = creerService1();
-        Monde monde = gameService.init();
-        gameService.monde.position(2, 0, Position.POSTION_TYPE.VIDE, Position.GRAPHISME.vide);
+        GameService gameService = new GameService();
+        Monde monde = new CreerMondeService().creerMonde1();
+        monde.position(2, 0, Position.POSTION_TYPE.VIDE, Position.GRAPHISME.vide);
         Monde expected = monde.clone();
 
         gameService.action(GameService.Touche.RIGHT, monde);
@@ -113,8 +108,8 @@ class GameServiceTest {
     @Test
     @Order(7)
     public void ascenseur_vers_le_bas() {
-        GameService gameService = creerService2();
-        Monde monde = gameService.init();
+        GameService gameService = new GameService();
+        Monde monde = new CreerMondeService().creerMonde2();
         Monde expected = monde.clone();
 
         gameService.action(GameService.Touche.LEFT, monde);
@@ -130,8 +125,8 @@ class GameServiceTest {
     @Test
     @Order(8)
     public void ascenseur_vers_le_haut() {
-        GameService gameService = creerService2();
-        Monde monde = gameService.init();
+        GameService gameService = new GameService();
+        Monde monde = new CreerMondeService().creerMonde2();
         Monde expected = monde.clone();
 
         gameService.action(GameService.Touche.RIGHT, monde);
@@ -147,8 +142,8 @@ class GameServiceTest {
     @Test
     @Order(9)
     public void ascenseur_vers_le_bas_puis_haut() {
-        GameService gameService = creerService2();
-        Monde monde = gameService.init();
+        GameService gameService = new GameService();
+        Monde monde = new CreerMondeService().creerMonde2();
         Monde expected = monde.clone();
 
         gameService.action(GameService.Touche.LEFT, monde);
@@ -169,8 +164,8 @@ class GameServiceTest {
     @Test
     @Order(10)
     public void ascenseur_vers_le_haut_puis_bas() {
-        GameService gameService = creerService2();
-        Monde monde = gameService.init();
+        GameService gameService = new GameService();
+        Monde monde = new CreerMondeService().creerMonde2();
         Monde expected = monde.clone();
 
         gameService.action(GameService.Touche.RIGHT, monde);
@@ -199,8 +194,8 @@ class GameServiceTest {
     @Test
     @Order(11)
     public void ramasser() {
-        GameService gameService = creerService1();
-        Monde monde = gameService.init();
+        GameService gameService = new GameService();
+        Monde monde = new CreerMondeService().creerMonde1();
         monde.objets.add(new Objet("objet-1", 1, 0, Objet.GRAPHISME.sucre));
         Monde expected = monde.clone();
 
@@ -213,8 +208,8 @@ class GameServiceTest {
     @Test
     @Order(12)
     public void deposer() {
-        GameService gameService = creerService1();
-        Monde monde = gameService.init();
+        GameService gameService = new GameService();
+        Monde monde = new CreerMondeService().creerMonde1();
         monde.inventaire = new Objet("objet-1", 1, 0, Objet.GRAPHISME.sucre);
         Monde expected = monde.clone();
 
@@ -227,8 +222,8 @@ class GameServiceTest {
     @Test
     @Order(13)
     public void deposerMaisOccupe() {
-        GameService gameService = creerService1();
-        Monde monde = gameService.init();
+        GameService gameService = new GameService();
+        Monde monde = new CreerMondeService().creerMonde1();
         monde.inventaire = new Objet("objet-1", 1, 0, Objet.GRAPHISME.sucre);
         monde.objets.add(new Objet("objet-2", 1, 0, Objet.GRAPHISME.hydrogene));
         Monde expected = monde.clone();
@@ -247,8 +242,8 @@ class GameServiceTest {
     @Test
     @Order(14)
     public void hydrazine() {
-        GameService gameService = creerService1();
-        Monde monde = gameService.init();
+        GameService gameService = new GameService();
+        Monde monde = new CreerMondeService().creerMonde1();
         monde.decors.add(new Decor("decors-1", 1, 0, Decor.GRAPHISME.hydrazine));
         monde.initIncrement(1);
         Monde expected = monde.clone();
@@ -261,8 +256,8 @@ class GameServiceTest {
     @Test
     @Order(15)
     public void hydrazineMaisOccupe() {
-        GameService gameService = creerService1();
-        Monde monde = gameService.init();
+        GameService gameService = new GameService();
+        Monde monde = new CreerMondeService().creerMonde1();
         monde.decors.add(new Decor("decors-1", 1, 0, Decor.GRAPHISME.hydrazine));
         monde.objets.add(new Objet("objet-2", 1, 0, Objet.GRAPHISME.tomate));
         monde.initIncrement(2);
@@ -282,8 +277,8 @@ class GameServiceTest {
     @Test
     @Order(16)
     public void recycleurAir() {
-        GameService gameService = creerService1();
-        Monde monde = gameService.init();
+        GameService gameService = new GameService();
+        Monde monde = new CreerMondeService().creerMonde1();
         monde.decors.add(new Decor("decors-1", 1, 0, Decor.GRAPHISME.recycleurAir));
         monde.initIncrement(1);
         Monde expected = monde.clone();
@@ -296,8 +291,8 @@ class GameServiceTest {
     @Test
     @Order(17)
     public void recycleurAirMaisOccupe() {
-        GameService gameService = creerService1();
-        Monde monde = gameService.init();
+        GameService gameService = new GameService();
+        Monde monde = new CreerMondeService().creerMonde1();
         monde.decors.add(new Decor("decors-1", 1, 0, Decor.GRAPHISME.recycleurAir));
         monde.objets.add(new Objet("objet-2", 1, 0, Objet.GRAPHISME.tomate));
         monde.initIncrement(2);
@@ -317,8 +312,8 @@ class GameServiceTest {
     @Test
     @Order(18)
     public void potagerSansEau() {
-        GameService gameService = creerService1();
-        Monde monde = gameService.init();
+        GameService gameService = new GameService();
+        Monde monde = new CreerMondeService().creerMonde1();
         monde.decors.add(new Decor("decors-1", 1, 0, Decor.GRAPHISME.potager));
         monde.initIncrement(1);
         Monde expected = monde.clone();
@@ -331,8 +326,8 @@ class GameServiceTest {
     @Test
     @Order(19)
     public void potagerAvecEau() {
-        GameService gameService = creerService1();
-        Monde monde = gameService.init();
+        GameService gameService = new GameService();
+        Monde monde = new CreerMondeService().creerMonde1();
         monde.decors.add(new Decor("decors-1", 1, 0, Decor.GRAPHISME.potager));
         monde.inventaire = new Objet("objet-2", 1, 0, Objet.GRAPHISME.bouteille);
         monde.initIncrement(2);
@@ -347,8 +342,8 @@ class GameServiceTest {
     @Test
     @Order(20)
     public void potagerAvecEauMaisOccupe() {
-        GameService gameService = creerService1();
-        Monde monde = gameService.init();
+        GameService gameService = new GameService();
+        Monde monde = new CreerMondeService().creerMonde1();
         monde.decors.add(new Decor("decors-1", 1, 0, Decor.GRAPHISME.potager));
         monde.inventaire = new Objet("objet-2", 1, 0, Objet.GRAPHISME.bouteille);
         monde.objets.add(new Objet("objet-3", 1, 0, Objet.GRAPHISME.hydrogene));
@@ -369,8 +364,8 @@ class GameServiceTest {
     @Test
     @Order(21)
     public void fourSansSucre() {
-        GameService gameService = creerService1();
-        Monde monde = gameService.init();
+        GameService gameService = new GameService();
+        Monde monde = new CreerMondeService().creerMonde1();
         monde.decors.add(new Decor("decors-1", 1, 0, Decor.GRAPHISME.four));
         monde.initIncrement(1);
         Monde expected = monde.clone();
@@ -383,8 +378,8 @@ class GameServiceTest {
     @Test
     @Order(22)
     public void fourAvecSucre() {
-        GameService gameService = creerService1();
-        Monde monde = gameService.init();
+        GameService gameService = new GameService();
+        Monde monde = new CreerMondeService().creerMonde1();
         monde.decors.add(new Decor("decors-1", 1, 0, Decor.GRAPHISME.four));
         monde.inventaire = new Objet("objet-2", 1, 0, Objet.GRAPHISME.sucre);
         monde.initIncrement(2);
@@ -399,8 +394,8 @@ class GameServiceTest {
     @Test
     @Order(23)
     public void fourAvecSucreMaisOccupe() {
-        GameService gameService = creerService1();
-        Monde monde = gameService.init();
+        GameService gameService = new GameService();
+        Monde monde = new CreerMondeService().creerMonde1();
         monde.decors.add(new Decor("decors-1", 1, 0, Decor.GRAPHISME.four));
         monde.inventaire = new Objet("objet-2", 1, 0, Objet.GRAPHISME.sucre);
         monde.objets.add(new Objet("objet-3", 1, 0, Objet.GRAPHISME.hydrogene));
@@ -421,8 +416,8 @@ class GameServiceTest {
     @Test
     @Order(24)
     public void melangeHydrogeneOxygene() {
-        GameService gameService = creerService1();
-        Monde monde = gameService.init();
+        GameService gameService = new GameService();
+        Monde monde = new CreerMondeService().creerMonde1();
         monde.inventaire = new Objet("objet-1", 1, 0, Objet.GRAPHISME.oxygene);
         monde.objets.add(new Objet("objet-2", 1, 0, Objet.GRAPHISME.hydrogene));
         monde.initIncrement(2);
@@ -438,8 +433,8 @@ class GameServiceTest {
     @Test
     @Order(25)
     public void melangeOxygeneHydrogene() {
-        GameService gameService = creerService1();
-        Monde monde = gameService.init();
+        GameService gameService = new GameService();
+        Monde monde = new CreerMondeService().creerMonde1();
         monde.inventaire = new Objet("objet-1", 1, 0, Objet.GRAPHISME.hydrogene);
         monde.objets.add(new Objet("objet-2", 1, 0, Objet.GRAPHISME.oxygene));
         monde.initIncrement(2);
@@ -462,8 +457,8 @@ class GameServiceTest {
     @Test
     @Order(26)
     public void melangeSucreOxygene() {
-        GameService gameService = creerService1();
-        Monde monde = gameService.init();
+        GameService gameService = new GameService();
+        Monde monde = new CreerMondeService().creerMonde1();
         monde.inventaire = new Objet("objet-1", 1, 0, Objet.GRAPHISME.oxygene);
         monde.objets.add(new Objet("objet-2", 1, 0, Objet.GRAPHISME.sucre));
         monde.initIncrement(2);
@@ -479,8 +474,8 @@ class GameServiceTest {
     @Test
     @Order(27)
     public void melangeOxygeneSucre() {
-        GameService gameService = creerService1();
-        Monde monde = gameService.init();
+        GameService gameService = new GameService();
+        Monde monde = new CreerMondeService().creerMonde1();
         monde.inventaire = new Objet("objet-1", 1, 0, Objet.GRAPHISME.sucre);
         monde.objets.add(new Objet("objet-2", 1, 0, Objet.GRAPHISME.oxygene));
         monde.initIncrement(2);
@@ -508,8 +503,8 @@ class GameServiceTest {
     @Test
     @Order(28)
     public void debrancherAmpoule() {
-        GameService gameService = creerService3();
-        Monde monde = gameService.init();
+        GameService gameService = new GameService();
+        Monde monde = new CreerMondeService().creerMonde3();
         monde.decors.add(new Decor("decor-1", 2, 2, Decor.GRAPHISME.ampouleAllumee));
         monde.initIncrement(1);
         Monde expected = monde.clone();
@@ -524,8 +519,8 @@ class GameServiceTest {
     @Test
     @Order(29)
     public void debrancherAmpouleMaisOccupe() {
-        GameService gameService = creerService3();
-        Monde monde = gameService.init();
+        GameService gameService = new GameService();
+        Monde monde = new CreerMondeService().creerMonde3();
         monde.decors.add(new Decor("decor-1", 2, 2, Decor.GRAPHISME.ampouleAllumee));
         monde.objets.add(new Objet("objet-2", 2, 2, Objet.GRAPHISME.hydrogene));
         monde.initIncrement(2);
@@ -538,8 +533,8 @@ class GameServiceTest {
     @Test
     @Order(30)
     public void brancherAmpouleAvecFilElectrique() {
-        GameService gameService = creerService3();
-        Monde monde = gameService.init();
+        GameService gameService = new GameService();
+        Monde monde = new CreerMondeService().creerMonde3();
         monde.decors.add(new Decor("decor-1", 2, 2, Decor.GRAPHISME.ampouleEteinte));
         monde.inventaire = new Objet("objet-2", 1, 0, Objet.GRAPHISME.electrique);
         monde.salles.get(0).graphisme = Salle.GRAPHISME.SOMBRE;
@@ -556,8 +551,8 @@ class GameServiceTest {
     @Test
     @Order(31)
     public void brancherAmpouleSansFilElectrique() {
-        GameService gameService = creerService3();
-        Monde monde = gameService.init();
+        GameService gameService = new GameService();
+        Monde monde = new CreerMondeService().creerMonde3();
         monde.decors.add(new Decor("decor-1", 2, 2, Decor.GRAPHISME.ampouleEteinte));
         monde.salles.get(0).graphisme = Salle.GRAPHISME.SOMBRE;
         monde.initIncrement(1);
@@ -578,8 +573,8 @@ class GameServiceTest {
     @Test
     @Order(32)
     public void brulerInflamableAvecFilElectrique() {
-        GameService gameService = creerService3();
-        Monde monde = gameService.init();
+        GameService gameService = new GameService();
+        Monde monde = new CreerMondeService().creerMonde3();
         monde.objets.add(new Objet("objet-1", 2, 2, Objet.GRAPHISME.inflammable));
         monde.inventaire = new Objet("objet-2", 2, 2, Objet.GRAPHISME.electrique);
         monde.initIncrement(2);
@@ -596,8 +591,8 @@ class GameServiceTest {
     @Test
     @Order(33)
     public void brulerInflamableInverses() {
-        GameService gameService = creerService3();
-        Monde monde = gameService.init();
+        GameService gameService = new GameService();
+        Monde monde = new CreerMondeService().creerMonde3();
         monde.objets.add(new Objet("objet-1", 2, 2, Objet.GRAPHISME.electrique));
         monde.inventaire = new Objet("objet-2", 2, 2, Objet.GRAPHISME.inflammable);
         monde.initIncrement(2);
@@ -619,8 +614,8 @@ class GameServiceTest {
     @Test
     @Order(34)
     public void brulerExplosifAvecFilElectrique() {
-        GameService gameService = creerService3();
-        Monde monde = gameService.init();
+        GameService gameService = new GameService();
+        Monde monde = new CreerMondeService().creerMonde3();
         monde.objets.add(new Objet("objet-1", 2, 2, Objet.GRAPHISME.explosif));
         monde.inventaire = new Objet("objet-2", 2, 2, Objet.GRAPHISME.electrique);
         monde.initIncrement(2);
@@ -636,8 +631,8 @@ class GameServiceTest {
     @Test
     @Order(35)
     public void brulerExplosifInverses() {
-        GameService gameService = creerService3();
-        Monde monde = gameService.init();
+        GameService gameService = new GameService();
+        Monde monde = new CreerMondeService().creerMonde3();
         monde.objets.add(new Objet("objet-1", 2, 2, Objet.GRAPHISME.electrique));
         monde.inventaire = new Objet("objet-2", 2, 2, Objet.GRAPHISME.explosif);
         monde.initIncrement(2);
@@ -711,40 +706,6 @@ class GameServiceTest {
             Assertions.assertEquals(expected.inventaire.graphisme, actual.inventaire.graphisme);
         }
 
-    }
-
-    private GameService creerService1() {
-        CreerMondeService creerMondeService = new CreerMondeService() {
-            public Monde creerMonde() {
-                Monde monde = creerMonde(3, 1, 0, 1, 0);
-                return monde;
-            }
-        };
-        return new GameService(creerMondeService);
-    }
-
-
-    private GameService creerService2() {
-        CreerMondeService creerMondeService = new CreerMondeService() {
-            public Monde creerMonde() {
-                Monde monde = creerMonde(3, 3, 1, 1, 1);
-                creerAscenseur(monde, "decors1", 0,1,0,1);
-                creerAscenseur(monde,"decors2", 2,1,1,2);
-                return monde;
-            }
-        };
-        return new GameService(creerMondeService);
-    }
-
-    private GameService creerService3() {
-        CreerMondeService creerMondeService = new CreerMondeService() {
-            public Monde creerMonde() {
-                Monde monde = creerMonde(5, 5, 2, 2, 2);
-                monde.salles.add(new Salle(1, 1, 3, 3));
-                return monde;
-            }
-        };
-        return new GameService(creerMondeService);
     }
 
 }

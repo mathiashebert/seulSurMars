@@ -1,6 +1,7 @@
 package com.bansheesoftware.seulsurmars;
 
 import com.bansheesoftware.seulsurmars.domain.Monde;
+import com.bansheesoftware.seulsurmars.service.CreerMondeService;
 import com.bansheesoftware.seulsurmars.service.GameService;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,11 +13,13 @@ import java.util.concurrent.ConcurrentHashMap;
 public class GameController {
 
     private final GameService gameService;
+    private final CreerMondeService creerMondeService;
 
     Map<Integer, Monde> mondes = new ConcurrentHashMap<>();
 
-    public GameController(GameService gameService) {
+    public GameController(GameService gameService, CreerMondeService creerMondeService) {
         this.gameService = gameService;
+        this.creerMondeService = creerMondeService;
     }
 
     @PostMapping(value = "touche")
@@ -64,7 +67,7 @@ public class GameController {
 
     @GetMapping
     public Monde init() {
-        Monde monde =  gameService.init();
+        Monde monde =  creerMondeService.creerMonde();
         mondes.put(monde.getId(), monde);
         return monde;
     }

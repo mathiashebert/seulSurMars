@@ -3,17 +3,12 @@ package com.bansheesoftware.seulsurmars.service;
 import com.bansheesoftware.seulsurmars.domain.*;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 
 @org.springframework.stereotype.Service
 public class GameService {
-    Monde monde; // package pour pouvoir être modifié dans les tests
-
     List<Processor> processors = new ArrayList<>();
 
-    public GameService(CreerMondeService creerMondeService) {
-        monde = creerMondeService.creerMonde();
-
+    public GameService() {
         processors.add(new Process1());
         processors.add(new Process2());
         processors.add(new Process3());
@@ -30,10 +25,6 @@ public class GameService {
 
     public enum Touche {
         LEFT, RIGHT, DECOR, OBJET,
-    }
-
-    public Monde init() {
-        return monde;
     }
 
     public void action(Touche touche, Monde monde) {
