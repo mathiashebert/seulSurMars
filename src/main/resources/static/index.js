@@ -36,13 +36,13 @@ function fetchApi(url, params) {
             return response.json()})
         .then(function(data)
         {
-            console.log(data);
-            const actions = [];/*
+            console.log(data); /*
+            const actions = [];
             for (let [key, value] of Object.entries(data)) {
                 actions.push(new Action(value.type, key, parseInt(value.x), parseInt(value.y), parseInt(value.duree), parseInt(value.inventaire), value.graphisme))
             }
             console.log(actions);*/
-            return actions;
+            return data;
         }).catch(error => console.error('Error:', error));
 }
 
@@ -149,12 +149,10 @@ function creerSalle(i, j, largeur, hauteur) {
 function creerElement(base, id, i,j,clazz) {
     if(base === "objet") {
         creerImage(id, i, j, base+' '+clazz);
-
     } else {
         creerImage(id+'-background', i, j, base+' background '+clazz);
         creerImage(id+'-foreground', i, j, base+' foreground '+clazz);
     }
-
 }
 function creerImage(id, i,j,clazz) {
     let tile = document.getElementById(id);
@@ -162,9 +160,9 @@ function creerImage(id, i,j,clazz) {
         tile = document.createElement('div');
         tile.setAttribute('id', id);
         PLATEAU.appendChild(tile);
-        tile.style.bottom = j + 'em';
-        tile.style.left = i + 'em';
     }
+    tile.style.bottom = j + 'em';
+    tile.style.left = i + 'em';
     tile.className = clazz;
 }
 function creerTile(i,j,clazz) {
@@ -244,77 +242,112 @@ async function touche(key) {
     if(MOUVEMENT && ACTION_SUIVANTE !== null) {
         return;
     }
-    const actions = await callToucheApi(key);
+    const monde = await callToucheApi(key);
     // si on est en mouvement, mais d'autre action prévue, on note la suivante
     if(MOUVEMENT) {
-        ACTION_SUIVANTE = actions;
+        ACTION_SUIVANTE = monde;
         return;
     }
     // si on n'est pas en mouvement
-    appliquerAction(actions, true);
+    appliquerAction(monde, true);
 }
 
-function appliquerAction(actions, block) {
-    if(actions === null) {return ;}
+function appliquerAction(data, block) {
+    if(data === null) {return ;}
 
-    const deplacements = actions.filter(a => a.type === 'DEPLACER' && a.id === 'hero');
-    if(deplacements && deplacements.length && deplacements[0]) {
-        deplacerHero(deplacements[0].x, deplacements[0].y);
-    } else if(block) {
-        deplacerHero(POSITION_X, POSITION_Y);
+    if(block) {
+        deplacerHero(data.positionX, data.positionY);
     }
 
-    for(let action of actions) {
-        const index = INVENTAIRE.indexOf(action.id);
-        switch (action.type) {
-            case "DEPLACER":
-                if(action.id === 'hero') {
-              //      deplacerHero(action.x, action.y);
-                } else if(index > -1) {
-              //      document.getElementById(action.id).style.bottom= action.y+'em';
-              //      document.getElementById(action.id).style.left= action.x+'em';
-              //      setTimeout(function () {
-              //          document.getElementById(action.id).classList.remove('inventaire');
-              //      }, 500)
-              //      INVENTAIRE[index] = null;
-                } else {
-                    document.getElementById(action.id+'-background').style.bottom= action.y+'em';
-                    document.getElementById(action.id+'-background').style.left= action.x+'em';
-                    document.getElementById(action.id+'-foreground').style.bottom= action.y+'em';
-                    document.getElementById(action.id+'-foreground').style.left= action.x+'em';
-                }
-                break;
+    for(let index in data.decors) {
+        const a = data.decors[index];
+        creerElement('decor', a.id, a.x, a.y, a.graphisme);
+    }
 
-            case "TIMER":
-                // dessinerTimer(action);
-                break;
+    // dessiner les objets
+    for(let index in data.objets) {
+        const o = data.objets[index];
+        creerElement('objet', o.id, o.x, o.y, o.graphisme);
 
-            case "GAME_OVER":
-                document.getElementById("gameover").style.opacity = "1";
-                break;
+        // cas particulier : quand l'objet est retiré de l'inventaire
+        if(INVENTAIRE[0] === o.id && data.inventaire !== o.id) {
+            document.getElementById(o.id).classList.add("inventaire");
 
-            case "RETIRER":
-                if(index > -1) {
-                    INVENTAIRE[index] = null;
-                }
-                document.getElementById(action.id).remove();
-                break;
-
-            case "DESSINER":
-                if(action.id.indexOf('objet') >= 0) {
-                    dessinerObjet(action, index);
-                } else if(action.id.indexOf('decor') >= 0) {
-                    dessinerDecor(action);
-                }  else if(action.id.indexOf('salle') >= 0) {
-                    dessinerSalle(action);
-                }
-                break;
-
-
+            setTimeout(function () {
+                document.getElementById(o.id).classList.remove('inventaire');
+            }, 500)
         }
-        dessinerTimer(action);
-
     }
+
+    // dessiner l'inventaire
+    if(data.inventaire) {
+        const dessin = document.getElementById(data.inventaire.id);
+        dessin.classList.add('inventaire');
+        recentrerInventaire(dessin, 0);
+        INVENTAIRE[0] = data.inventaire.id;
+    } else {
+        INVENTAIRE[0] = null;
+    }
+
+    // retirer les objets qui ne sont plus dans la liste d'objets, ni dans l'inventaire
+    document.querySelectorAll('.objet').forEach(value => {
+        const id = value.getAttribute('id');
+        if(data.objets.filter(o => o.id === id).length === 0 && INVENTAIRE[0] !== id) {
+            value.remove();
+        }
+    });
+    /*
+        for(let action of actions) {
+            const index = INVENTAIRE.indexOf(action.id);
+            switch (action.type) {
+                case "DEPLACER":
+                    if(action.id === 'hero') {
+                  //      deplacerHero(action.x, action.y);
+                    } else if(index > -1) {
+                  //      document.getElementById(action.id).style.bottom= action.y+'em';
+                  //      document.getElementById(action.id).style.left= action.x+'em';
+                  //      setTimeout(function () {
+                  //          document.getElementById(action.id).classList.remove('inventaire');
+                  //      }, 500)
+                  //      INVENTAIRE[index] = null;
+                    } else {
+                        document.getElementById(action.id+'-background').style.bottom= action.y+'em';
+                        document.getElementById(action.id+'-background').style.left= action.x+'em';
+                        document.getElementById(action.id+'-foreground').style.bottom= action.y+'em';
+                        document.getElementById(action.id+'-foreground').style.left= action.x+'em';
+                    }
+                    break;
+
+                case "TIMER":
+                    // dessinerTimer(action);
+                    break;
+
+                case "GAME_OVER":
+                    document.getElementById("gameover").style.opacity = "1";
+                    break;
+
+                case "RETIRER":
+                    if(index > -1) {
+                        INVENTAIRE[index] = null;
+                    }
+                    document.getElementById(action.id).remove();
+                    break;
+
+                case "DESSINER":
+                    if(action.id.indexOf('objet') >= 0) {
+                        dessinerObjet(action, index);
+                    } else if(action.id.indexOf('decor') >= 0) {
+                        dessinerDecor(action);
+                    }  else if(action.id.indexOf('salle') >= 0) {
+                        dessinerSalle(action);
+                    }
+                    break;
+
+
+            }
+            dessinerTimer(action);
+
+        }*/
 
 }
 
