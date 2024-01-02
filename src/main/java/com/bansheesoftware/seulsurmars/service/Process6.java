@@ -19,7 +19,9 @@ public class Process6 implements Processor {
             Optional<Objet> inventaire = Optional.ofNullable(monde.inventaire).filter(objet1 -> objet1.graphisme.equals(Objet.GRAPHISME.bouteille));
             if(decor.isPresent() && objet.isEmpty() && inventaire.isPresent()) {
                 monde.inventaire = null;
-                monde.objets.add( new Objet("objet-"+monde.increment(), monde.positionX, monde.positionY, Objet.GRAPHISME.tomate));
+                Objet tomate = new Objet("objet-"+monde.increment(), monde.positionX, monde.positionY, Objet.GRAPHISME.tomate);
+                tomate.delai = 10;
+                monde.objets.add(tomate);
                 return true;
             }
         }

@@ -5,6 +5,7 @@ public class Animation {
     public int x;
     public int y;
     public GRAPHISME graphisme;
+    public int delai = 0;
 
     public enum GRAPHISME {
         feu, explosion
@@ -18,6 +19,8 @@ public class Animation {
     }
 
     public Animation clone() {
-        return new Animation(id, x, y, graphisme);
+        Animation animation = new Animation(id, x, y, graphisme);
+        animation.delai = this.delai;
+        return animation;
     }
 }

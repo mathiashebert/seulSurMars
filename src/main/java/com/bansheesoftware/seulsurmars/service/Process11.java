@@ -5,7 +5,7 @@ import com.bansheesoftware.seulsurmars.domain.*;
 import java.util.Optional;
 
 /**
- * brancher et debrancher une ampoule electrique
+ * allumer un mélange oxygene/hydrogène (inflammable)
  */
 public class Process11 implements Processor {
 
@@ -18,8 +18,12 @@ public class Process11 implements Processor {
             if(objet.isPresent() && inventaire.isPresent()) {
                 monde.objets.remove(objet.get());
                 monde.inventaire = null;
-                monde.animations.add(new Animation("animation-"+monde.increment(), monde.positionX, monde.positionY, Animation.GRAPHISME.feu));
-                monde.objets.add(new Objet("objet-"+monde.increment(), monde.positionX, monde.positionY, Objet.GRAPHISME.bouteille));
+                Animation feu = new Animation("animation-"+monde.increment(), monde.positionX, monde.positionY, Animation.GRAPHISME.feu);
+                feu.delai = 2;
+                monde.animations.add(feu);
+                Objet eau = new Objet("objet-"+monde.increment(), monde.positionX, monde.positionY, Objet.GRAPHISME.bouteille);
+                eau.delai = 2;
+                monde.objets.add(eau);
                 return true;
             }
         }

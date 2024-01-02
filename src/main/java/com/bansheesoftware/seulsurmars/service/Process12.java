@@ -20,7 +20,9 @@ public class Process12 implements Processor {
             if(objet.isPresent() && inventaire.isPresent()) {
                 monde.objets.remove(objet.get());
                 monde.inventaire = null;
-                monde.animations.add(new Animation("animation-"+monde.increment(), monde.positionX, monde.positionY, Animation.GRAPHISME.explosion));
+                Animation explosion = new Animation("animation-"+monde.increment(), monde.positionX, monde.positionY, Animation.GRAPHISME.explosion);
+                explosion.delai = 2;
+                monde.animations.add(explosion);
                 return true;
             }
         }

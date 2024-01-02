@@ -5,6 +5,7 @@ public class Objet {
     public int x;
     public int y;
     public GRAPHISME graphisme;
+    public int delai = 0;
 
     public enum GRAPHISME {
         bouteille, oxygene, tomate, hydrogene, inflammable, sucre, cupcake, explosif, electrique
@@ -18,6 +19,8 @@ public class Objet {
     }
 
     public Objet clone() {
-        return new Objet(id, x, y, graphisme);
+        Objet objet = new Objet(id, x, y, graphisme);
+        objet.delai = this.delai;
+        return objet;
     }
 }
