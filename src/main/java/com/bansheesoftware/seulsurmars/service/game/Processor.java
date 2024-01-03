@@ -1,6 +1,7 @@
-package com.bansheesoftware.seulsurmars.service;
+package com.bansheesoftware.seulsurmars.service.game;
 
 import com.bansheesoftware.seulsurmars.domain.*;
+import com.bansheesoftware.seulsurmars.service.game.GameService;
 
 import java.util.Optional;
 

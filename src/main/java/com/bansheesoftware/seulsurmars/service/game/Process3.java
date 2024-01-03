@@ -1,6 +1,5 @@
-package com.bansheesoftware.seulsurmars.service;
+package com.bansheesoftware.seulsurmars.service.game;
 
-import com.bansheesoftware.seulsurmars.domain.Ascenseur;
 import com.bansheesoftware.seulsurmars.domain.Monde;
 import com.bansheesoftware.seulsurmars.domain.Objet;
 

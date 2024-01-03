@@ -53,7 +53,16 @@
     transform: scaleX(-1);
 }
 
-#oxygen-foreground {
+#oxygen {
+    width: 1em;
+    height: 1em;
+    position: absolute;
+    top: 0;
+    right: 1em;
+    border:0.1em  solid transparent;
+    z-index: 20;
+}
+#starve {
     width: 1em;
     height: 1em;
     position: absolute;

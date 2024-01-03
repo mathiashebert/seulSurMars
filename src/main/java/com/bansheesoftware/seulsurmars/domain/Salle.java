@@ -19,7 +19,7 @@ public class Salle {
         this.graphisme = GRAPHISME.NORMALE;
     }
 
-    public String id() {
+    public String getId() {
         return "salle-"+x+"-"+y;
     }
 

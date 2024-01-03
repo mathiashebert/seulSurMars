@@ -1,0 +1,46 @@
+
+
+.animation {
+    position: absolute;
+    width: 1em;
+    height: 1em;
+    background-size: cover;
+    z-index: 5;
+
+    background-repeat: no-repeat;
+    animation-name: sprite;
+    animation-duration: 10s;
+    animation-timing-function: steps(6);
+    animation-iteration-count: 1;
+    animation-fill-mode: forwards;
+}
+
+
+.animation.tomate {
+    background-image: url("img/tomate-animation.gif");
+}
+.animation.four {
+    background-image: url("img/four-animation.png");
+    width: 2em;
+    height: 2em;
+    animation-name: sprite2;
+
+}
+
+.animation.feu {
+    background-image: url("img/animation-feu.png");
+}
+
+.animation.electrique {
+    background-image: url("img/animation-electrique.png");
+}
+
+@keyframes sprite {
+    from { background-position: 0em; }
+    to { background-position: -6em; }
+}
+
+@keyframes sprite2 {
+    from { background-position: 0em; }
+    to { background-position: -12em; }
+}

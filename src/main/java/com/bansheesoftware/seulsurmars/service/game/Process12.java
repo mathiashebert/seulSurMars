@@ -1,4 +1,4 @@
-package com.bansheesoftware.seulsurmars.service;
+package com.bansheesoftware.seulsurmars.service.game;
 
 import com.bansheesoftware.seulsurmars.domain.Animation;
 import com.bansheesoftware.seulsurmars.domain.Monde;
@@ -7,7 +7,7 @@ import com.bansheesoftware.seulsurmars.domain.Objet;
 import java.util.Optional;
 
 /**
- * brancher et debrancher une ampoule electrique
+ * allumer un mélange oxygene/sucre (explosif)
  */
 public class Process12 implements Processor {
 
@@ -20,7 +20,7 @@ public class Process12 implements Processor {
             if(objet.isPresent() && inventaire.isPresent()) {
                 monde.objets.remove(objet.get());
                 monde.inventaire = null;
-                Animation explosion = new Animation("animation-"+monde.increment(), monde.positionX, monde.positionY, Animation.GRAPHISME.explosion);
+                Animation explosion = new Animation("animation-"+monde.increment(), monde.positionX, monde.positionY, Animation.GRAPHISME.feu, 1);
                 explosion.delai = 2;
                 monde.animations.add(explosion);
                 return true;
