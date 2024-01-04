@@ -13,7 +13,7 @@ public class Process3 implements Processor {
         if(GameService.Touche.OBJET.equals(touche)) {
             Objet objet = trouverObjet(monde, monde.positionX, monde.positionY)
                     .orElse(null);
-            if(objet != null && objet.delai == 0 && monde.inventaire == null) {
+            if(objet != null && objet.animation == 0 && monde.inventaire == null) {
                 monde.inventaire = objet;
                 monde.objets.remove(objet);
                 return true;

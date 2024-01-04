@@ -102,9 +102,8 @@ class GameServiceTest {
      * comme les autres décors, il possède une position (x,y). Mais il a également une hauteurHaut et une HauteurBas
      * lors de son utilisation (avec la touche DECOR), s'il est en positionHaut, alors il passe en positionBas, avec le héro
      * inversement, s'il est en positionBas, il passe en positionHaut, avec le héro
-     * s'il y a un objet sur la même position, il est egalement déplacé
      *
-     * note : il est possible de se déplacer vers une position "vide" (non "sol"), s'il y a un ascenseur
+     * note : il est possible de se déplacer vers une position "VIDE" (non "SOL"), s'il y a un ascenseur
      */
 
     @Test
@@ -188,9 +187,10 @@ class GameServiceTest {
     /**
      * OBJECTIF 3 : ramasser/déposer un objet
      *
-     * s'il ne porte pas d'objet, le hero peut rammaser un objet sur la position où il se trouve, en appuyant sur la touche "OBJET"
+     * s'il ne porte pas d'objet, le hero peut ramasser un objet sur la position où il se trouve, en appuyant sur la touche "OBJET"
      * s'il a déjà un objet, il dépose cet objet sur la position où il se trouve
      * s'il a déjà un objet, et qu'il y a déjà un objet sur la position, la touche "entrer" n'a aucun effet
+     * il n'est pas possible de ramasser un objet avec une animation
      */
 
     @Test
@@ -240,7 +240,7 @@ class GameServiceTest {
         GameService gameService = new GameService();
         Monde monde = new CreerMondeService().creerMonde1();
         monde.objets.add(new Objet("objet-1", 1, 0, Objet.GRAPHISME.sucre));
-        monde.objets.get(0).delai = 1;
+        monde.objets.get(0).animation = 1;
         Monde expected = monde.clone();
 
         gameService.action(GameService.Touche.OBJET, monde);
@@ -262,11 +262,10 @@ class GameServiceTest {
         GameService gameService = new GameService();
         Monde monde = new CreerMondeService().creerMonde1();
         monde.decors.add(new Decor("decors-1", 1, 0, Decor.GRAPHISME.hydrazine));
-        monde.initIncrement(1);
         Monde expected = monde.clone();
 
         gameService.action(GameService.Touche.DECOR, monde);
-        expected.objets.add(new Objet("objet-2", 1, 0, Objet.GRAPHISME.hydrogene));
+        expected.objets.add(new Objet("objet-101", 1, 0, Objet.GRAPHISME.hydrogene));
         verifierMonde(expected, monde);
     }
 
@@ -277,7 +276,6 @@ class GameServiceTest {
         Monde monde = new CreerMondeService().creerMonde1();
         monde.decors.add(new Decor("decors-1", 1, 0, Decor.GRAPHISME.hydrazine));
         monde.objets.add(new Objet("objet-2", 1, 0, Objet.GRAPHISME.tomate));
-        monde.initIncrement(2);
         Monde expected = monde.clone();
 
         gameService.action(GameService.Touche.DECOR, monde);
@@ -298,11 +296,10 @@ class GameServiceTest {
         GameService gameService = new GameService();
         Monde monde = new CreerMondeService().creerMonde1();
         monde.decors.add(new Decor("decors-1", 1, 0, Decor.GRAPHISME.recycleurAir));
-        monde.initIncrement(1);
         Monde expected = monde.clone();
 
         gameService.action(GameService.Touche.DECOR, monde);
-        expected.objets.add(new Objet("objet-2", 1, 0, Objet.GRAPHISME.oxygene));
+        expected.objets.add(new Objet("objet-101", 1, 0, Objet.GRAPHISME.oxygene));
         verifierMonde(expected, monde);
     }
 
@@ -313,7 +310,6 @@ class GameServiceTest {
         Monde monde = new CreerMondeService().creerMonde1();
         monde.decors.add(new Decor("decors-1", 1, 0, Decor.GRAPHISME.recycleurAir));
         monde.objets.add(new Objet("objet-2", 1, 0, Objet.GRAPHISME.tomate));
-        monde.initIncrement(2);
         Monde expected = monde.clone();
 
         gameService.action(GameService.Touche.DECOR, monde);
@@ -324,7 +320,8 @@ class GameServiceTest {
      * OBJECTIF 6 : faire pousser une tomate
      *
      * si le hero utilise un decor "potager", et qu'il a de l'eau
-     * cela crée un objet "tomate" sur cette position, avec un delai de 10 secondes
+     * cela crée un objet "tomatequipousse" sur cette position, avec un delai de 10 secondes
+     * et enlève l'eau de l'inventaire
      * (s'il n'y a pas déjà un objet sur cette position, sinon aucun effet)
      */
 
@@ -334,7 +331,6 @@ class GameServiceTest {
         GameService gameService = new GameService();
         Monde monde = new CreerMondeService().creerMonde1();
         monde.decors.add(new Decor("decors-1", 1, 0, Decor.GRAPHISME.potager));
-        monde.initIncrement(1);
         Monde expected = monde.clone();
 
         gameService.action(GameService.Touche.DECOR, monde);
@@ -349,13 +345,12 @@ class GameServiceTest {
         Monde monde = new CreerMondeService().creerMonde1();
         monde.decors.add(new Decor("decors-1", 1, 0, Decor.GRAPHISME.potager));
         monde.inventaire = new Objet("objet-2", 1, 0, Objet.GRAPHISME.bouteille);
-        monde.initIncrement(2);
         Monde expected = monde.clone();
 
         gameService.action(GameService.Touche.DECOR, monde);
         expected.inventaire = null;
-        expected.objets.add(new Objet("objet-3", 1, 0, Objet.GRAPHISME.tomate));
-        expected.objets.get(0).delai = 10;
+        expected.objets.add(new Objet("objet-101", 1, 0, Objet.GRAPHISME.tomatequipousse));
+        expected.objets.get(0).animation = 10;
         verifierMonde(expected, monde);
     }
 
@@ -367,7 +362,6 @@ class GameServiceTest {
         monde.decors.add(new Decor("decors-1", 1, 0, Decor.GRAPHISME.potager));
         monde.inventaire = new Objet("objet-2", 1, 0, Objet.GRAPHISME.bouteille);
         monde.objets.add(new Objet("objet-3", 1, 0, Objet.GRAPHISME.hydrogene));
-        monde.initIncrement(3);
         Monde expected = monde.clone();
 
         gameService.action(GameService.Touche.DECOR, monde);
@@ -378,7 +372,8 @@ class GameServiceTest {
      * OBJECTIF 7 : faire cuire un cupcake
      *
      * si le hero utilise un decor "four", et qu'il a du sucre,
-     * cela crée un objet "cupcake" sur cette position, avec un delai de 2 secondes
+     * cela crée un objet "cupcakequicuit" sur cette position, avec une animation de 3 secondes
+     * et enlève le sucre de l'inventaire
      * (s'il n'y a pas déjà un objet sur cette position, sinon aucun effet)
      */
 
@@ -388,7 +383,6 @@ class GameServiceTest {
         GameService gameService = new GameService();
         Monde monde = new CreerMondeService().creerMonde1();
         monde.decors.add(new Decor("decors-1", 1, 0, Decor.GRAPHISME.four));
-        monde.initIncrement(1);
         Monde expected = monde.clone();
 
         gameService.action(GameService.Touche.DECOR, monde);
@@ -403,13 +397,12 @@ class GameServiceTest {
         Monde monde = new CreerMondeService().creerMonde1();
         monde.decors.add(new Decor("decors-1", 1, 0, Decor.GRAPHISME.four));
         monde.inventaire = new Objet("objet-2", 1, 0, Objet.GRAPHISME.sucre);
-        monde.initIncrement(2);
         Monde expected = monde.clone();
 
         gameService.action(GameService.Touche.DECOR, monde);
         expected.inventaire = null;
-        expected.objets.add(new Objet("objet-3", 1, 0, Objet.GRAPHISME.cupcake));
-        expected.objets.get(0).delai = 2;
+        expected.objets.add(new Objet("objet-101", 1, 0, Objet.GRAPHISME.cupcakequicuit));
+        expected.objets.get(0).animation = 3;
         verifierMonde(expected, monde);
     }
 
@@ -421,7 +414,6 @@ class GameServiceTest {
         monde.decors.add(new Decor("decors-1", 1, 0, Decor.GRAPHISME.four));
         monde.inventaire = new Objet("objet-2", 1, 0, Objet.GRAPHISME.sucre);
         monde.objets.add(new Objet("objet-3", 1, 0, Objet.GRAPHISME.hydrogene));
-        monde.initIncrement(3);
         Monde expected = monde.clone();
 
         gameService.action(GameService.Touche.DECOR, monde);
@@ -431,7 +423,8 @@ class GameServiceTest {
     /**
      * OBJECTIF 8 : mélanger de l'hydrogène et de l'oxygène
      *
-     * si le hero est sur la même position qu'un objet "oxygene", et qu'il dépose de l'hydrogène, cela crée un objet "inflammable" sur cette position
+     * si le hero est sur la même position qu'un objet "oxygene", et qu'il dépose de l'hydrogène
+     * cela crée un objet "inflammable" sur cette position
      * (et vice-versa)
      */
 
@@ -442,13 +435,12 @@ class GameServiceTest {
         Monde monde = new CreerMondeService().creerMonde1();
         monde.inventaire = new Objet("objet-1", 1, 0, Objet.GRAPHISME.oxygene);
         monde.objets.add(new Objet("objet-2", 1, 0, Objet.GRAPHISME.hydrogene));
-        monde.initIncrement(2);
         Monde expected = monde.clone();
 
         gameService.action(GameService.Touche.OBJET, monde);
         expected.inventaire = null;
         expected.objets.clear();
-        expected.objets.add(new Objet("objet-3", 1, 0, Objet.GRAPHISME.inflammable));
+        expected.objets.add(new Objet("objet-101", 1, 0, Objet.GRAPHISME.inflammable));
         verifierMonde(expected, monde);
     }
 
@@ -459,20 +451,20 @@ class GameServiceTest {
         Monde monde = new CreerMondeService().creerMonde1();
         monde.inventaire = new Objet("objet-1", 1, 0, Objet.GRAPHISME.hydrogene);
         monde.objets.add(new Objet("objet-2", 1, 0, Objet.GRAPHISME.oxygene));
-        monde.initIncrement(2);
         Monde expected = monde.clone();
 
         gameService.action(GameService.Touche.OBJET, monde);
         expected.inventaire = null;
         expected.objets.clear();
-        expected.objets.add(new Objet("objet-3", 1, 0, Objet.GRAPHISME.inflammable));
+        expected.objets.add(new Objet("objet-101", 1, 0, Objet.GRAPHISME.inflammable));
         verifierMonde(expected, monde);
     }
 
     /**
      * OBJECTIF 9 : mélanger du sucre et de l'oxygène
      *
-     * si le hero est sur la même position qu'un objet "oxygene", et qu'il dépose du sucre, cela crée un objet "explosif" sur cette position
+     * si le hero est sur la même position qu'un objet "oxygene", et qu'il dépose du sucre,
+     * cela crée un objet "explosif" sur cette position
      * (et vice-versa)
      */
 
@@ -483,13 +475,12 @@ class GameServiceTest {
         Monde monde = new CreerMondeService().creerMonde1();
         monde.inventaire = new Objet("objet-1", 1, 0, Objet.GRAPHISME.oxygene);
         monde.objets.add(new Objet("objet-2", 1, 0, Objet.GRAPHISME.sucre));
-        monde.initIncrement(2);
         Monde expected = monde.clone();
 
         gameService.action(GameService.Touche.OBJET, monde);
         expected.inventaire = null;
         expected.objets.clear();
-        expected.objets.add(new Objet("objet-3", 1, 0, Objet.GRAPHISME.explosif));
+        expected.objets.add(new Objet("objet-101", 1, 0, Objet.GRAPHISME.explosif));
         verifierMonde(expected, monde);
     }
 
@@ -500,13 +491,12 @@ class GameServiceTest {
         Monde monde = new CreerMondeService().creerMonde1();
         monde.inventaire = new Objet("objet-1", 1, 0, Objet.GRAPHISME.sucre);
         monde.objets.add(new Objet("objet-2", 1, 0, Objet.GRAPHISME.oxygene));
-        monde.initIncrement(2);
         Monde expected = monde.clone();
 
         gameService.action(GameService.Touche.OBJET, monde);
         expected.inventaire = null;
         expected.objets.clear();
-        expected.objets.add(new Objet("objet-3", 1, 0, Objet.GRAPHISME.explosif));
+        expected.objets.add(new Objet("objet-101", 1, 0, Objet.GRAPHISME.explosif));
         verifierMonde(expected, monde);
     }
 
@@ -528,12 +518,11 @@ class GameServiceTest {
         GameService gameService = new GameService();
         Monde monde = new CreerMondeService().creerMonde3();
         monde.decors.add(new Decor("decor-1", 2, 2, Decor.GRAPHISME.ampouleAllumee));
-        monde.initIncrement(1);
         Monde expected = monde.clone();
 
         gameService.action(GameService.Touche.DECOR, monde);
         expected.decors.get(0).graphisme = Decor.GRAPHISME.ampouleEteinte;
-        expected.objets.add(new Objet("objet-2", 2, 2, Objet.GRAPHISME.electrique));
+        expected.objets.add(new Objet("objet-101", 2, 2, Objet.GRAPHISME.electrique));
         expected.salles.get(0).graphisme = Salle.GRAPHISME.SOMBRE;
         verifierMonde(expected, monde);
     }
@@ -545,7 +534,6 @@ class GameServiceTest {
         Monde monde = new CreerMondeService().creerMonde3();
         monde.decors.add(new Decor("decor-1", 2, 2, Decor.GRAPHISME.ampouleAllumee));
         monde.objets.add(new Objet("objet-2", 2, 2, Objet.GRAPHISME.hydrogene));
-        monde.initIncrement(2);
         Monde expected = monde.clone();
 
         gameService.action(GameService.Touche.DECOR, monde);
@@ -560,7 +548,6 @@ class GameServiceTest {
         monde.decors.add(new Decor("decor-1", 2, 2, Decor.GRAPHISME.ampouleEteinte));
         monde.inventaire = new Objet("objet-2", 1, 0, Objet.GRAPHISME.electrique);
         monde.salles.get(0).graphisme = Salle.GRAPHISME.SOMBRE;
-        monde.initIncrement(2);
         Monde expected = monde.clone();
 
         gameService.action(GameService.Touche.DECOR, monde);
@@ -577,7 +564,6 @@ class GameServiceTest {
         Monde monde = new CreerMondeService().creerMonde3();
         monde.decors.add(new Decor("decor-1", 2, 2, Decor.GRAPHISME.ampouleEteinte));
         monde.salles.get(0).graphisme = Salle.GRAPHISME.SOMBRE;
-        monde.initIncrement(1);
         Monde expected = monde.clone();
 
         gameService.action(GameService.Touche.DECOR, monde);
@@ -588,7 +574,7 @@ class GameServiceTest {
      * OBJECTIF 11 : combiner "inflamable" et "electrique"
      *
      * si le hero est sur la même position qu'un objet "inflamable", et qu'il dépose un objet "electrique"
-     * cela crée une animation "feu" et crée un objet "bouteille" (avec un delai de 2 secondes)
+     * cela crée une animation "decomptefeu" avec une animation de 1 seconde
      * (et PAS vice-versa)
      */
 
@@ -599,16 +585,13 @@ class GameServiceTest {
         Monde monde = new CreerMondeService().creerMonde3();
         monde.objets.add(new Objet("objet-1", 2, 2, Objet.GRAPHISME.inflammable));
         monde.inventaire = new Objet("objet-2", 2, 2, Objet.GRAPHISME.electrique);
-        monde.initIncrement(2);
         Monde expected = monde.clone();
 
         gameService.action(GameService.Touche.OBJET, monde);
         expected.objets.clear();
         expected.inventaire = null;
-        expected.animations.add(new Animation("animation-3", 2, 2, Animation.GRAPHISME.feu));
-        expected.objets.add(new Objet("objet-4", 2, 2, Objet.GRAPHISME.bouteille));
-        expected.animations.get(0).delai = 2;
-        expected.objets.get(0).delai = 2;
+        expected.objets.add(new Objet("objet-101", 2, 2, Objet.GRAPHISME.decomptefeu));
+        expected.objets.get(0).animation = 1;
         verifierMonde(expected, monde);
     }
 
@@ -619,7 +602,6 @@ class GameServiceTest {
         Monde monde = new CreerMondeService().creerMonde3();
         monde.objets.add(new Objet("objet-1", 2, 2, Objet.GRAPHISME.electrique));
         monde.inventaire = new Objet("objet-2", 2, 2, Objet.GRAPHISME.inflammable);
-        monde.initIncrement(2);
         Monde expected = monde.clone();
 
         gameService.action(GameService.Touche.OBJET, monde);
@@ -631,7 +613,7 @@ class GameServiceTest {
      * OBJECTIF 12 : combiner "explosif" et "electrique"
      *
      * si le hero est sur la même position qu'un objet "explosif", et qu'il dépose un objet "electrique"
-     * cela crée une animation "explosion" (avec un delai de 2 secondes)
+     * cela crée une animation "decompteexplosion" (avec un delai de 1 seconde)
      * (et vice-versa)
      */
 
@@ -642,14 +624,13 @@ class GameServiceTest {
         Monde monde = new CreerMondeService().creerMonde3();
         monde.objets.add(new Objet("objet-1", 2, 2, Objet.GRAPHISME.explosif));
         monde.inventaire = new Objet("objet-2", 2, 2, Objet.GRAPHISME.electrique);
-        monde.initIncrement(2);
         Monde expected = monde.clone();
 
         gameService.action(GameService.Touche.OBJET, monde);
         expected.objets.clear();
         expected.inventaire = null;
-        expected.animations.add(new Animation("animation-3", 2, 2, Animation.GRAPHISME.explosion));
-        expected.animations.get(0).delai = 2;
+        expected.objets.add(new Objet("objet-101", 2, 2, Objet.GRAPHISME.decompteexplosion));
+        expected.objets.get(0).animation = 1;
         verifierMonde(expected, monde);
     }
 
@@ -660,7 +641,6 @@ class GameServiceTest {
         Monde monde = new CreerMondeService().creerMonde3();
         monde.objets.add(new Objet("objet-1", 2, 2, Objet.GRAPHISME.electrique));
         monde.inventaire = new Objet("objet-2", 2, 2, Objet.GRAPHISME.explosif);
-        monde.initIncrement(2);
         Monde expected = monde.clone();
 
         gameService.action(GameService.Touche.OBJET, monde);
@@ -676,6 +656,8 @@ class GameServiceTest {
         Assertions.assertEquals(expected.hauteur, actual.hauteur);
         Assertions.assertEquals(expected.positionX, actual.positionX);
         Assertions.assertEquals(expected.positionY, actual.positionY);
+        Assertions.assertEquals(expected.timerOxygene, actual.timerOxygene);
+        Assertions.assertEquals(expected.timerNourriture, actual.timerNourriture);
 
         Assertions.assertEquals(expected.positions.size(), actual.positions.size());
         for(int i=0; i<expected.positions.size(); i++) {
@@ -702,16 +684,7 @@ class GameServiceTest {
             Assertions.assertEquals(expected.objets.get(i).y, actual.objets.get(i).y);
             Assertions.assertEquals(expected.objets.get(i).id, actual.objets.get(i).id);
             Assertions.assertEquals(expected.objets.get(i).graphisme, actual.objets.get(i).graphisme);
-            Assertions.assertEquals(expected.objets.get(i).delai, actual.objets.get(i).delai);
-        }
-
-        Assertions.assertEquals(expected.animations.size(), actual.animations.size());
-        for(int i=0; i<expected.animations.size(); i++) {
-            Assertions.assertEquals(expected.animations.get(i).x, actual.animations.get(i).x);
-            Assertions.assertEquals(expected.animations.get(i).y, actual.animations.get(i).y);
-            Assertions.assertEquals(expected.animations.get(i).id, actual.animations.get(i).id);
-            Assertions.assertEquals(expected.animations.get(i).graphisme, actual.animations.get(i).graphisme);
-            Assertions.assertEquals(expected.animations.get(i).delai, actual.animations.get(i).delai);
+            Assertions.assertEquals(expected.objets.get(i).animation, actual.objets.get(i).animation);
         }
 
         Assertions.assertEquals(expected.salles.size(), actual.salles.size());

@@ -118,9 +118,9 @@ function draw(data) {
         const o = data.objets[index];
         creerElement('objet', o.id, o.x, o.y, o.graphisme);
 
-        if(o.delai > 0) {
-            document.getElementById(o.id).style.display = 'none';
-            setTimeout(function () { document.getElementById(o.id).style.display = 'block'; }, o.delai*1000);
+        if(o.animation > 0) {
+            document.getElementById(o.id).classList.add('animation');
+            document.getElementById(o.id).style.animationDuration = o.animation + 's';
         }
 
         // cas particulier : quand l'objet est retiré de l'inventaire, il faut lui laisser la classe "inventaire" pendant 500 ms
@@ -205,7 +205,7 @@ function creerSalle(i, j, largeur, hauteur) {
 }
 
 function creerElement(base, id, i,j,clazz) {
-    if(base === "objet" || base === "animation") {
+    if(base === "objet") {
         creerImage(id, i, j, base+' '+clazz);
     } else {
         creerImage(id+'-background', i, j, base+' background '+clazz);

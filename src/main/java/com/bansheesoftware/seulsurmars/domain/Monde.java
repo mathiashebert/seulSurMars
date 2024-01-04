@@ -1,9 +1,7 @@
 package com.bansheesoftware.seulsurmars.domain;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public class Monde {
 
@@ -19,19 +17,17 @@ public class Monde {
 
     public List<Objet> objets = new ArrayList<>();
     public List<Decor> decors = new ArrayList<>();
-    public List<Animation> animations = new ArrayList<>();
 
     public List<Salle> salles = new ArrayList<>();
 
     public Objet inventaire;
 
-    private int increment = 0;
+    public int timerOxygene = 0;
+    public int timerNourriture = 30;
 
+    private int increment = 100;
     public int increment() {
         return ++increment;
-    }
-    public int initIncrement(int i) {
-        return increment = i;
     }
 
 
@@ -79,9 +75,6 @@ public class Monde {
         }
         for(int i = 0; i<this.salles.size(); i++) {
             clone.salles.add(this.salles.get(i).clone());
-        }
-        for(int i = 0; i<this.animations.size(); i++) {
-            clone.animations.add(this.animations.get(i).clone());
         }
 
         if(this.inventaire != null) {

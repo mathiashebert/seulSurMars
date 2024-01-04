@@ -1,6 +1,5 @@
 package com.bansheesoftware.seulsurmars.service.game;
 
-import com.bansheesoftware.seulsurmars.domain.Animation;
 import com.bansheesoftware.seulsurmars.domain.Monde;
 import com.bansheesoftware.seulsurmars.domain.Objet;
 
@@ -20,9 +19,9 @@ public class Process12 implements Processor {
             if(objet.isPresent() && inventaire.isPresent()) {
                 monde.objets.remove(objet.get());
                 monde.inventaire = null;
-                Animation explosion = new Animation("animation-"+monde.increment(), monde.positionX, monde.positionY, Animation.GRAPHISME.feu, 1);
-                explosion.delai = 2;
-                monde.animations.add(explosion);
+                Objet explosion = new Objet("objet-"+monde.increment(), monde.positionX, monde.positionY, Objet.GRAPHISME.decompteexplosion);
+                explosion.animation = 1;
+                monde.objets.add(explosion);
                 return true;
             }
         }

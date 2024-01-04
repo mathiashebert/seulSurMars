@@ -29,8 +29,6 @@ public class CreerMondeService {
         monde.decors.add(new Decor("decor-10", 1, 6, Decor.GRAPHISME.hydrazine));
         monde.decors.add(new Decor("decor-11", 6, 1, Decor.GRAPHISME.recycleurAir));
 
-        monde.initIncrement(9);
-
         return monde;
     }
 
@@ -66,7 +64,7 @@ public class CreerMondeService {
 
     public Monde creerMonde3() {
         Monde monde = creerMonde(5, 5, 2, 2, 2);
-        creerSalle(monde, 2, 2, 3, 3, true, true);
+        creerSalle(monde, 1, 1, 3, 3, true, true);
         return monde;
     }
 

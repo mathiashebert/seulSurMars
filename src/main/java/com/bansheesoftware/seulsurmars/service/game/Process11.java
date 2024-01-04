@@ -18,15 +18,9 @@ public class Process11 implements Processor {
             if(objet.isPresent() && inventaire.isPresent()) {
                 monde.objets.remove(objet.get());
                 monde.inventaire = null;
-                Animation feu = new Animation("animation-"+monde.increment(), monde.positionX, monde.positionY, Animation.GRAPHISME.feu, 1);
-                feu.delai = 2;
-                monde.animations.add(feu);
-                Objet eau = new Objet("objet-"+monde.increment(), monde.positionX, monde.positionY, Objet.GRAPHISME.bouteille);
-                eau.delai = 2;
-                monde.objets.add(eau);
-                Animation electrique = new Animation("animation-"+monde.increment(), monde.positionX, monde.positionY, Animation.GRAPHISME.electrique, 2);
-                monde.animations.add(electrique);
-
+                Objet feu = new Objet("objet-"+monde.increment(), monde.positionX, monde.positionY, Objet.GRAPHISME.decomptefeu);
+                feu.animation = 1;
+                monde.objets.add(feu);
                 return true;
             }
         }

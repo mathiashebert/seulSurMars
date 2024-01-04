@@ -18,7 +18,6 @@ public class GameController {
     private final CreerMondeService creerMondeService;
 
     Map<Integer, Monde> mondes = new ConcurrentHashMap<>();
-    Map<Integer, Set<String>> timers = new ConcurrentHashMap<>();
 
     public GameController(GameService gameService, TimerService timerService, CreerMondeService creerMondeService) {
         this.gameService = gameService;
@@ -31,7 +30,6 @@ public class GameController {
         String key = body.get("touche");
         int id = Integer.valueOf(body.get("id"));
         Monde monde = mondes.get(id);
-        Set<String> timer = timers.get(id);
         if (key == null) {
             return monde;
         }
@@ -55,7 +53,7 @@ public class GameController {
 
         // TODO : gérer les timers
         gameService.action(touche, monde);
-        timerService.action(monde, timer);
+        timerService.action(monde);
 
         // TODO : gérer la fin de partie
         return (monde);
@@ -76,7 +74,6 @@ public class GameController {
     public Monde init() {
         Monde monde =  creerMondeService.creerMonde();
         mondes.put(monde.getId(), monde);
-        timers.put(monde.getId(), new HashSet<>());
         return monde;
     }
 }
