@@ -19,7 +19,7 @@
 */
 
 function callTimerApi(timer) {
-    return fetchApi('http://localhost:8080/game/timer', {timer: timer});
+    return fetchApi('http://localhost:8080/game/timer', {id: ID, timer: timer});
 }
 function callToucheApi(touche) {
     return fetchApi('http://localhost:8080/game/touche', {id: ID, touche: touche});
@@ -118,9 +118,17 @@ function draw(data) {
         const o = data.objets[index];
         creerElement('objet', o.id, o.x, o.y, o.graphisme);
 
+        // cas special d'une animation
         if(o.animation > 0) {
             document.getElementById(o.id).classList.add('animation');
             document.getElementById(o.id).style.animationDuration = o.animation + 's';
+
+            TIMERS[o.id] = setTimeout(function () {
+                removeTimer(o.id);
+                callTimerApi(o.id).then(function (actions) {
+                    appliquerAction(actions, false);
+                });
+            }, o.animation*1000);
         }
 
         // cas particulier : quand l'objet est retiré de l'inventaire, il faut lui laisser la classe "inventaire" pendant 500 ms
@@ -147,7 +155,7 @@ function draw(data) {
     document.querySelectorAll('.objet').forEach(value => {
         const id = value.getAttribute('id');
         if(data.objets.filter(o => o.id === id).length === 0 && INVENTAIRE[0] !== id) {
-            value.remove();
+            removeTimer(id);
         }
     });
 
@@ -156,20 +164,9 @@ function draw(data) {
         dessinerSalle(data.salles[index]);
     }
 
-    // dessiner les animations
-    for(let index in data.animations) {
-        const o = data.animations[index];
-        creerElement('animation', o.id, o.x, o.y, o.graphisme);
-
-        document.getElementById(o.id).style.animationDuration = o.duree + 's';
-
-        if(o.delai > 0) {
-            document.getElementById(o.id).style.display = 'none';
-            setTimeout(function () { document.getElementById(o.id).style.display = 'block'; }, o.delai*1000);
-        }
-
-    }
-
+    // dessiner les timers
+    dessinerTimer('oxygene', data.timerOxygene);
+    dessinerTimer('nourriture', data.timerNourriture);
 
 }
 
@@ -311,66 +308,18 @@ async function touche(key) {
 }
 
 function appliquerAction(data, block) {
-    if(data === null) {return ;}
+    if(!data || !data.status) {return ;}
+
+    if(data.status === 'gameOver') {
+        document.getElementById('gameover').style.opacity = 1;
+    }
+
 
     if(block) {
         deplacerHero(data.positionX, data.positionY);
     }
 
     draw(data);
-
-    /*
-        for(let action of actions) {
-            const index = INVENTAIRE.indexOf(action.id);
-            switch (action.type) {
-                case "DEPLACER":
-                    if(action.id === 'hero') {
-                  //      deplacerHero(action.x, action.y);
-                    } else if(index > -1) {
-                  //      document.getElementById(action.id).style.bottom= action.y+'em';
-                  //      document.getElementById(action.id).style.left= action.x+'em';
-                  //      setTimeout(function () {
-                  //          document.getElementById(action.id).classList.remove('inventaire');
-                  //      }, 500)
-                  //      INVENTAIRE[index] = null;
-                    } else {
-                        document.getElementById(action.id+'-background').style.bottom= action.y+'em';
-                        document.getElementById(action.id+'-background').style.left= action.x+'em';
-                        document.getElementById(action.id+'-foreground').style.bottom= action.y+'em';
-                        document.getElementById(action.id+'-foreground').style.left= action.x+'em';
-                    }
-                    break;
-
-                case "TIMER":
-                    // dessinerTimer(action);
-                    break;
-
-                case "GAME_OVER":
-                    document.getElementById("gameover").style.opacity = "1";
-                    break;
-
-                case "RETIRER":
-                    if(index > -1) {
-                        INVENTAIRE[index] = null;
-                    }
-                    document.getElementById(action.id).remove();
-                    break;
-
-                case "DESSINER":
-                    if(action.id.indexOf('objet') >= 0) {
-                        dessinerObjet(action, index);
-                    } else if(action.id.indexOf('decor') >= 0) {
-                        dessinerDecor(action);
-                    }  else if(action.id.indexOf('salle') >= 0) {
-                        dessinerSalle(action);
-                    }
-                    break;
-
-
-            }
-            dessinerTimer(action);
-
-        }*/
 
 }
 
@@ -434,61 +383,34 @@ function deplacerHero(x, y) {
 
 }
 
-function dessinerTimer(timer) {
-    let elem = document.getElementById(timer.id + '-timer');
-    if(elem) {
-        return;
-    }
+function dessinerTimer(id, duree) {
 
-    if(timer.duree > 0) {
-        elem = document.createElement('div');
-        elem.setAttribute('id', timer.id + '-timer');
+    console.log("dessiner timer", id, duree, TIMERS[id]);
+
+    if(duree === 0) {
+        removeTimer(id);
+    } else if( !TIMERS[id] ) {
+        const elem = document.createElement('div');
+        elem.setAttribute('id', id);
         elem.classList.add('timer');
-        elem.style.animationDuration = timer.duree + 's';
+        elem.style.animationDuration = duree + 's';
         elem.classList.add('launched');
-        let idPorteur = timer.id;
-        document.getElementById(idPorteur).appendChild(elem);
+        document.getElementById(id + '-timer').appendChild(elem);
 
-        TIMERS[timer.id] = setTimeout(function(){
-            elem.remove();
-            callTimerApi(timer.id).then(function (actions) {
+        TIMERS[id] = setTimeout(function(){
+            removeTimer(id)
+            callTimerApi(id).then(function (actions) {
                 appliquerAction(actions, false);
             });
-        }, action.duree *  1000);
-    } else {
-        clearTimeout(TIMERS[timer.id]);
+        }, duree *  1000);
     }
+}
 
-    /*
-    let elem = document.getElementById(action.id + '-timer');
-    if(elem) {
-        elem.remove();
+function removeTimer(id) {
+    console.log("remove timer", id);
+    if(document.getElementById(id)) {
+        document.getElementById(id).remove();
     }
-    if(action.duree > 0) {
-        elem = document.createElement('div');
-        elem.setAttribute('id', action.id + '-timer');
-        elem.classList.add('timer');
-        elem.style.animationDuration = action.duree + 's';
-        elem.classList.add('launched');
-        let idPorteur = action.id;
-        if(idPorteur.indexOf("objet") < 0) {
-            idPorteur += '-foreground';
-        }
-        document.getElementById(idPorteur).appendChild(elem);
-
-        TIMERS[action.id] = setTimeout(function(){
-            callTimerApi(action.id).then(function (actions) {
-                appliquerAction(actions, false);
-            });
-        }, action.duree *  1000);
-    } else if(action.duree < 0) {
-        TIMERS[action.id] = setTimeout(function(){
-            callTimerApi(action.id).then(function (actions) {
-                appliquerAction(actions, false);
-            });
-        }, action.duree *  -1000);
-    } else {
-        clearTimeout(TIMERS[action.id]);
-    }
-    */
+    clearTimeout(TIMERS[id]);
+    TIMERS[id] = undefined;
 }

@@ -25,9 +25,15 @@ public class Monde {
     public int timerOxygene = 0;
     public int timerNourriture = 30;
 
+    public Status status = Status.onGoing;
+
     private int increment = 100;
     public int increment() {
         return ++increment;
+    }
+
+    public enum Status {
+        onGoing, gameOver, victory
     }
 
 

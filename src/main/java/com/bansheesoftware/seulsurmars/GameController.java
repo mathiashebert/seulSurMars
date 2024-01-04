@@ -51,24 +51,24 @@ public class GameController {
                 return monde;
         }
 
-        // TODO : gérer les timers
         gameService.action(touche, monde);
         timerService.action(monde);
 
-        // TODO : gérer la fin de partie
         return (monde);
     }
-/*
+
     @PostMapping(value = "timer")
-    public Map<String, Action> timer(@RequestBody Map<String, String> body) {
+    public Monde timer(@RequestBody Map<String, String> body) {
         String timer = body.get("timer");
+        int id = Integer.valueOf(body.get("id"));
+        Monde monde = mondes.get(id);
         if (timer == null) {
-            return new HashMap<>();
+            return monde;
         }
 
-        Map<String, Action> actions = gameService.timer(timer);
-        return (actions);
-    }*/
+        timerService.timer(monde, timer);
+        return monde;
+    }
 
     @GetMapping
     public Monde init() {

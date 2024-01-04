@@ -9,9 +9,6 @@ import java.util.*;
 @org.springframework.stereotype.Service
 public class TimerService {
 
-    public static final String RESPIRER = "respirer";
-    public static final String MANGER = "manger";
-
     public TimerService() {
 
     }
@@ -27,22 +24,54 @@ public class TimerService {
         }
     }
 
-    public void timer(Monde monde, Set<String> timers, String timer) {
-        if(timer.equals(RESPIRER)) {
+    public void timer(Monde monde, String timer) {
+
+        if(timer.equals("oxygene")) {
             if(avoirOxygene(monde)) {
                 monde.inventaire = null;
             } else {
-                throw new RuntimeException("game over");
+                monde.status = Monde.Status.gameOver;
+                monde.timerOxygene = 0;
             }
         }
 
-        if(timer.equals(MANGER)) {
+        else if(timer.equals("nourriture")) {
             if(avoirNourriture(monde)) {
                 monde.inventaire = null;
             } else {
-                throw new RuntimeException("game over");
+                monde.status = Monde.Status.gameOver;
+                monde.timerNourriture = 0;
+            }
+        } else {
+            Objet objet = monde.objets.stream().filter(o -> o.id.equals(timer)).findAny().orElse(null);
+            if(objet != null) {
+                switch (objet.graphisme) {
+                    case tomatequipousse:
+                        objet.graphisme = Objet.GRAPHISME.tomate;
+                        objet.animation = 0;
+                        break;
+                    case cupcakequicuit:
+                        objet.graphisme = Objet.GRAPHISME.cupcake;
+                        objet.animation = 0;
+                        break;
+                    case decompteexplosion:
+                        objet.graphisme = Objet.GRAPHISME.explosion;
+                        objet.animation = 1;
+                        break;
+                    case decomptefeu:
+                        objet.graphisme = Objet.GRAPHISME.feu;
+                        objet.animation = 1;
+                        break;
+                    case feu:
+                        objet.graphisme = Objet.GRAPHISME.bouteille;
+                        objet.animation = 0;
+                        break;
+                }
             }
         }
+
+
+
     }
 
 
