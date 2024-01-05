@@ -574,7 +574,7 @@ class GameServiceTest {
      * OBJECTIF 11 : combiner "inflamable" et "electrique"
      *
      * si le hero est sur la même position qu'un objet "inflamable", et qu'il dépose un objet "electrique"
-     * cela crée une animation "decomptefeu" avec une animation de 1 seconde
+     * cela crée une animation "decomptefeu" avec une animation de 3 secondes
      * (et PAS vice-versa)
      */
 
@@ -591,7 +591,7 @@ class GameServiceTest {
         expected.objets.clear();
         expected.inventaire = null;
         expected.objets.add(new Objet("objet-101", 2, 2, Objet.GRAPHISME.decomptefeu));
-        expected.objets.get(0).animation = 1;
+        expected.objets.get(0).animation = 3;
         verifierMonde(expected, monde);
     }
 
@@ -613,8 +613,8 @@ class GameServiceTest {
      * OBJECTIF 12 : combiner "explosif" et "electrique"
      *
      * si le hero est sur la même position qu'un objet "explosif", et qu'il dépose un objet "electrique"
-     * cela crée une animation "decompteexplosion" (avec un delai de 1 seconde)
-     * (et vice-versa)
+     * cela crée une animation "decompteexplosion" (avec une animation de 3 secondes)
+     * (et PAS vice-versa)
      */
 
     @Test
@@ -630,7 +630,7 @@ class GameServiceTest {
         expected.objets.clear();
         expected.inventaire = null;
         expected.objets.add(new Objet("objet-101", 2, 2, Objet.GRAPHISME.decompteexplosion));
-        expected.objets.get(0).animation = 1;
+        expected.objets.get(0).animation = 3;
         verifierMonde(expected, monde);
     }
 

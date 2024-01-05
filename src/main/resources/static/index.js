@@ -161,7 +161,7 @@ function draw(data) {
 
     // dessiner l'ambiance des salles
     for(let index in data.salles) {
-        dessinerSalle(data.salles[index]);
+        dessinerSalle(data.salles[index], data);
     }
 
     // dessiner les timers
@@ -324,19 +324,30 @@ function appliquerAction(data, block) {
 }
 
 
-function dessinerSalle(action) {
+function dessinerSalle(action, data) {
     const salle = document.getElementById(action.id);
     if(!salle) {
         return;
     }
     const effetSalle = salle.getElementsByClassName('effet-salle').item(0);
-    console.log("dessiner salle", action, effetSalle);
 
     if(action.graphisme.includes('SOMBRE')) {
         effetSalle.style.background = 'radial-gradient(circle at '+(LARGEUR_FENETRE/2)+'em '+(HAUTEUR_FENETRE/2)+'em, transparent, black 1.5em, black)';
         let mask = 'linear-gradient(rgb(0, 0, 0) 0px, rgb(0, 0, 0) 0px)';
 
+        console.log(data.objets);
+        for(let index in data.objets) {
+            const value = data.objets[index];
+            if(value.graphisme === 'feu' || value.graphisme === 'explosion') {
+                console.log("feu !", value);
+                const px = value.x - action.x - 0.5;
+                const py= action.y + action.hauteur - value.y - 1.5;
+                mask += ', radial-gradient(circle at '+px+'em '+py+'em, rgb(0, 0, 0) 0, rgba(0, 0, 0, 0) 1em) no-repeat';
+            }
+        }
+        console.log(mask);
 
+/*
         const lights = action.graphisme.split(" ");
         for(let i = 1; i< lights.length; i++) {
             const position = lights[i];
@@ -347,7 +358,7 @@ function dessinerSalle(action) {
             mask += ', radial-gradient(circle at '+px+'em '+py+'em, rgb(0, 0, 0) 0, rgba(0, 0, 0, 0) 1em) no-repeat';
             console.log(mask);
         }
-
+*/
         salle.style['-webkit-mask'] = mask;
         salle.style['-webkit-mask-composite'] = 'xor';
     } else if(action.graphisme.includes('ALARME')) {
@@ -385,8 +396,6 @@ function deplacerHero(x, y) {
 
 function dessinerTimer(id, duree) {
 
-    console.log("dessiner timer", id, duree, TIMERS[id]);
-
     if(duree === 0) {
         removeTimer(id);
     } else if( !TIMERS[id] ) {
@@ -407,7 +416,6 @@ function dessinerTimer(id, duree) {
 }
 
 function removeTimer(id) {
-    console.log("remove timer", id);
     if(document.getElementById(id)) {
         document.getElementById(id).remove();
     }

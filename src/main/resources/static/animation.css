@@ -35,6 +35,14 @@
     background-image: url("img/animation-electrique.png");
 }
 
+.animation.explosion {
+    background-image: url("img/animation-feu.png");
+}
+
+.animation.decompteexplosion {
+    background-image: url("img/animation-electrique.png");
+}
+
 @keyframes sprite {
     from { background-position: 0em; }
     to { background-position: -6em; }

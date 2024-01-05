@@ -19,7 +19,7 @@ public class Process11 implements Processor {
                 monde.objets.remove(objet.get());
                 monde.inventaire = null;
                 Objet feu = new Objet("objet-"+monde.increment(), monde.positionX, monde.positionY, Objet.GRAPHISME.decomptefeu);
-                feu.animation = 1;
+                feu.animation = 3;
                 monde.objets.add(feu);
                 return true;
             }

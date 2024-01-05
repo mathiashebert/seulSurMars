@@ -20,7 +20,7 @@ public class Process12 implements Processor {
                 monde.objets.remove(objet.get());
                 monde.inventaire = null;
                 Objet explosion = new Objet("objet-"+monde.increment(), monde.positionX, monde.positionY, Objet.GRAPHISME.decompteexplosion);
-                explosion.animation = 1;
+                explosion.animation = 3;
                 monde.objets.add(explosion);
                 return true;
             }

@@ -23,7 +23,7 @@ public class Monde {
     public Objet inventaire;
 
     public int timerOxygene = 0;
-    public int timerNourriture = 30;
+    public int timerNourriture = 120;
 
     public Status status = Status.onGoing;
 

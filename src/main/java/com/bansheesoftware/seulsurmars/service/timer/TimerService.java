@@ -20,7 +20,7 @@ public class TimerService {
             monde.timerOxygene = 0; // si on est dedans, il n'y a pas de timer d'oxygène
         }
         else {
-            monde.timerOxygene = 10; // si on est dehors, le timer d'oxygène est initialisé à 10 secondes
+            monde.timerOxygene = 30; // si on est dehors, le timer d'oxygène est initialisé à 30 secondes
         }
     }
 
@@ -57,6 +57,10 @@ public class TimerService {
                     case decompteexplosion:
                         objet.graphisme = Objet.GRAPHISME.explosion;
                         objet.animation = 1;
+                        break;
+                    case explosion:
+                        objet.animation = 0;
+                        monde.objets.remove(objet);
                         break;
                     case decomptefeu:
                         objet.graphisme = Objet.GRAPHISME.feu;

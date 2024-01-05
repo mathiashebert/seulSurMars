@@ -61,6 +61,9 @@
     right: 1em;
     border:0.1em  solid transparent;
     z-index: 20;
+    background: url("./img/o2.png") no-repeat;
+    background-size: contain;
+
 }
 #nourriture-timer {
     width: 1em;
@@ -70,6 +73,8 @@
     right: 0;
     border:0.1em  solid transparent;
     z-index: 20;
+    background: url("./img/pomme.png") no-repeat;
+    background-size: contain;
 }
 
 #inventaire {
