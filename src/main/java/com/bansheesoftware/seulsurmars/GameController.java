@@ -51,8 +51,7 @@ public class GameController {
                 return monde;
         }
 
-        gameService.action(touche, monde);
-        timerService.action(monde);
+        // TODO
 
         return (monde);
     }
@@ -66,13 +65,14 @@ public class GameController {
             return monde;
         }
 
-        timerService.timer(monde, timer);
+        // TODO
+
         return monde;
     }
 
     @GetMapping
     public Monde init() {
-        Monde monde =  creerMondeService.creerMonde();
+        Monde monde =  // TODO;
         mondes.put(monde.getId(), monde);
         return monde;
     }
