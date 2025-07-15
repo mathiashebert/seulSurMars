@@ -362,6 +362,10 @@ function dessinerSalle(action, data) {
         salle.style['-webkit-mask'] = mask;
         salle.style['-webkit-mask-composite'] = 'xor';
     } else if(action.graphisme.includes('ALARME')) {
+        console.error("ALARM");
+        effetSalle.style.background = 'red';
+        effetSalle.animate([{ opacity: 0 }, { opacity: 0.5 }, { opacity: 0 }], { duration: 1000, iterations: Infinity, easing: "linear" })
+
 
     } else {
         effetSalle.style.background = 'transparent';

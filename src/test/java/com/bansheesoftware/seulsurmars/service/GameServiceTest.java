@@ -571,7 +571,7 @@ class GameServiceTest {
     }
 
     /**
-     * OBJECTIF 11 : combiner "inflamable" et "electrique"
+     * OBJECTIF 11 : déposer "electrique" sur "inflammable
      *
      * si le hero est sur la même position qu'un objet "inflamable", et qu'il dépose un objet "electrique"
      * cela crée une animation "decomptefeu" avec une animation de 3 secondes
@@ -610,7 +610,7 @@ class GameServiceTest {
 
 
     /**
-     * OBJECTIF 12 : combiner "explosif" et "electrique"
+     * OBJECTIF 12 : déposer "electrique" sur "explosif"
      *
      * si le hero est sur la même position qu'un objet "explosif", et qu'il dépose un objet "electrique"
      * cela crée une animation "decompteexplosion" (avec une animation de 3 secondes)

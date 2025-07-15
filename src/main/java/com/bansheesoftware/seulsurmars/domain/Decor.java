@@ -7,7 +7,7 @@ public class Decor {
     public GRAPHISME graphisme;
 
     public enum GRAPHISME {
-        ascenseur, potager, hydrazine, fontaine, recycleurAir, four, ampouleEteinte, ampouleAllumee
+        ascenseur, potager, hydrazine, fontaine, recycleurAir, four, ampouleEteinte, ampouleAllumee, terminal, terminalCasse
     }
 
     public Decor(String id, int x, int y, GRAPHISME graphisme) {

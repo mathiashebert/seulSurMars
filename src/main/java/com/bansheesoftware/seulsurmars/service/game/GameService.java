@@ -21,6 +21,7 @@ public class GameService {
         processors.add(new Process10());
         processors.add(new Process11());
         processors.add(new Process12());
+        processors.add(new Process13());
     }
 
     public enum Touche {

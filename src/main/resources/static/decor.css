@@ -35,6 +35,13 @@
 .decor.fontaine.background {
     background-image: url("./img/fontaine_b.png");
 }
+.decor.terminal.background {
+    background-image: url("./img/terminal_b.png");
+}
+.decor.terminalCasse.background {
+    background-image: url("./img/terminalCasse_b.png");
+}
+
 .decor.recycleurAir.background {
     background-image: url("./img/air-recycling.png");
 }
