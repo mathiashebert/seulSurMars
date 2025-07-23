@@ -1,7 +1,8 @@
 package com.bansheesoftware.seulsurmars.service.game;
 
 import com.bansheesoftware.seulsurmars.domain.*;
-import com.bansheesoftware.seulsurmars.service.game.GameService;
+import com.bansheesoftware.seulsurmars.domain.decor.Decor;
+import com.bansheesoftware.seulsurmars.domain.objet.Objet;
 
 import java.util.Optional;
 
@@ -21,6 +22,15 @@ public interface Processor {
                 salle.x + salle.largeur >= x &&
                 salle.y <= y &&
                 salle.y + salle.hauteur >= y).findAny();
+    }
+    default Optional<Decor> trouverDecors(Monde monde, Salle salle, Decor.GRAPHISME graphisme) {
+        return monde.decors.stream()
+                .filter(decor -> decor.graphisme.equals(graphisme))
+                .filter(decor ->
+                salle.x <= decor.x &&
+                        salle.x + salle.largeur >= decor.x &&
+                        salle.y <= decor.y &&
+                        salle.y + salle.hauteur >= decor.y).findAny();
     }
 
 

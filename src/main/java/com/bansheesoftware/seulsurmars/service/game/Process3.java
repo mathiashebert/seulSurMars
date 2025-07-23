@@ -1,7 +1,7 @@
 package com.bansheesoftware.seulsurmars.service.game;
 
 import com.bansheesoftware.seulsurmars.domain.Monde;
-import com.bansheesoftware.seulsurmars.domain.Objet;
+import com.bansheesoftware.seulsurmars.domain.objet.Objet;
 
 /**
  * ramasser déposer un objet avec la touche "OBJET"

@@ -36,7 +36,7 @@ function fetchApi(url, params) {
             return response.json()})
         .then(function(data)
         {
-            console.log(data); /*
+             /*
             const actions = [];
             for (let [key, value] of Object.entries(data)) {
                 actions.push(new Action(value.type, key, parseInt(value.x), parseInt(value.y), parseInt(value.duree), parseInt(value.inventaire), value.graphisme))
@@ -108,9 +108,14 @@ function creerPlateau() {
 
 function draw(data) {
 
+    // dessiner les decors
+
     for(let index in data.decors) {
         const a = data.decors[index];
         creerElement('decor', a.id, a.x, a.y, a.graphisme);
+
+        drawAnimation(a, true);
+
     }
 
     // dessiner les objets
@@ -118,18 +123,7 @@ function draw(data) {
         const o = data.objets[index];
         creerElement('objet', o.id, o.x, o.y, o.graphisme);
 
-        // cas special d'une animation
-        if(o.animation > 0) {
-            document.getElementById(o.id).classList.add('animation');
-            document.getElementById(o.id).style.animationDuration = o.animation + 's';
-
-            TIMERS[o.id] = setTimeout(function () {
-                removeTimer(o.id);
-                callTimerApi(o.id).then(function (actions) {
-                    appliquerAction(actions, false);
-                });
-            }, o.animation*1000);
-        }
+        drawAnimation(o);
 
         // cas particulier : quand l'objet est retiré de l'inventaire, il faut lui laisser la classe "inventaire" pendant 500 ms
         if(INVENTAIRE[0] === o.id && data.inventaire !== o.id) {
@@ -182,6 +176,28 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
 }, false);
+
+function drawAnimation(o, isDecors) {
+    if(o.animation > 0) {
+        if(isDecors) {
+            document.getElementById(o.id+'-background').classList.add('animation');
+            document.getElementById(o.id+'-background').style.animationDuration = o.animation + 's';
+        } else {
+            document.getElementById(o.id).classList.add('animation');
+            document.getElementById(o.id).style.animationDuration = o.animation + 's';
+        }
+
+        if(!TIMERS[o.id]) {
+            TIMERS[o.id] = setTimeout(function () {
+                removeTimer(o.id);
+                callTimerApi(o.id).then(function (actions) {
+                    appliquerAction(actions, false);
+                });
+            }, o.animation*1000);
+        }
+
+    }
+}
 
 function creerSalle(i, j, largeur, hauteur) {
     let tile = document.createElement('div');
@@ -291,7 +307,6 @@ document.addEventListener('keydown', function(e) {
 }, false);
 
 async function touche(key) {
-    console.log(key);
 
     // si on est en mouvement, et qu'il y a déjà une action suivante de prévue, on ne fait rien
     if(MOUVEMENT && ACTION_SUIVANTE !== null) {
@@ -335,17 +350,14 @@ function dessinerSalle(action, data) {
         effetSalle.style.background = 'radial-gradient(circle at '+(LARGEUR_FENETRE/2)+'em '+(HAUTEUR_FENETRE/2)+'em, transparent, black 1.5em, black)';
         let mask = 'linear-gradient(rgb(0, 0, 0) 0px, rgb(0, 0, 0) 0px)';
 
-        console.log(data.objets);
         for(let index in data.objets) {
             const value = data.objets[index];
             if(value.graphisme === 'feu' || value.graphisme === 'explosion') {
-                console.log("feu !", value);
                 const px = value.x - action.x - 0.5;
                 const py= action.y + action.hauteur - value.y - 1.5;
                 mask += ', radial-gradient(circle at '+px+'em '+py+'em, rgb(0, 0, 0) 0, rgba(0, 0, 0, 0) 1em) no-repeat';
             }
         }
-        console.log(mask);
 
 /*
         const lights = action.graphisme.split(" ");
@@ -362,7 +374,6 @@ function dessinerSalle(action, data) {
         salle.style['-webkit-mask'] = mask;
         salle.style['-webkit-mask-composite'] = 'xor';
     } else if(action.graphisme.includes('ALARME')) {
-        console.error("ALARM");
         effetSalle.style.background = 'red';
         effetSalle.animate([{ opacity: 0 }, { opacity: 0.5 }, { opacity: 0 }], { duration: 1000, iterations: Infinity, easing: "linear" })
 

@@ -1,6 +1,6 @@
-package com.bansheesoftware.seulsurmars.domain;
+package com.bansheesoftware.seulsurmars.domain.objet;
 
-public class Objet {
+public abstract class Objet {
     public String id;
     public int x;
     public int y;
@@ -19,9 +19,15 @@ public class Objet {
         this.graphisme = graphisme;
     }
 
-    public Objet clone() {
-        Objet objet = new Objet(id, x, y, graphisme);
-        objet.animation = this.animation;
-        return objet;
+    public boolean isInflammable() {
+        return graphisme.equals(GRAPHISME.inflammable) ||
+                graphisme.equals(GRAPHISME.oxygene) ||
+                graphisme.equals(GRAPHISME.hydrogene);
     }
+    public boolean isExplosif() {
+        return graphisme.equals(GRAPHISME.explosif);
+
+    }
+
+    public abstract Objet duplique();
 }

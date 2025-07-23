@@ -22,6 +22,7 @@ public class GameService {
         processors.add(new Process11());
         processors.add(new Process12());
         processors.add(new Process13());
+        processors.add(new Process14());
     }
 
     public enum Touche {
@@ -29,6 +30,7 @@ public class GameService {
     }
 
     public void action(Touche touche, Monde monde) {
+        if(monde.status.equals(Monde.Status.gameOver)) return;
 
         for(Processor processor : processors) {
             if(processor.process(touche, monde)) {

@@ -1,35 +1,40 @@
 package com.bansheesoftware.seulsurmars.service.creermonde;
 
 import com.bansheesoftware.seulsurmars.domain.*;
+import com.bansheesoftware.seulsurmars.domain.decor.*;
+import com.bansheesoftware.seulsurmars.domain.objet.*;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
 @org.springframework.stereotype.Service
 public class CreerMondeService {
-    private AtomicInteger increment = new AtomicInteger(0);
+    private final AtomicInteger increment = new AtomicInteger(0);
 
 
     public Monde creerMonde() {
         Monde monde = creerMonde(50, 10, 6, 6, 6);
 
-        creerSalle(monde, 3,5, 6, 4, true, true);
-        creerSalle(monde, 3,0, 6, 4, false, false);
+        creerSalle(monde, 3,5, 8, 4, true, true);
+        creerSalle(monde, 3,0, 10, 4, false, false);
+        creerSalle(monde, 12,5, 6, 4, true, true);
 
-        monde.salles.get(0).graphisme = Salle.GRAPHISME.ALARME;
+        monde.salles.get(2).graphisme = Salle.GRAPHISME.ALARME;
 
         creerAscenseur(monde, "decors-1", 5, 6, 1, 6);
 
-        monde.objets.add(new Objet("objet-1", 4, 6, Objet.GRAPHISME.sucre));
-        monde.objets.add(new Objet("objet-2", 3, 6, Objet.GRAPHISME.bouteille));
-        monde.objets.add(new Objet("objet-3", 2, 6, Objet.GRAPHISME.bouteille));
-        monde.objets.add(new Objet("objet-4", 4, 1, Objet.GRAPHISME.oxygene));
-        monde.objets.add(new Objet("objet-5", 6, 1, Objet.GRAPHISME.hydrogene));
+        monde.objets.add(new Sucre("objet-1", 0, 6));
+        monde.objets.add(new Electrique("objet-2", 1, 6));
+        monde.objets.add(new Oxygene("objet-3", 2, 6));
+        monde.objets.add(new Oxygene("objet-4", 4, 6));
+        monde.objets.add(new Hydrogene("objet-5", 5, 6));
+        monde.objets.add(new Electrique("objet-7", 6, 6));
+        /*monde.decors.add(new Terminal("decor-7.1", 13, 6, Decor.GRAPHISME.terminalCasse));
 
-        monde.decors.add(new Decor("decor-7", 4, 6, Decor.GRAPHISME.terminalCasse));
-        monde.decors.add(new Decor("decor-8", 0, 6, Decor.GRAPHISME.potager));
-        monde.decors.add(new Decor("decor-9", 4, 1, Decor.GRAPHISME.ampouleAllumee));
-        monde.decors.add(new Decor("decor-10", 1, 6, Decor.GRAPHISME.hydrazine));
-        monde.decors.add(new Decor("decor-11", 6, 1, Decor.GRAPHISME.recycleurAir));
+        monde.decors.add(new Potager("decor-8", 0, 6));
+        monde.decors.add(new Potager("decor-10", 1, 6));
+        monde.decors.add(new Ampoule("decor-9", 4, 1, Decor.GRAPHISME.ampouleAllumee));
+        monde.decors.add(new RecycleurAir("decor-11", 6, 6));
+        monde.decors.add(new Hydrazine("decor-12", 7, 6));*/
 
         return monde;
     }

@@ -1,8 +1,9 @@
 package com.bansheesoftware.seulsurmars.service.game;
 
-import com.bansheesoftware.seulsurmars.domain.Decor;
+import com.bansheesoftware.seulsurmars.domain.decor.Decor;
 import com.bansheesoftware.seulsurmars.domain.Monde;
-import com.bansheesoftware.seulsurmars.domain.Objet;
+import com.bansheesoftware.seulsurmars.domain.objet.Electrique;
+import com.bansheesoftware.seulsurmars.domain.objet.Objet;
 import com.bansheesoftware.seulsurmars.domain.Salle;
 
 import java.util.Optional;
@@ -22,7 +23,7 @@ public class Process10 implements Processor {
 
             if(decor.filter(decors -> decors.graphisme.equals(Decor.GRAPHISME.ampouleAllumee)).isPresent() && objet.isEmpty() && salle.isPresent()) {
                 decor.get().graphisme = Decor.GRAPHISME.ampouleEteinte;
-                monde.objets.add( new Objet("objet-"+monde.increment(), monde.positionX, monde.positionY, Objet.GRAPHISME.electrique));
+                monde.objets.add( new Electrique("objet-"+monde.increment(), monde.positionX, monde.positionY));
                 salle.get().graphisme = Salle.GRAPHISME.SOMBRE;
                 return true;
             }

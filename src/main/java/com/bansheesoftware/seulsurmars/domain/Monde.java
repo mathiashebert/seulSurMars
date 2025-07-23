@@ -1,5 +1,8 @@
 package com.bansheesoftware.seulsurmars.domain;
 
+import com.bansheesoftware.seulsurmars.domain.decor.Decor;
+import com.bansheesoftware.seulsurmars.domain.objet.Objet;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -74,17 +77,17 @@ public class Monde {
         clone.positionY = this.positionY;
 
         for(int i = 0; i<this.objets.size(); i++) {
-            clone.objets.add(this.objets.get(i).clone());
+            clone.objets.add(this.objets.get(i).duplique());
         }
         for(int i = 0; i<this.decors.size(); i++) {
-            clone.decors.add(this.decors.get(i).clone());
+            clone.decors.add(this.decors.get(i).duplique());
         }
         for(int i = 0; i<this.salles.size(); i++) {
             clone.salles.add(this.salles.get(i).clone());
         }
 
         if(this.inventaire != null) {
-            clone.inventaire = this.inventaire.clone();
+            clone.inventaire = this.inventaire.duplique();
         }
 
         clone.increment = this.increment;

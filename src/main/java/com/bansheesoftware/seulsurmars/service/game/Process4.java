@@ -1,8 +1,9 @@
 package com.bansheesoftware.seulsurmars.service.game;
 
-import com.bansheesoftware.seulsurmars.domain.Decor;
+import com.bansheesoftware.seulsurmars.domain.decor.Decor;
 import com.bansheesoftware.seulsurmars.domain.Monde;
-import com.bansheesoftware.seulsurmars.domain.Objet;
+import com.bansheesoftware.seulsurmars.domain.objet.Hydrogene;
+import com.bansheesoftware.seulsurmars.domain.objet.Objet;
 
 import java.util.Optional;
 
@@ -17,7 +18,7 @@ public class Process4 implements Processor {
             Optional<Decor> decors = trouverDecor(monde, monde.positionX, monde.positionY).filter(decors1 -> decors1.graphisme.equals(Decor.GRAPHISME.hydrazine));
             Optional<Objet> objet = trouverObjet(monde, monde.positionX, monde.positionY);
             if(decors.isPresent() && objet.isEmpty()) {
-                monde.objets.add( new Objet("objet-"+monde.increment(), monde.positionX, monde.positionY, Objet.GRAPHISME.hydrogene));
+                monde.objets.add( new Hydrogene("objet-"+monde.increment(), monde.positionX, monde.positionY));
                 return true;
             }
         }

@@ -9,9 +9,9 @@ import com.bansheesoftware.seulsurmars.domain.objet.Objet;
 import java.util.Optional;
 
 /**
- * brancher et debrancher un terminal
+ * brancher et debrancher une tourelle
  */
-public class Process13 implements Processor {
+public class Process14 implements Processor {
 
     @Override
     public boolean process(GameService.Touche touche, Monde monde) {
@@ -21,19 +21,18 @@ public class Process13 implements Processor {
             Optional<Salle> salle = trouverSalle(monde, monde.positionX, monde.positionY);
             Optional<Objet> inventaire = Optional.ofNullable(monde.inventaire).filter(objet1 -> objet1.graphisme.equals(Objet.GRAPHISME.electrique));
 
-            if(decor.filter(decors -> decors.graphisme.equals(Decor.GRAPHISME.terminal)).isPresent() && objet.isEmpty() && salle.isPresent()) {
-                decor.get().graphisme = Decor.GRAPHISME.terminalCasse;
+            if(decor.filter(decors -> decors.graphisme.equals(Decor.GRAPHISME.tourelleFermee)).isPresent() && objet.isEmpty() && salle.isPresent()) {
+                decor.get().graphisme = Decor.GRAPHISME.tourelleCassee;
                 monde.objets.add( new Electrique("objet-"+monde.increment(), monde.positionX, monde.positionY));
-                salle.get().graphisme = Salle.GRAPHISME.ALARME;
-                Optional<Decor> tourelle = trouverDecors(monde, salle.get(), Decor.GRAPHISME.tourelleFermee);
-                tourelle.ifPresent(value -> ((Tourelle) value).animer(monde));
                 return true;
             }
 
-            if(decor.filter(decors -> decors.graphisme.equals(Decor.GRAPHISME.terminalCasse)).isPresent() && inventaire.isPresent() && salle.isPresent()) {
+            if(decor.filter(decors -> decors.graphisme.equals(Decor.GRAPHISME.tourelleCassee)).isPresent() && inventaire.isPresent() && salle.isPresent()) {
                 monde.inventaire = null;
-                decor.get().graphisme = Decor.GRAPHISME.terminal;
-                salle.get().graphisme = Salle.GRAPHISME.NORMALE;
+                decor.get().graphisme = Decor.GRAPHISME.tourelleFermee;
+                if(salle.get().graphisme.equals(Salle.GRAPHISME.ALARME)) {
+                    ((Tourelle) decor.get()).animer(monde);
+                }
                 return true;
             }
         }

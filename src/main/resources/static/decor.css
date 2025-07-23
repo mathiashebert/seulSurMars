@@ -57,3 +57,12 @@
 .decor.ampouleEteinte.background {
     background-image: url("./img/ampouleEteinte.png");
 }
+.decor.tourelleFermee.background {
+    background-image: url("./img/tourellefermee.png");
+}
+.decor.tourelleOuverte.background {
+    background-image: url("./img/tourelleouverte.png");
+}
+.decor.tourelleCassee.background {
+    background-image: url("./img/tourellecassee.png");
+}

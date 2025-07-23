@@ -1,7 +1,8 @@
 package com.bansheesoftware.seulsurmars.service.game;
 
 import com.bansheesoftware.seulsurmars.domain.Monde;
-import com.bansheesoftware.seulsurmars.domain.Objet;
+import com.bansheesoftware.seulsurmars.domain.objet.GazInflamable;
+import com.bansheesoftware.seulsurmars.domain.objet.Objet;
 
 import java.util.Optional;
 
@@ -21,7 +22,7 @@ public class Process8 implements Processor {
             ) {
                 monde.inventaire = null;
                 monde.objets.remove(objet.get());
-                monde.objets.add( new Objet("objet-"+monde.increment(), monde.positionX, monde.positionY, Objet.GRAPHISME.inflammable));
+                monde.objets.add( new GazInflamable("objet-"+monde.increment(), monde.positionX, monde.positionY));
                 return true;
             }
         }

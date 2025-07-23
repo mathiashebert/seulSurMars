@@ -1,6 +1,7 @@
 package com.bansheesoftware.seulsurmars.service.game;
 
 import com.bansheesoftware.seulsurmars.domain.*;
+import com.bansheesoftware.seulsurmars.domain.objet.Objet;
 
 import java.util.Optional;
 
@@ -16,11 +17,9 @@ public class Process11 implements Processor {
             Optional<Objet> inventaire = Optional.ofNullable(monde.inventaire).filter(objet1 -> objet1.graphisme.equals(Objet.GRAPHISME.electrique));
 
             if(objet.isPresent() && inventaire.isPresent()) {
-                monde.objets.remove(objet.get());
                 monde.inventaire = null;
-                Objet feu = new Objet("objet-"+monde.increment(), monde.positionX, monde.positionY, Objet.GRAPHISME.decomptefeu);
-                feu.animation = 3;
-                monde.objets.add(feu);
+                objet.get().graphisme = Objet.GRAPHISME.decomptefeu;
+                objet.get().animation = 3;
                 return true;
             }
         }

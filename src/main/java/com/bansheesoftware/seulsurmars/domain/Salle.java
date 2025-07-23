@@ -28,4 +28,8 @@ public class Salle {
         salle.graphisme = graphisme;
         return salle;
     }
+
+    public boolean interieur(int x, int y) {
+        return x >= this.x && x < this.x + this.largeur && y >= this.y && y < this.y + this.hauteur;
+    }
 }

@@ -1,4 +1,4 @@
-package com.bansheesoftware.seulsurmars.domain;
+package com.bansheesoftware.seulsurmars.domain.decor;
 
 public class Ascenseur extends Decor {
     public int hauteurBas;
@@ -8,5 +8,11 @@ public class Ascenseur extends Decor {
         super(id, x, y, GRAPHISME.ascenseur);
         this.hauteurBas = hauteurBas;
         this.hauteurHaut = hauteurHaut;
+    }
+
+
+    @Override
+    public Ascenseur duplique() {
+        return new Ascenseur(id, x, y, hauteurBas, hauteurHaut);
     }
 }
