@@ -10,7 +10,6 @@ let currentPileIndex = 0;
 let astronauts = []; // Liste des astronautes avec leurs positions et ressources
 let boardResources = {}; // ex: { "2-3": { food: 1, energy: 2 } }
 let selectedAstronaut = null;
-let possibleTargets = [];
 
 
 function createDeck() {
@@ -58,23 +57,9 @@ function initializeGame() {
 function drawInitialLayout() {
     const board = document.getElementById('board');
     board.innerHTML = '';
-    const grid = [];
-/*
-    for (let y = 0; y < boardSize; y++) {
-        for (let x = 0; x < boardSize; x++) {
-            const div = document.createElement('div');
-            div.classList.add('card');
-            div.dataset.x = x;
-            div.dataset.y = y;
-            const special = Object.entries(specialPositions).find(([_, pos]) => pos[0] === y && pos[1] === x);
-            div.textContent = special ? special[0] : '';
-            board.appendChild(div);
-        }
-    }*/
 
     for (let row = 0; row < boardSize; row++) {
         const rowEl = document.createElement('div');
-        //rowEl.className = 'row';
         for (let col = 0; col < boardSize; col++) {
             const cell = document.createElement('div');
             cell.className = 'cell';
@@ -82,9 +67,7 @@ function drawInitialLayout() {
             cell.dataset.col = col;
             cell.innerHTML = '';
             board.appendChild(cell);
-            //rowEl.appendChild(cell);
         }
-        //board.appendChild(rowEl);
     }
 
     // Positionnement des 4 as au centre (carré 2x2)
@@ -101,6 +84,31 @@ function placeCard(row, col, card) {
         cell.classList.add('card');
         cell.dataset.suit = card.suit;
         cell.dataset.value = card.value;
+
+        // ajout d'une icone d'appel, draggable
+        if (card.suit === 'spades') {
+            const icon = document.createElement('div');
+            icon.className = 'call-icon';
+            icon.innerText = '📡';
+            icon.setAttribute('draggable', 'true');
+            icon.addEventListener('dragstart', e => {
+                e.dataTransfer.setData('text/plain', 'call');
+
+                const astro = cell.querySelector(`.astronaut`);
+                if(astro) {
+                    selectedAstronaut = astro.dataset.index;
+
+                    // les modules habitables sont des cibles potentielles
+                    // todo doit être actif, et libre
+                    document.querySelectorAll('.card[data-suit="hearts"]').forEach(el => {
+                        if( isFree(parseInt(el.dataset.row), parseInt(el.dataset.col))) el.classList.add('possible-target' )
+
+                    });
+                }
+
+            });
+            cell.appendChild(icon);
+        }
     }
 }
 
@@ -139,14 +147,11 @@ function renderAstronauts() {
                 selectedAstronaut = i;
                 const targets = new Set();
                 pathfinder(astro.row, astro.col, 3, targets);
-                targets.delete(`${astro.row}-${astro.col}`);
-                possibleTargets = [];
 
                 targets.forEach(target => {
                     const x = target.split('-')[0];
                     const y = target.split('-')[1];
                     document.querySelector(`.cell[data-row="${x}"][data-col="${y}"]`).classList.add('possible-target');
-                    possibleTargets.push(target);
                 })
             });
             cell.appendChild(token);
@@ -155,12 +160,14 @@ function renderAstronauts() {
                 const food = document.createElement('div');
                 food.className = 'resource-token';
                 food.innerText = `🥬${astro.food}`;
+                food.addEventListener('click', () => discardResource(astro, 'food'));
                 token.appendChild(food);
             }
             if (astro.energy > 0) {
                 const energy = document.createElement('div');
                 energy.className = 'resource-token';
                 energy.innerText = `🔋${astro.energy}`;
+                energy.addEventListener('click', () => discardResource(astro, 'energy'));
                 token.appendChild(energy);
             }
         }
@@ -244,15 +251,57 @@ function renderResources() {
             const food = document.createElement('div');
             food.className = 'resource-token';
             food.innerText = `🥬${resources.food}`;
+            food.addEventListener('click', () => collectResource(row, col, 'food'));
             cell.appendChild(food);
         }
         if (resources.energy > 0) {
             const energy = document.createElement('div');
             energy.className = 'resource-token';
             energy.innerText = `🔋${resources.energy}`;
+            energy.addEventListener('click', () => collectResource(row, col, 'energy'));
             cell.appendChild(energy);
         }
     }
+}
+
+function collectResource(row, col, type) {
+    let astronaut = astronauts.find(a => a.row === row && a.col === col);
+
+    if (!astronaut) {
+        log("Aucun astronaute sur cette case pour ramasser une ressource.");
+        return;
+    }
+
+    if (astronaut.food + astronaut.energy >= 5) {
+        log("L'astronaute a atteint sa limite de ressources.");
+        return;
+    }
+
+    const key = `${row}-${col}`;
+    if (boardResources[key][type] <= 0) {
+        log("Plus aucune ressource à ramasser");
+        return;
+    }
+
+    astronaut[type]++;
+    boardResources[key][type] --;
+    log(`Astronaute ramasse 1 ${type}.`);
+    renderResources();
+    renderAstronauts();
+}
+
+
+function discardResource(astronaut, type) {
+
+    if (astronaut[type] <= 0) {
+        log("L'astronaute n'a plus de stock à jeter");
+        return;
+    }
+
+    astronaut[type]--;
+    log(`Astronaute jette 1 ${type}.`);
+    renderResources();
+    renderAstronauts();
 }
 
 
@@ -261,47 +310,80 @@ function setupDragAndDrop() {
         cell.addEventListener('dragover', (e) => e.preventDefault());
         cell.addEventListener('drop', (e) => {
 
+            if (selectedAstronaut === null) return;
+
+            const astro = astronauts[selectedAstronaut];
+            selectedAstronaut = null;
+
+            if( ! cell.classList.contains("possible-target")) {
+                log("destination invalide.");
+                document.querySelectorAll(`.cell`).forEach(c => {c.classList.remove('possible-target')});
+                return;
+            }
+
             document.querySelectorAll(`.cell`).forEach(c => {c.classList.remove('possible-target')});
 
-            if (selectedAstronaut === null) return;
-            const row = parseInt(cell.dataset.row);
-            const col = parseInt(cell.dataset.col);
-            const astro = astronauts[selectedAstronaut];
+            const data = e.dataTransfer.getData('text/plain');
 
-            if( ! possibleTargets.includes(row+'-'+col) ) {
-                log("Déplacement invalide.");
-                selectedAstronaut = null;
-                return;
+            if(data === 'call') {
+                calling(cell, astro);
+            } else {
+                movement(cell, astro);
             }
 
-            if(astro.energy <= 0) {
-                log("Pas d'energie.");
-                selectedAstronaut = null;
-                return;
-            }
-
-            const hasCard = cell.classList.contains('card');
-
-            astro.row = row;
-            astro.col = col;
-            astro.energy--;
-            log(`Astronaute déplacé vers ${row},${col} (énergie restante : ${astro.energy})`);
-
-            if (!hasCard) {
-                log("Le mouvement s'arrête sur une case vide.");
-                const card = deck.shift();
-                console.log(deck);
-                placeCard(row, col, card);
-            }
-
-            renderAstronauts();
-            selectedAstronaut = null;
         });
     });
 }
 
+function movement(cell, astro) {
+
+    const row = parseInt(cell.dataset.row);
+    const col = parseInt(cell.dataset.col);
+
+    if(astro.energy <= 0) {
+        log("Pas d'energie.");
+        return;
+    }
+
+    const hasCard = cell.classList.contains('card');
+
+    astro.row = row;
+    astro.col = col;
+    astro.energy--;
+    log(`Astronaute déplacé vers ${row},${col} (énergie restante : ${astro.energy})`);
+
+    if (!hasCard) {
+        log("Le mouvement s'arrête sur une case vide.");
+        const card = deck.shift();
+        placeCard(row, col, card);
+    }
+
+    renderAstronauts();
+}
+
+function calling(cell, astro) {
+    const row = parseInt(cell.dataset.row);
+    const col = parseInt(cell.dataset.col);
+
+    if(astro.energy <= 0) {
+        log("Pas d'energie.");
+        return;
+    }
+    astro.energy--;
+
+    if (cell.dataset.suit === 'hearts') {
+        astronauts.push({ row, col, energy: 0, food: 0 });
+        renderAstronauts();
+        log("Nouvel astronaute appelé sur un module habitable.");
+    } else {
+        log("Appel échoué : la case n'est pas un module habitable.");
+    }
+}
+
 function pathfinder(x, y, dist, targets) {
-    targets.add(`${x}-${y}`);
+    if(isFree(x,y)) {
+        targets.add(`${x}-${y}`);
+    }
 
     if(dist <= 0) return;
 
@@ -314,6 +396,11 @@ function pathfinder(x, y, dist, targets) {
     if(x < boardSize-1) pathfinder(x+1, y, dist-1, targets);
     if(y > 0) pathfinder(x, y-1, dist-1, targets);
 
+}
+
+function isFree(row, col) {
+    // pour l'instant, on verifie s'il y a un astronaute dessus
+    return !astronauts.find(a => a.row === row && a.col === col)
 }
 
 function log(message) {
