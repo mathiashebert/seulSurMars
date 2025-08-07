@@ -6,10 +6,11 @@ const values = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'
 
 let deck = [];
 let drawPiles = [[], [], [], []];
-let currentPileIndex = 0;
 let astronauts = []; // Liste des astronautes avec leurs positions et ressources
 let boardResources = {}; // ex: { "2-3": { food: 1, energy: 2 } }
 let selectedAstronaut = null;
+let selectedDiscardCard = null;
+let discardPile = [];
 
 
 function createDeck() {
@@ -52,6 +53,26 @@ function initializeGame() {
     drawInitialLayout();
     placeInitialAstronaut();
     setupDragAndDrop();
+
+    // première phase de resource (début du tour 1)
+    runResourcePhase();
+
+}
+
+function revealCardFromDeck() {
+    if(deck.length === 0) {
+        // todo  : victoire
+    }
+    const card = deck.shift();
+    if(['J', 'Q', 'K'].includes(card.value)) {
+        // todo peripetie
+    }
+    return card;
+}
+function discardFromDeck(number) {
+    for(let i= 0; i<number; i++) {
+        discardPile.push(revealCardFromDeck());
+    }
 }
 
 function drawInitialLayout() {
@@ -59,7 +80,6 @@ function drawInitialLayout() {
     board.innerHTML = '';
 
     for (let row = 0; row < boardSize; row++) {
-        const rowEl = document.createElement('div');
         for (let col = 0; col < boardSize; col++) {
             const cell = document.createElement('div');
             cell.className = 'cell';
@@ -71,44 +91,88 @@ function drawInitialLayout() {
     }
 
     // Positionnement des 4 as au centre (carré 2x2)
-    placeCard(2, 2, { suit: 'hearts', value: 'A' });
-    placeCard(2, 3, { suit: 'clubs', value: 'A' });
-    placeCard(3, 2, { suit: 'diamonds', value: 'A' });
-    placeCard(3, 3, { suit: 'spades', value: 'A' });
+    placeCard(2, 2, {suit: 'hearts', value: 'A'});
+    placeCard(2, 3, {suit: 'clubs', value: 'A'});
+    placeCard(3, 2, {suit: 'diamonds', value: 'A'});
+    placeCard(3, 3, {suit: 'spades', value: 'A'});
+
+    // pile de defausse
+    const discard = document.getElementById('discard');
+    discard.innerHTML = '';
+
+    for (let row = 0; row < discardSize; row++) {
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        cell.innerHTML = '';
+        cell.dataset.index = ''+row;
+        discard.appendChild(cell);
+
+        cell.setAttribute('draggable', 'true');
+        cell.addEventListener('dragstart', e => {
+            e.dataTransfer.setData('text/plain', 'recycle');
+            selectedDiscardCard = cell;
+
+            document.querySelectorAll('.card.construction.occupied').forEach(el => {
+                el.classList.add('possible-target' )
+            });
+        });
+    }
+}
+function prepareCard(cell, card) {
+    cell.innerHTML = `${card.value} ${getSuitSymbol(card.suit)}`;
+    cell.dataset.card = `${card.value} ${card.suit}`;
+    cell.classList.add('card');
+    cell.classList.add('construction');
+
+    const icon = document.createElement('div');
+    icon.className = 'build-icon';
+    icon.innerText = '🔧';
+    icon.title = 'Construire ici';
+    icon.addEventListener('click', () => construction(cell));
+    cell.appendChild(icon);
+}
+
+function buildCard(cell) {
+    const card = {value : cell.dataset.card.split(' ')[0], suit : cell.dataset.card.split(' ')[1]};
+    cell.classList.remove('construction');
+
+    cell.classList.add('card');
+    cell.dataset.suit = card.suit;
+    cell.dataset.value = card.value;
+
+    cell.querySelectorAll('.build-icon').forEach(el => el.remove());
+
+    // ajout d'une icone d'appel, draggable, en cas d'antenne de communication
+    if (card.suit === 'spades') {
+        const icon = document.createElement('div');
+        icon.className = 'call-icon';
+        icon.innerText = '📡';
+        icon.setAttribute('draggable', 'true');
+        icon.addEventListener('dragstart', e => {
+            e.dataTransfer.setData('text/plain', 'call');
+
+            const astro = cell.querySelector(`.astronaut`);
+            if(astro) {
+                selectedAstronaut = astro.dataset.index;
+
+                // les modules habitables sont des cibles potentielles
+                // todo doit être actif, et libre
+                document.querySelectorAll('.card[data-suit="hearts"]').forEach(el => {
+                    if( isFree(parseInt(el.dataset.row), parseInt(el.dataset.col))) el.classList.add('possible-target' )
+
+                });
+            }
+
+        });
+        cell.appendChild(icon);
+    }
 }
 
 function placeCard(row, col, card) {
     const cell = document.querySelector(`.cell[data-row="${row}"][data-col="${col}"]`);
     if (cell) {
-        cell.innerHTML = `${card.value} ${getSuitSymbol(card.suit)}`;
-        cell.classList.add('card');
-        cell.dataset.suit = card.suit;
-        cell.dataset.value = card.value;
-
-        // ajout d'une icone d'appel, draggable
-        if (card.suit === 'spades') {
-            const icon = document.createElement('div');
-            icon.className = 'call-icon';
-            icon.innerText = '📡';
-            icon.setAttribute('draggable', 'true');
-            icon.addEventListener('dragstart', e => {
-                e.dataTransfer.setData('text/plain', 'call');
-
-                const astro = cell.querySelector(`.astronaut`);
-                if(astro) {
-                    selectedAstronaut = astro.dataset.index;
-
-                    // les modules habitables sont des cibles potentielles
-                    // todo doit être actif, et libre
-                    document.querySelectorAll('.card[data-suit="hearts"]').forEach(el => {
-                        if( isFree(parseInt(el.dataset.row), parseInt(el.dataset.col))) el.classList.add('possible-target' )
-
-                    });
-                }
-
-            });
-            cell.appendChild(icon);
-        }
+        prepareCard(cell, card);
+        buildCard(cell);
     }
 }
 
@@ -132,12 +196,15 @@ function placeInitialAstronaut() {
 function renderAstronauts() {
     // Supprimer les anciens
     document.querySelectorAll('.astronaut').forEach(el => el.remove());
+    document.querySelectorAll('.cell').forEach(el => el.classList.remove('occupied'));
 
 
     for (let i = 0; i < astronauts.length; i++) {
         const astro = astronauts[i];
         const cell = document.querySelector(`.cell[data-row="${astro.row}"][data-col="${astro.col}"]`);
         if (cell) {
+            cell.classList.add('occupied');
+
             const token = document.createElement('div');
             token.className = 'astronaut';
             token.innerText = '👨‍🚀';
@@ -231,11 +298,44 @@ function runResourcePhase() {
 
 }
 
+function runDiscardPhase() {
+    let pileIndex = 1;
+    if(deck.length <= 36) pileIndex = 2;
+    if(deck.length <= 24) pileIndex = 3;
+    if(deck.length <= 12) pileIndex = 4;
+
+    discardFromDeck(pileIndex);
+    renderDiscardPile();
+}
+
 function addResourceToCell(row, col, type, amount = 1) {
     const key = `${row}-${col}`;
     if (!boardResources[key]) boardResources[key] = { food: 0, energy: 0 };
     boardResources[key][type] = Math.min((boardResources[key][type] || 0) + amount, 3);
 }
+
+function renderDiscardPile() {
+    const lastCards = discardPile.slice(-1*discardSize).reverse(); // dernières cartes, plus récentes en haut
+
+    for (let i = 0; i <= discardSize; i++) {
+
+        const cell = document.querySelector(`#discard .cell[data-index="${i}"]`)
+
+        if(cell) {
+            cell.innerHTML = '';
+            const card = lastCards[i-1];
+            cell.dataset.card = null;
+
+            if(card) {
+                cell.innerHTML = `${card.value} ${getSuitSymbol(card.suit)}`;
+                cell.dataset.card = `${card.value} ${card.suit}`;
+
+                // todo prévoir l'action "recyclage"
+            }
+        }
+    }
+}
+
 
 function renderResources() {
     // Supprimer les anciens affichages
@@ -309,30 +409,75 @@ function setupDragAndDrop() {
     document.querySelectorAll('.cell').forEach(cell => {
         cell.addEventListener('dragover', (e) => e.preventDefault());
         cell.addEventListener('drop', (e) => {
+            const data = e.dataTransfer.getData('text/plain');
+
+            if (data === 'recycle' && selectedDiscardCard) {
+                const astronaut = cell.querySelector('.astronaut');
+                if (astronaut) {
+                    selectedAstronaut = parseInt(astronaut.dataset.index);
+                }
+            }
 
             if (selectedAstronaut === null) return;
 
             const astro = astronauts[selectedAstronaut];
             selectedAstronaut = null;
 
-            if( ! cell.classList.contains("possible-target")) {
+            if (!cell.classList.contains("possible-target")) {
                 log("destination invalide.");
-                document.querySelectorAll(`.cell`).forEach(c => {c.classList.remove('possible-target')});
+                document.querySelectorAll(`.cell`).forEach(c => {
+                    c.classList.remove('possible-target')
+                });
                 return;
             }
 
-            document.querySelectorAll(`.cell`).forEach(c => {c.classList.remove('possible-target')});
+            document.querySelectorAll(`.cell`).forEach(c => {
+                c.classList.remove('possible-target')
+            });
 
-            const data = e.dataTransfer.getData('text/plain');
 
-            if(data === 'call') {
+            if (data === 'call') {
                 calling(cell, astro);
-            } else {
+            } else if(data === 'recycle') {
+                recycle(cell, astro, selectedDiscardCard);
+            }  else {
                 movement(cell, astro);
             }
 
         });
     });
+}
+
+function recycle(cell, astro, selectedDiscardCard) {
+    if(astro.energy <= 0) {
+        log("Pas d'energie.");
+        return;
+    }
+    astro --;
+
+    const cardToDiscard = cell.dataset.card;
+    const cardToInstall = selectedDiscardCard.dataset.card;
+
+    console.log(cardToDiscard, cardToInstall);
+
+    setCard(selectedDiscardCard, cardToDiscard);
+    setCard(cell, cardToInstall);
+
+    // remettre l'icone de construction
+    const icon = document.createElement('div');
+    icon.className = 'build-icon';
+    icon.innerText = '🔧';
+    icon.title = 'Construire ici';
+    icon.addEventListener('click', () => construction(cell));
+    cell.appendChild(icon);
+
+    renderAstronauts();
+}
+
+function setCard(cell, data) {
+    const card = {value : data.split(' ')[0], suit : data.split(' ')[1]};
+    cell.dataset.card = data;
+    cell.innerHTML = `${card.value} ${getSuitSymbol(card.suit)}`;
 }
 
 function movement(cell, astro) {
@@ -355,7 +500,7 @@ function movement(cell, astro) {
     if (!hasCard) {
         log("Le mouvement s'arrête sur une case vide.");
         const card = deck.shift();
-        placeCard(row, col, card);
+        prepareCard(cell, card);
     }
 
     renderAstronauts();
@@ -378,6 +523,25 @@ function calling(cell, astro) {
     } else {
         log("Appel échoué : la case n'est pas un module habitable.");
     }
+}
+
+function construction(cell) {
+    const row = parseInt(cell.dataset.row);
+    const col = parseInt(cell.dataset.col);
+
+    const astro = astronauts.find(a => a.row === row && a.col === col);
+    if(!astro) {
+        log("Pas d'astronaute pour construire ici");
+        return;
+    }
+    if(astro.energy <= 0) {
+        log("Pas d'energie");
+        return;
+    }
+    astro.energy--;
+
+    buildCard(cell);
+    renderAstronauts();
 }
 
 function pathfinder(x, y, dist, targets) {

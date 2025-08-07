@@ -25,10 +25,25 @@
             gap: 5px;
             margin: 1rem auto;
         }
+
+        .discard {
+            display: grid;
+            grid-template-columns: repeat(6, 80px);
+            gap: 5px;
+            margin: 1rem auto;
+        }
+
+
+        .card.cell {
+            background: #333;
+        }
+        .card.cell.construction:not(.occupied) {
+            color: #333;
+        }
         .cell {
             width: 80px;
             height: 80px;
-            background: #333;
+            background: #222;
             border: 1px solid #555;
             display: flex;
             align-items: center;
@@ -71,6 +86,8 @@
 <body>
 <h1>Une Maison sur la Lune</h1>
 <div class="board" id="board"></div>
+<p>defausse</p>
+<div class="discard" id="discard"></div>
 <div class="controls">
     <button onclick="nextTurn()">Tour Suivant</button>
     <button onclick="resetGame()">Réinitialiser</button>
@@ -78,9 +95,9 @@
 <div class="log" id="log"></div>
 
 <script>
-    const board = document.getElementById('board');
     const logPanel = document.getElementById('log');
     const boardSize = 6;
+    const discardSize = 6;
     const cards = [];
     const specialPositions = {
         '♥': [2, 2],
@@ -88,21 +105,6 @@
         '♦': [3, 2],
         '♠': [3, 3],
     };
-
-    function createBoard() {
-        board.innerHTML = '';
-        for (let y = 0; y < boardSize; y++) {
-            for (let x = 0; x < boardSize; x++) {
-                const div = document.createElement('div');
-                div.classList.add('card');
-                div.dataset.x = x;
-                div.dataset.y = y;
-                const special = Object.entries(specialPositions).find(([_, pos]) => pos[0] === y && pos[1] === x);
-                div.textContent = special ? special[0] : '';
-                board.appendChild(div);
-            }
-        }
-    }
 
     function logMessage(msg) {
         const p = document.createElement('p');
@@ -112,6 +114,8 @@
     }
 
     function nextTurn() {
+        runDiscardPhase();
+
         logMessage("Début d'un nouveau tour...");
         // Logique de ressources, péripéties, actions à implémenter ici
         runResourcePhase();
@@ -123,7 +127,6 @@
         initializeGame();
     }
 
-    createBoard();
     logMessage("Bienvenue sur la Lune !");
 </script>
 <script src="index.js"></script>
