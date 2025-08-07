@@ -1,439 +1,325 @@
-/*fetch('http://localhost:8080/game', {
-    method: 'POST',
-    body: JSON.stringify({
-        title:'sdsfd',
-        body:'sdfsdfsf',
+// Jeu : Une Maison sur la Lune
+// Fichier principal JavaScript
 
-    }),
-    headers: {
-        'Content-type': 'application/json; charset=UTF-8',
-    }
-})
-    .then(function(response){
-        return response.json()})
-    .then(function(data)
-    {
-        console.log(data);
-        return data;
-    }).catch(error => console.error('Error:', error));
-*/
+const suits = ['hearts', 'clubs', 'diamonds', 'spades'];
+const values = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
 
-function callTimerApi(timer) {
-    return fetchApi('http://localhost:8080/game/timer', {id: ID, timer: timer});
-}
-function callToucheApi(touche) {
-    return fetchApi('http://localhost:8080/game/touche', {id: ID, touche: touche});
-}
-function fetchApi(url, params) {
-    return fetch(url, {
-        method: 'POST',
-        body: JSON.stringify(params),
-        headers: {
-            'Content-type': 'application/json; charset=UTF-8',
-        }
-    })
-        .then(function(response){
-            return response.json()})
-        .then(function(data)
-        {
-             /*
-            const actions = [];
-            for (let [key, value] of Object.entries(data)) {
-                actions.push(new Action(value.type, key, parseInt(value.x), parseInt(value.y), parseInt(value.duree), parseInt(value.inventaire), value.graphisme))
-            }
-            console.log(actions);*/
-            return data;
-        }).catch(error => console.error('Error:', error));
-}
+let deck = [];
+let drawPiles = [[], [], [], []];
+let currentPileIndex = 0;
+let astronauts = []; // Liste des astronautes avec leurs positions et ressources
+let boardResources = {}; // ex: { "2-3": { food: 1, energy: 2 } }
+let selectedAstronaut = null;
+let possibleTargets = [];
 
 
-
-const TILE_SIZE = 96;
-const LARGEUR = 20;
-const HAUTEUR = 15;
-const LARGEUR_FENETRE = 9;
-const HAUTEUR_FENETRE = 9;
-let POSITION_Y = 1;
-let POSITION_X = 1;
-
-let PLATEAU;
-let HERO;
-let ID;
-
-let MOUVEMENT = false;
-let ACTION_SUIVANTE = null;
-
-const TIMERS = {};
-const INVENTAIRE = [];
-
-
-function creerPlateau() {
-
-    PLATEAU = document.getElementById('plateau');
-    document.getElementById("inventaire").style.width = LARGEUR_FENETRE+'em';
-
-    return fetch('http://localhost:8080/game', {
-        headers: {
-            'Content-type': 'application/json; charset=UTF-8',
-        }
-    })
-        .then(function(response){
-            return response.json()})
-        .then(function(data)
-        {
-            ID = data.id;
-            PLATEAU.style.width = data.largeur+'em';
-            PLATEAU.style.height = data.hauteur+'em';
-
-            POSITION_X = data.positionX;
-            POSITION_Y = data.positionY;
-
-            for(let index in data.salles) {
-                const a = data.salles[index];
-                creerSalle(a.x, a.y, a.largeur, a.hauteur);
-            }
-
-            for(let i=0; i<data.largeur; i++) {
-                for(let j=0; j<data.hauteur; j++) {
-                    creerTile(i,j,data.positions[i][j].graphisme);
-                }
-            }
-
-            draw(data);
-
-            return data;
-        }).catch(error => console.error('Error:', error));
-
-}
-
-function draw(data) {
-
-    // dessiner les decors
-
-    for(let index in data.decors) {
-        const a = data.decors[index];
-        creerElement('decor', a.id, a.x, a.y, a.graphisme);
-
-        drawAnimation(a, true);
-
-    }
-
-    // dessiner les objets
-    for(let index in data.objets) {
-        const o = data.objets[index];
-        creerElement('objet', o.id, o.x, o.y, o.graphisme);
-
-        drawAnimation(o);
-
-        // cas particulier : quand l'objet est retiré de l'inventaire, il faut lui laisser la classe "inventaire" pendant 500 ms
-        if(INVENTAIRE[0] === o.id && data.inventaire !== o.id) {
-            document.getElementById(o.id).classList.add("inventaire");
-
-            setTimeout(function () {
-                document.getElementById(o.id).classList.remove('inventaire');
-            }, 500)
+function createDeck() {
+    deck = [];
+    for (let suit of suits) {
+        for (let value of values) {
+            deck.push({ suit, value });
         }
     }
-
-    // dessiner l'inventaire
-    if(data.inventaire) {
-        const dessin = document.getElementById(data.inventaire.id);
-        dessin.classList.add('inventaire');
-        recentrerInventaire(dessin, 0);
-        INVENTAIRE[0] = data.inventaire.id;
-    } else {
-        INVENTAIRE[0] = null;
-    }
-
-    // retirer les objets qui ne sont plus dans la liste d'objets, ni dans l'inventaire
-    document.querySelectorAll('.objet').forEach(value => {
-        const id = value.getAttribute('id');
-        if(data.objets.filter(o => o.id === id).length === 0 && INVENTAIRE[0] !== id) {
-            removeTimer(id);
-        }
-    });
-
-    // dessiner l'ambiance des salles
-    for(let index in data.salles) {
-        dessinerSalle(data.salles[index], data);
-    }
-
-    // dessiner les timers
-    dessinerTimer('oxygene', data.timerOxygene);
-    dessinerTimer('nourriture', data.timerNourriture);
-
 }
 
-document.addEventListener('DOMContentLoaded', function() {
-
-    retaillerFenetre();
-    creerPlateau().then(function () {
-        creerHero();
-        recentrerPlateau();
-        setTimeout(function () {
-            document.getElementById("fenetre").classList.add("ready");
-        }, 500);
-    });
-
-}, false);
-
-function drawAnimation(o, isDecors) {
-    if(o.animation > 0) {
-        if(isDecors) {
-            document.getElementById(o.id+'-background').classList.add('animation');
-            document.getElementById(o.id+'-background').style.animationDuration = o.animation + 's';
-        } else {
-            document.getElementById(o.id).classList.add('animation');
-            document.getElementById(o.id).style.animationDuration = o.animation + 's';
-        }
-
-        if(!TIMERS[o.id]) {
-            TIMERS[o.id] = setTimeout(function () {
-                removeTimer(o.id);
-                callTimerApi(o.id).then(function (actions) {
-                    appliquerAction(actions, false);
-                });
-            }, o.animation*1000);
-        }
-
+function shuffle(array) {
+    for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
     }
 }
 
-function creerSalle(i, j, largeur, hauteur) {
-    let tile = document.createElement('div');
-    tile.setAttribute('id', 'salle-'+i+'-'+j);
-    PLATEAU.appendChild(tile);
-    tile.style.bottom = (j+1) + 'em';
-    tile.style.left = (i+1) + 'em';
-    tile.style.width = (largeur-2) + 'em';
-    tile.style.height = (hauteur-2) + 'em';
-    tile.classList.add('salle');
+function initializeDrawPiles() {
+    const pileDefinitions = [
+        ['2', '3', '4'],
+        ['5', '6', 'J'],
+        ['7', '8', 'Q'],
+        ['9', '10', 'K']
+    ];
 
-    let inside = document.createElement('div');
-    tile.appendChild(inside);
-    inside.style.width = LARGEUR_FENETRE + 'em';
-    inside.style.height = HAUTEUR_FENETRE + 'em';
-    inside.classList.add('effet-salle');
-    // inside.style.background = 'radial-gradient(circle at '+(LARGEUR_FENETRE/2)+'em '+(HAUTEUR_FENETRE/2)+'em, transparent, black 1.5em, black)';
-}
-
-function creerElement(base, id, i,j,clazz) {
-    if(base === "objet") {
-        creerImage(id, i, j, base+' '+clazz);
-    } else {
-        creerImage(id+'-background', i, j, base+' background '+clazz);
-        creerImage(id+'-foreground', i, j, base+' foreground '+clazz);
+    for (let i = 0; i < 4; i++) {
+        drawPiles[i] = deck.filter(card => pileDefinitions[i].includes(card.value));
+        shuffle(drawPiles[i]);
+    }
+    deck = [];
+    for (let i = 0; i < 4; i++) {
+        deck.push(...drawPiles[i]);
     }
 }
-function creerImage(id, i,j,clazz) {
-    let tile = document.getElementById(id);
-    if (tile === null) {
-        tile = document.createElement('div');
-        tile.setAttribute('id', id);
-        PLATEAU.appendChild(tile);
-    }
-    tile.style.bottom = j + 'em';
-    tile.style.left = i + 'em';
-    tile.className = clazz;
-}
-function creerTile(i,j,clazz) {
-    creerElement('tile', 'tile-' + i + '-' + j, i, j, clazz);
+
+function initializeGame() {
+    createDeck();
+    initializeDrawPiles();
+    drawInitialLayout();
+    placeInitialAstronaut();
+    setupDragAndDrop();
 }
 
-function retaillerFenetre() {
-    const fenetre = document.getElementById('fenetre');
-    fenetre.style.fontSize = TILE_SIZE+'px';
-    fenetre.style.width = (TILE_SIZE*LARGEUR_FENETRE) + 'px';
-    fenetre.style.height = (TILE_SIZE*HAUTEUR_FENETRE) + 'px';
-
-}
-function recentrerPlateau() {
-    const offsetX = (LARGEUR_FENETRE -1)/2 - POSITION_X;
-    const offsetY = (HAUTEUR_FENETRE -1)/2 - POSITION_Y;
-
-    // recentrer le plateau
-    document.getElementById("plateau").style.bottom= offsetY+'em';
-    document.getElementById("plateau").style.left= offsetX+'em';
-
-    // replacer le hero
-    HERO.style.left = POSITION_X+'em';
-    HERO.style.bottom = POSITION_Y+'em';
-
-    // repositionner l'inventaire
-    document.getElementById("inventaire").style.bottom= -offsetY+'em';
-    document.getElementById("inventaire").style.left= -offsetX+'em';
-
-    for(let i=0; i<10; i++) {
-        if(INVENTAIRE[i]) {
-            recentrerInventaire(document.getElementById(INVENTAIRE[i]), i);
-        }
-    }
-
-    // repositionner les effets de salle
-    Array.from(document.getElementsByClassName('effet-salle')).forEach((el) => {
-        const salle = el.parentNode;
-        el.style.bottom = (-parseInt(salle.style.bottom) -offsetY) + 'em';
-        el.style.left = (-parseInt(salle.style.left) -offsetX) + 'em';
-    });
-
-
-
-}
-
-function recentrerInventaire(element, index) {
-
-    const offsetX = (LARGEUR_FENETRE -1)/2 - POSITION_X;
-    const offsetY = (HAUTEUR_FENETRE -1)/2 - POSITION_Y;
-
-    element.style.bottom= (-offsetY)+'em';
-    element.style.left= (-offsetX+index)+'em';
-}
-
-
-
-function creerHero() {
-    HERO = document.createElement('div');
-    HERO.setAttribute('id', 'hero');
-    HERO.style.left = POSITION_X+'em';
-    HERO.style.bottom = POSITION_Y+'em';
-
-    document.getElementById("plateau").appendChild(HERO);
-}
-
-
-document.addEventListener('keydown', function(e) {
-    touche(e.code);
-
-}, false);
-
-async function touche(key) {
-
-    // si on est en mouvement, et qu'il y a déjà une action suivante de prévue, on ne fait rien
-    if(MOUVEMENT && ACTION_SUIVANTE !== null) {
-        return;
-    }
-    const monde = await callToucheApi(key);
-    // si on est en mouvement, mais d'autre action prévue, on note la suivante
-    if(MOUVEMENT) {
-        ACTION_SUIVANTE = monde;
-        return;
-    }
-    // si on n'est pas en mouvement
-    appliquerAction(monde, true);
-}
-
-function appliquerAction(data, block) {
-    if(!data || !data.status) {return ;}
-
-    if(data.status === 'gameOver') {
-        document.getElementById('gameover').style.opacity = 1;
-    }
-
-
-    if(block) {
-        deplacerHero(data.positionX, data.positionY);
-    }
-
-    draw(data);
-
-}
-
-
-function dessinerSalle(action, data) {
-    const salle = document.getElementById(action.id);
-    if(!salle) {
-        return;
-    }
-    const effetSalle = salle.getElementsByClassName('effet-salle').item(0);
-
-    if(action.graphisme.includes('SOMBRE')) {
-        effetSalle.style.background = 'radial-gradient(circle at '+(LARGEUR_FENETRE/2)+'em '+(HAUTEUR_FENETRE/2)+'em, transparent, black 1.5em, black)';
-        let mask = 'linear-gradient(rgb(0, 0, 0) 0px, rgb(0, 0, 0) 0px)';
-
-        for(let index in data.objets) {
-            const value = data.objets[index];
-            if(value.graphisme === 'feu' || value.graphisme === 'explosion') {
-                const px = value.x - action.x - 0.5;
-                const py= action.y + action.hauteur - value.y - 1.5;
-                mask += ', radial-gradient(circle at '+px+'em '+py+'em, rgb(0, 0, 0) 0, rgba(0, 0, 0, 0) 1em) no-repeat';
-            }
-        }
-
+function drawInitialLayout() {
+    const board = document.getElementById('board');
+    board.innerHTML = '';
+    const grid = [];
 /*
-        const lights = action.graphisme.split(" ");
-        for(let i = 1; i< lights.length; i++) {
-            const position = lights[i];
-            const px = position.split("-")[0];
-            const py= position.split("-")[1];
-            console.log(position);
-            console.log(mask);
-            mask += ', radial-gradient(circle at '+px+'em '+py+'em, rgb(0, 0, 0) 0, rgba(0, 0, 0, 0) 1em) no-repeat';
-            console.log(mask);
+    for (let y = 0; y < boardSize; y++) {
+        for (let x = 0; x < boardSize; x++) {
+            const div = document.createElement('div');
+            div.classList.add('card');
+            div.dataset.x = x;
+            div.dataset.y = y;
+            const special = Object.entries(specialPositions).find(([_, pos]) => pos[0] === y && pos[1] === x);
+            div.textContent = special ? special[0] : '';
+            board.appendChild(div);
         }
-*/
-        salle.style['-webkit-mask'] = mask;
-        salle.style['-webkit-mask-composite'] = 'xor';
-    } else if(action.graphisme.includes('ALARME')) {
-        effetSalle.style.background = 'red';
-        effetSalle.animate([{ opacity: 0 }, { opacity: 0.5 }, { opacity: 0 }], { duration: 1000, iterations: Infinity, easing: "linear" })
+    }*/
 
+    for (let row = 0; row < boardSize; row++) {
+        const rowEl = document.createElement('div');
+        //rowEl.className = 'row';
+        for (let col = 0; col < boardSize; col++) {
+            const cell = document.createElement('div');
+            cell.className = 'cell';
+            cell.dataset.row = row;
+            cell.dataset.col = col;
+            cell.innerHTML = '';
+            board.appendChild(cell);
+            //rowEl.appendChild(cell);
+        }
+        //board.appendChild(rowEl);
+    }
 
-    } else {
-        effetSalle.style.background = 'transparent';
+    // Positionnement des 4 as au centre (carré 2x2)
+    placeCard(2, 2, { suit: 'hearts', value: 'A' });
+    placeCard(2, 3, { suit: 'clubs', value: 'A' });
+    placeCard(3, 2, { suit: 'diamonds', value: 'A' });
+    placeCard(3, 3, { suit: 'spades', value: 'A' });
+}
+
+function placeCard(row, col, card) {
+    const cell = document.querySelector(`.cell[data-row="${row}"][data-col="${col}"]`);
+    if (cell) {
+        cell.innerHTML = `${card.value} ${getSuitSymbol(card.suit)}`;
+        cell.classList.add('card');
+        cell.dataset.suit = card.suit;
+        cell.dataset.value = card.value;
     }
 }
 
-function deplacerHero(x, y) {
-    if(x < POSITION_X) {
-        HERO.classList.add('left');
-        HERO.classList.add('mouvement');
-    } else if(x > POSITION_X) {
-        HERO.classList.remove('left');
-        HERO.classList.add('mouvement');
+function getSuitSymbol(suit) {
+    switch (suit) {
+        case 'hearts': return '♥';
+        case 'clubs': return '♣';
+        case 'diamonds': return '♦';
+        case 'spades': return '♠';
     }
-
-    POSITION_X = x;
-    POSITION_Y = y;
-
-    recentrerPlateau();
-    MOUVEMENT = true;
-    setTimeout(function () {
-        MOUVEMENT = false;
-        HERO.classList.remove('mouvement');
-        if(ACTION_SUIVANTE !== null) {
-            appliquerAction(ACTION_SUIVANTE, true);
-            ACTION_SUIVANTE = null;
-        }
-    }, 500);
-
-
 }
 
-function dessinerTimer(id, duree) {
+function placeInitialAstronaut() {
+    const row = 2;
+    const col = 2;
+    astronauts.push({ row, col, energy: 0, food: 0 });
+    renderAstronauts();
+    logMessage("Astronaute initial placé sur l'as de cœur.");
+}
 
-    if(duree === 0) {
-        removeTimer(id);
-    } else if( !TIMERS[id] ) {
-        const elem = document.createElement('div');
-        elem.setAttribute('id', id);
-        elem.classList.add('timer');
-        elem.style.animationDuration = duree + 's';
-        elem.classList.add('launched');
-        document.getElementById(id + '-timer').appendChild(elem);
+function renderAstronauts() {
+    // Supprimer les anciens
+    document.querySelectorAll('.astronaut').forEach(el => el.remove());
 
-        TIMERS[id] = setTimeout(function(){
-            removeTimer(id)
-            callTimerApi(id).then(function (actions) {
-                appliquerAction(actions, false);
+
+    for (let i = 0; i < astronauts.length; i++) {
+        const astro = astronauts[i];
+        const cell = document.querySelector(`.cell[data-row="${astro.row}"][data-col="${astro.col}"]`);
+        if (cell) {
+            const token = document.createElement('div');
+            token.className = 'astronaut';
+            token.innerText = '👨‍🚀';
+            token.draggable = true;
+            token.dataset.index = i;
+            token.addEventListener('dragstart', (e) => {
+                selectedAstronaut = i;
+                const targets = new Set();
+                pathfinder(astro.row, astro.col, 3, targets);
+                targets.delete(`${astro.row}-${astro.col}`);
+                possibleTargets = [];
+
+                targets.forEach(target => {
+                    const x = target.split('-')[0];
+                    const y = target.split('-')[1];
+                    document.querySelector(`.cell[data-row="${x}"][data-col="${y}"]`).classList.add('possible-target');
+                    possibleTargets.push(target);
+                })
             });
-        }, duree *  1000);
+            cell.appendChild(token);
+
+            if (astro.food > 0) {
+                const food = document.createElement('div');
+                food.className = 'resource-token';
+                food.innerText = `🥬${astro.food}`;
+                token.appendChild(food);
+            }
+            if (astro.energy > 0) {
+                const energy = document.createElement('div');
+                energy.className = 'resource-token';
+                energy.innerText = `🔋${astro.energy}`;
+                token.appendChild(energy);
+            }
+        }
     }
 }
 
-function removeTimer(id) {
-    if(document.getElementById(id)) {
-        document.getElementById(id).remove();
+function runResourcePhase() {
+    // Ajouter ressources aux cartes
+    for (let row = 0; row < boardSize; row++) {
+        for (let col = 0; col < boardSize; col++) {
+            const cell = document.querySelector(`.cell[data-row="${row}"][data-col="${col}"]`);
+            const suit = cell?.dataset.suit;
+            const value = cell?.dataset.value;
+
+            if (!suit || !value) continue;
+
+            // Ajouter un jeton ravitaillement si serre (clubs ♣)
+            if (suit === 'clubs') {
+                addResourceToCell(row, col, 'food');
+                log(`+1 ravitaillement ajouté à la serre en ${row},${col}`);
+            }
+
+            // Ajouter un jeton énergie si panneau solaire (diamonds ♦)
+            if (suit === 'diamonds') {
+                addResourceToCell(row, col, 'energy');
+                log(`+1 énergie ajoutée au panneau solaire en ${row},${col}`);
+            }
+        }
     }
-    clearTimeout(TIMERS[id]);
-    TIMERS[id] = undefined;
+
+    renderResources();
+
+    const astronautsDied = [];
+    for (let astro of astronauts) {
+        let cell = document.querySelector(`.cell[data-row="${astro.row}"][data-col="${astro.col}"]`);
+        const suit = cell?.dataset.suit;
+        const value = cell?.dataset.value;
+
+        // Vérifie si le module habitable est actif
+        let isHabitat = (suit === 'hearts' && value !== undefined);
+        let onActiveHabitat = isHabitat; // Simplification pour la V1
+
+        let maxResource = 5 - astro.food;
+        if (onActiveHabitat) {
+            astro.energy = Math.min(astro.energy + 3, maxResource);
+            log("Astronaute sur module actif : gagne 3 énergie.");
+        } else {
+            astro.food--;
+            astro.energy = Math.min(astro.energy + 2, maxResource);
+            log("Astronaute consomme 1 ravitaillement, gagne 2 énergie.");
+        }
+
+        if (astro.food < 0) {
+            log("Un astronaute est mort faute de ravitaillement.");
+            // Retirer l'astronaute
+            astronautsDied.push(astro);
+        }
+    }
+    astronauts = astronauts.filter(x => !astronautsDied.includes(x))
+    renderAstronauts();
+
 }
+
+function addResourceToCell(row, col, type, amount = 1) {
+    const key = `${row}-${col}`;
+    if (!boardResources[key]) boardResources[key] = { food: 0, energy: 0 };
+    boardResources[key][type] = Math.min((boardResources[key][type] || 0) + amount, 3);
+}
+
+function renderResources() {
+    // Supprimer les anciens affichages
+    document.querySelectorAll('.resource-token').forEach(e => e.remove());
+
+    for (let key in boardResources) {
+        const [row, col] = key.split('-').map(Number);
+        const cell = document.querySelector(`.cell[data-row="${row}"][data-col="${col}"]`);
+        if (!cell) continue;
+
+        const resources = boardResources[key];
+        if (resources.food > 0) {
+            const food = document.createElement('div');
+            food.className = 'resource-token';
+            food.innerText = `🥬${resources.food}`;
+            cell.appendChild(food);
+        }
+        if (resources.energy > 0) {
+            const energy = document.createElement('div');
+            energy.className = 'resource-token';
+            energy.innerText = `🔋${resources.energy}`;
+            cell.appendChild(energy);
+        }
+    }
+}
+
+
+function setupDragAndDrop() {
+    document.querySelectorAll('.cell').forEach(cell => {
+        cell.addEventListener('dragover', (e) => e.preventDefault());
+        cell.addEventListener('drop', (e) => {
+
+            document.querySelectorAll(`.cell`).forEach(c => {c.classList.remove('possible-target')});
+
+            if (selectedAstronaut === null) return;
+            const row = parseInt(cell.dataset.row);
+            const col = parseInt(cell.dataset.col);
+            const astro = astronauts[selectedAstronaut];
+
+            if( ! possibleTargets.includes(row+'-'+col) ) {
+                log("Déplacement invalide.");
+                selectedAstronaut = null;
+                return;
+            }
+
+            if(astro.energy <= 0) {
+                log("Pas d'energie.");
+                selectedAstronaut = null;
+                return;
+            }
+
+            const hasCard = cell.classList.contains('card');
+
+            astro.row = row;
+            astro.col = col;
+            astro.energy--;
+            log(`Astronaute déplacé vers ${row},${col} (énergie restante : ${astro.energy})`);
+
+            if (!hasCard) {
+                log("Le mouvement s'arrête sur une case vide.");
+                const card = deck.shift();
+                console.log(deck);
+                placeCard(row, col, card);
+            }
+
+            renderAstronauts();
+            selectedAstronaut = null;
+        });
+    });
+}
+
+function pathfinder(x, y, dist, targets) {
+    targets.add(`${x}-${y}`);
+
+    if(dist <= 0) return;
+
+    const cell = document.querySelector(`.cell[data-row="${x}"][data-col="${y}"]`)
+    const hasCard = cell.classList.contains('card');
+    if(!hasCard) return;
+
+    if(x > 0) pathfinder(x-1, y, dist-1, targets);
+    if(y < boardSize-1) pathfinder(x, y+1, dist-1, targets);
+    if(x < boardSize-1) pathfinder(x+1, y, dist-1, targets);
+    if(y > 0) pathfinder(x, y-1, dist-1, targets);
+
+}
+
+function log(message) {
+    logMessage(message);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    initializeGame();
+});
