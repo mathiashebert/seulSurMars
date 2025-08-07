@@ -317,20 +317,18 @@ function addResourceToCell(row, col, type, amount = 1) {
 function renderDiscardPile() {
     const lastCards = discardPile.slice(-1*discardSize).reverse(); // dernières cartes, plus récentes en haut
 
-    for (let i = 0; i <= discardSize; i++) {
+    for (let i = 0; i < discardSize; i++) {
 
         const cell = document.querySelector(`#discard .cell[data-index="${i}"]`)
 
         if(cell) {
             cell.innerHTML = '';
-            const card = lastCards[i-1];
+            const card = lastCards[i];
             cell.dataset.card = null;
 
             if(card) {
                 cell.innerHTML = `${card.value} ${getSuitSymbol(card.suit)}`;
                 cell.dataset.card = `${card.value} ${card.suit}`;
-
-                // todo prévoir l'action "recyclage"
             }
         }
     }
@@ -453,7 +451,7 @@ function recycle(cell, astro, selectedDiscardCard) {
         log("Pas d'energie.");
         return;
     }
-    astro --;
+    astro.energy --;
 
     const cardToDiscard = cell.dataset.card;
     const cardToInstall = selectedDiscardCard.dataset.card;
