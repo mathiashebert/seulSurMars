@@ -11,6 +11,17 @@ let boardResources = {}; // ex: { "2-3": { food: 1, energy: 2 } }
 let selectedAstronaut = null;
 let selectedDiscardCard = null;
 let discardPile = [];
+let alienAdventure = {
+    alienPosition:null,      // { row, col }
+    alienSignalCount: 0,     // Nombre de signaux sur l'antenne
+    alienAdventureStep: 0,    // 0 = pas commencé, 1 = phase Signal Alien active, 2 = invasion
+    alienCount: 0    // Nombre total d’aliens sur le plateau
+}
+
+let vegetationAdventure = {
+    vegetationPosition:null,      // { row, col }
+    vegetationAdventureStep: 0,
+}
 
 
 function createDeck() {
@@ -62,17 +73,193 @@ function initializeGame() {
 function revealCardFromDeck() {
     if(deck.length === 0) {
         // todo  : victoire
+        return;
     }
     const card = deck.shift();
     if(['J', 'Q', 'K'].includes(card.value)) {
+
+        logMessage(`${card.value} ${getSuitSymbol(card.suit)}`)
+
+        // treffles : l'aventure des aliens
+        if(card.value === 'J' && card.suit === 'spades') { // signal alien
+            startAlienSignalAdventure();
+        }
+        if(card.value === 'Q' && card.suit === 'spades') { // offensive alien
+            revealInvasionAlien();
+        }
+        if(card.value === 'K' && card.suit === 'spades') { // base alien
+            triggerEThome();
+        }
+
+        if(card.value === 'J' && card.suit === 'clubs') {
+            startVegetationAdventure();
+        }
+
         // todo peripetie
     }
     return card;
 }
+
+function attackAlien() {
+    if (!alienAdventure.alienPosition) {
+        log("Aucun alien à attaquer ici.");
+        return;
+    }
+
+    let astro = astronauts.find(a => alienAdventure.alienPosition.row === a.row && a.col === alienAdventure.alienPosition.col);
+
+    if(!astro) {
+        log("Pas d'astronaute pour attaquer");
+    }
+    if (astro.energy <= 0) {
+        log("Pas assez d'énergie pour attaquer un alien.");
+        return;
+    }
+    astro.energy--;
+
+
+    // intercepter le signal
+    if(alienAdventure.alienAdventureStep === 1) {
+        document.querySelector('.alien-signal')?.remove();
+        alienAdventure.alienAdventureStep = 1.5;
+
+        log(`Le signal a été intercepté`);
+    }
+
+    // attaquer un alien
+    if(alienAdventure.alienAdventureStep === 2) {
+        if (alienAdventure.alienCount <= 1) {
+            log("Impossible de retirer le dernier alien.");
+            return;
+        }
+
+        alienAdventure.alienCount--;
+        log(`Un alien éliminé. Il en reste ${alienAdventure.alienCount}.`);
+        renderAliensIcon();
+        renderAstronauts();
+    }
+
+
+}
+
 function discardFromDeck(number) {
     for(let i= 0; i<number; i++) {
         discardPile.push(revealCardFromDeck());
     }
+}
+
+function startVegetationAdventure() {
+    // Récupère toutes les positions de serres déjà construites
+    const greenHouses = Array.from(document.querySelectorAll('.card[data-suit="clubs"]'))
+        .map(cell => ({
+            row: parseInt(cell.dataset.row),
+            col: parseInt(cell.dataset.col)
+        }));
+
+    if (greenHouses.length === 0) {
+        log("Aucune serre construite pour placer la mutation végétale.");
+        return;
+    }
+
+    // Choisir une serre au hasard
+    vegetationAdventure.vegetationPosition = greenHouses[Math.floor(Math.random() * greenHouses.length)];
+    vegetationAdventure.vegetationAdventureStep = 1;
+
+    // Ajouter une icône 🛸 sur la cellule // todo changer l'icone
+    const cell = document.querySelector(`.cell[data-row="${vegetationAdventure.vegetationPosition.row}"][data-col="${vegetationAdventure.vegetationPosition.col}"]`);
+    if (cell) {
+        const icon = document.createElement('div');
+        icon.className = 'plant-mutation';
+        icon.innerText = `🥬`; // todo changer l'icone
+        icon.title = `Mutation Végétale`;
+        cell.appendChild(icon);
+    }
+
+    log(`Une mutation génétique est apparue sur la serre ${vegetationAdventure.vegetationPosition.row},${vegetationAdventure.vegetationPosition.col}.`);
+}
+
+
+function startAlienSignalAdventure() {
+    // Récupère toutes les positions d'antennes déjà construites
+    const antennas = Array.from(document.querySelectorAll('.card[data-suit="spades"]'))
+        .map(cell => ({
+            row: parseInt(cell.dataset.row),
+            col: parseInt(cell.dataset.col)
+        }));
+
+    if (antennas.length === 0) {
+        log("Aucune antenne construite pour placer le signal alien.");
+        return;
+    }
+
+    // Choisir une antenne au hasard
+    alienAdventure.alienPosition = antennas[Math.floor(Math.random() * antennas.length)];
+    alienAdventure.alienSignalCount = 1;
+    alienAdventure.alienAdventureStep = 1;
+
+    // Ajouter une icône 🛸 sur la cellule
+    const cell = document.querySelector(`.cell[data-row="${alienAdventure.alienPosition.row}"][data-col="${alienAdventure.alienPosition.col}"]`);
+    if (cell) {
+        const icon = document.createElement('div');
+        icon.className = 'alien-signal';
+        icon.innerText = `🛸 ${alienAdventure.alienSignalCount}`;
+        icon.title = `Signal alien : ${alienAdventure.alienSignalCount}`;
+        cell.appendChild(icon);
+        icon.addEventListener('click', () => attackAlien());
+
+    }
+
+    log(`Signal alien détecté sur l'antenne en ${alienAdventure.alienPosition.row},${alienAdventure.alienPosition.col}.`);
+}
+function revealInvasionAlien() {
+    alienAdventure.alienAdventureStep = 2;
+    alienAdventure.alienCount = alienAdventure.alienSignalCount || 1;
+    renderAliensIcon();
+    log(`Invasion alien ! ${alienAdventure.alienCount} aliens débarquent.`);
+}
+function triggerEThome() {
+    const { alienCount } = alienAdventure;
+    if (!alienCount || alienCount <= 0) {
+        log("Aucun alien à répartir.");
+        return;
+    }
+
+    // Retirer l’icône alien existante
+    if (alienAdventure.alienPosition) {
+        const oldCell = document.querySelector(`.cell[data-row="${alienAdventure.alienPosition.row}"][data-col="${alienAdventure.alienPosition.col}"]`);
+        oldCell?.querySelector('.alien-icon')?.remove();
+    }
+
+    // Choisir X antennes au hasard
+    const antennas = [...document.querySelectorAll('.cell[data-suit="spades"]')];
+    shuffle(antennas); // Réutiliser ta fonction shuffle
+
+    const chosenAntennas = antennas.slice(0, alienCount);
+    chosenAntennas.forEach(cell => {
+        const row = parseInt(cell.dataset.row);
+        const col = parseInt(cell.dataset.col);
+
+        // Si astronaute présent → il meurt
+        const astroIndex = astronauts.findIndex(a => a.row === row && a.col === col);
+        if (astroIndex >= 0) {
+            log(`Un astronaute est tué par un alien sur ${row},${col}`);
+            astronauts.splice(astroIndex, 1);
+        }
+
+        // Mettre un icône alien
+        const icon = document.createElement('div');
+        icon.className = 'alien-icon';
+        icon.innerText = '👽';
+        cell.appendChild(icon);
+
+        // Marquer la case comme interdite
+        cell.classList.add('alien');
+    });
+
+    // Mettre à jour l’état
+    alienAdventure.alienAdventureStep = 3;
+    alienAdventure.alienCount = 0;
+    alienAdventure.alienPosition = null; // Plus de position unique
 }
 
 function drawInitialLayout() {
@@ -298,6 +485,56 @@ function runResourcePhase() {
 
 }
 
+function runAdventurePhase() {
+    // Alien Signal en cours
+    if (alienAdventure.alienAdventureStep === 1 && alienAdventure.alienPosition) {
+
+        // Mettre à jour l'affichage
+        const cell = document.querySelector(`.cell[data-row="${alienAdventure.alienPosition.row}"][data-col="${alienAdventure.alienPosition.col}"]`);
+        const icon = cell.querySelector('.alien-signal');
+        if (icon) {
+            alienAdventure.alienSignalCount++;
+            icon.innerText = `🛸 ${alienAdventure.alienSignalCount}`;
+            icon.title = `Signal alien : ${alienAdventure.alienSignalCount}`;
+        }
+
+        log(`Un nouveau signal alien a été détecté ! Total : ${alienAdventure.alienSignalCount}`);
+    }
+
+    if (alienAdventure.alienAdventureStep === 2) {
+        // +1 alien
+        alienAdventure.alienCount++;
+        log(`Renfort alien : ${alienAdventure.alienCount} au total !`);
+
+        if (astronauts.length > 0) {
+            const targetIndex = Math.floor(Math.random() * astronauts.length);
+            const target = astronauts[targetIndex];
+            alienAdventure.alienPosition = { row: target.row, col: target.col };
+
+            // Combat
+            let totalRes = target.food + target.energy;
+            if (totalRes < alienAdventure.alienCount) {
+                log(`Un astronaute a été submergé par ${alienAdventure.alienCount} aliens !`);
+                astronauts.splice(targetIndex, 1);
+            } else {
+                let toRemove = alienAdventure.alienCount;
+                if (target.food >= toRemove) {
+                    target.food -= toRemove;
+                } else {
+                    toRemove -= target.food;
+                    target.food = 0;
+                    target.energy = Math.max(0, target.energy - toRemove);
+                }
+                log(`Un astronaute perd ${alienAdventure.alienCount} ressources.`);
+            }
+            renderAstronauts();
+            renderAliensIcon();
+        }
+    }
+
+    // Ici on pourra ajouter les autres péripéties plus tard...
+}
+
 function runDiscardPhase() {
     let pileIndex = 1;
     if(deck.length <= 36) pileIndex = 2;
@@ -308,10 +545,18 @@ function runDiscardPhase() {
     renderDiscardPile();
 }
 
-function addResourceToCell(row, col, type, amount = 1) {
+function addResourceToCell(row, col, type) {
     const key = `${row}-${col}`;
     if (!boardResources[key]) boardResources[key] = { food: 0, energy: 0 };
-    boardResources[key][type] = Math.min((boardResources[key][type] || 0) + amount, 3);
+
+    const specialMutation = type === 'food'
+        && vegetationAdventure.vegetationPosition
+        && vegetationAdventure.vegetationPosition.row === row
+        && vegetationAdventure.vegetationPosition.col === col;
+    const max = specialMutation? 4 : 3;
+    const amount = specialMutation ? 2 : 1;
+
+    boardResources[key][type] = Math.min((boardResources[key][type] || 0) + amount, max);
 }
 
 function renderDiscardPile() {
@@ -370,14 +615,33 @@ function collectResource(row, col, type) {
         return;
     }
 
-    if (astronaut.food + astronaut.energy >= 5) {
-        log("L'astronaute a atteint sa limite de ressources.");
-        return;
-    }
-
     const key = `${row}-${col}`;
     if (boardResources[key][type] <= 0) {
         log("Plus aucune ressource à ramasser");
+        return;
+    }
+
+    // cas particulier de la mutation vegetale
+    const specialVegetationMutation = type === 'food'
+        && vegetationAdventure.vegetationPosition
+        && vegetationAdventure.vegetationPosition.row === row
+        && vegetationAdventure.vegetationPosition.col === col;
+    if(specialVegetationMutation) {
+        if (astronaut.energy <= 0) {
+            log("L'astronaute n'a pas d'energie");
+            return;
+        }
+        astronaut.energy --;
+
+        if(boardResources[key][type] == 1) {
+            // on ramasse la le dernier jeton de ravitallement, donc on elève la mutation
+            vegetationAdventure.vegetationPosition = null;
+            document.querySelector('.plant-mutation')?.remove();
+        }
+    }
+
+    if (astronaut.food + astronaut.energy >= 5) {
+        log("L'astronaute a atteint sa limite de ressources.");
         return;
     }
 
@@ -514,13 +778,24 @@ function calling(cell, astro) {
     }
     astro.energy--;
 
-    if (cell.dataset.suit === 'hearts') {
-        astronauts.push({ row, col, energy: 0, food: 0 });
-        renderAstronauts();
-        log("Nouvel astronaute appelé sur un module habitable.");
-    } else {
-        log("Appel échoué : la case n'est pas un module habitable.");
-    }
+    astronauts.push({ row, col, energy: 0, food: 0 });
+    renderAstronauts();
+    log("Nouvel astronaute appelé sur un module habitable.");
+
+}
+
+function renderAliensIcon() {
+    if (!alienAdventure.alienPosition) return;
+    const cell = document.querySelector(`.cell[data-row="${alienAdventure.alienPosition.row}"][data-col="${alienAdventure.alienPosition.col}"]`);
+    if (!cell) return;
+    document.querySelectorAll('.alien-icon').forEach(el => el.remove());
+
+    const icon = document.createElement('div');
+    icon.className = 'alien-icon';
+    icon.innerText = ((alienAdventure.alienCount > 1) ? '👽' : '🕳️') + alienAdventure.alienCount;
+    cell.appendChild(icon);
+
+    icon.addEventListener('click', () => attackAlien());
 }
 
 function construction(cell) {
@@ -543,13 +818,16 @@ function construction(cell) {
 }
 
 function pathfinder(x, y, dist, targets) {
+
+    const cell = document.querySelector(`.cell[data-row="${x}"][data-col="${y}"]`)
+    if (cell.classList.contains('alien')) return; // interdit
+
     if(isFree(x,y)) {
         targets.add(`${x}-${y}`);
     }
 
     if(dist <= 0) return;
 
-    const cell = document.querySelector(`.cell[data-row="${x}"][data-col="${y}"]`)
     const hasCard = cell.classList.contains('card');
     if(!hasCard) return;
 
