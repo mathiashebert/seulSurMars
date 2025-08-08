@@ -83,16 +83,24 @@ function revealCardFromDeck() {
         // treffles : l'aventure des aliens
         if(card.value === 'J' && card.suit === 'spades') { // signal alien
             startAlienSignalAdventure();
+            alert("signal Alien");
         }
         if(card.value === 'Q' && card.suit === 'spades') { // offensive alien
             revealInvasionAlien();
+            alert("Invasion Alien");
         }
         if(card.value === 'K' && card.suit === 'spades') { // base alien
             triggerEThome();
+            alert("E.T. téléphone maison");
         }
 
         if(card.value === 'J' && card.suit === 'clubs') {
             startVegetationAdventure();
+            alert("Mutation végétale");
+        }
+        if(card.value === 'Q' && card.suit === 'clubs') {
+            startLuxuriance();
+            alert("Luxuriance");
         }
 
         // todo peripetie
@@ -176,6 +184,45 @@ function startVegetationAdventure() {
     }
 
     log(`Une mutation génétique est apparue sur la serre ${vegetationAdventure.vegetationPosition.row},${vegetationAdventure.vegetationPosition.col}.`);
+}
+
+function startLuxuriance() {
+    vegetationAdventure.vegetationAdventureStep = 2;
+
+    moveVegetation();
+
+    renderResources();
+    renderAstronauts();
+}
+
+function moveVegetation() {
+    const expansionOrder = [
+        {row: 2, col: 3},
+        {row: 3, col: 3},
+        {row: 3, col: 2},
+        {row: 2, col: 2}, {row: 1, col: 2},
+        {row: 1, col: 3}, {row: 1, col: 4},
+        {row: 2, col: 4}, {row: 3, col: 4}, {row: 4, col: 4},
+        {row: 4, col: 3}, {row: 4, col: 2}, {row: 4, col: 1},
+        {row: 3, col: 1}, {row: 2, col: 1}, {row: 1, col: 1}, {row: 0, col: 1},
+        {row: 0, col: 2}, {row: 0, col: 3}, {row: 0, col: 4}, {row: 0, col: 5},
+        {row: 1, col: 5}, {row: 2, col: 5}, {row: 3, col: 5}, {row: 4, col: 5}, {row: 5, col: 5},
+        {row: 5, col: 4}, {row: 5, col: 3}, {row: 5, col: 2}, {row: 5, col: 1}, {row: 5, col: 0},
+        {row: 4, col: 0}, {row: 3, col: 0}, {row: 2, col: 0}, {row: 1, col: 0}, {row: 0, col: 0}
+    ]
+
+    for(let i=0; i<expansionOrder.length-1; i++) {
+        const location = expansionOrder[i];
+        const nextLocation = expansionOrder[i+1];
+
+        const amount = getFood(location.row, location.col);
+
+        if(amount > 1) {
+            setFood(location.row, location.col, 1);
+            const nextAmount = getFood(nextLocation.row, nextLocation.col) + amount -1;  // amount-1 représente l'excédent
+            setFood(nextLocation.row, nextLocation.col, nextAmount);
+        }
+    }
 }
 
 
@@ -440,13 +487,13 @@ function runResourcePhase() {
 
             // Ajouter un jeton ravitaillement si serre (clubs ♣)
             if (suit === 'clubs') {
-                addResourceToCell(row, col, 'food');
+                addFoodToCell(row, col);
                 log(`+1 ravitaillement ajouté à la serre en ${row},${col}`);
             }
 
             // Ajouter un jeton énergie si panneau solaire (diamonds ♦)
             if (suit === 'diamonds') {
-                addResourceToCell(row, col, 'energy');
+                addEnergyToCell(row, col);
                 log(`+1 énergie ajoutée au panneau solaire en ${row},${col}`);
             }
         }
@@ -483,6 +530,35 @@ function runResourcePhase() {
     astronauts = astronauts.filter(x => !astronautsDied.includes(x))
     renderAstronauts();
 
+}
+
+function getCardKey(card) {
+    return getKey(card.row, card.col);
+}
+function getKey(row, col) {
+    return `${row}-${col}`
+}
+function getFood(row, col) {
+    if(!boardResources[getKey(row, col)]) return 0;
+    if(!boardResources[getKey(row, col)]['food']) return 0;
+    return boardResources[getKey(row, col)]['food']
+}
+function setFood(row, col, food) {
+    if(!boardResources[getKey(row, col)]) {
+        boardResources[getKey(row, col)] = {food: 0, energy: 0};
+    }
+    boardResources[getKey(row, col)]['food'] = food;
+}
+function getEnergy(row, col) {
+    if(!boardResources[getKey(row, col)]) return 0;
+    if(!boardResources[getKey(row, col)]['energy']) return 0;
+    return boardResources[getKey(row, col)]['energy']
+}
+function setEnergy(row, col, energy) {
+    if(!boardResources[getKey(row, col)]) {
+        boardResources[getKey(row, col)] = {food: 0, energy: 0};
+    }
+    boardResources[getKey(row, col)]['energy'] = energy;
 }
 
 function runAdventurePhase() {
@@ -532,6 +608,33 @@ function runAdventurePhase() {
         }
     }
 
+    if (vegetationAdventure.vegetationAdventureStep === 2) {
+        moveVegetation();
+
+        const astronautsDied = [];
+        for(let i=0; i<astronauts.length; i++) {
+            const astro = astronauts[i];
+
+            // vérifier si l'astronaute est sur une case avec de la vegetation, et adjacent à une case avec de la vegetation
+            const astroKey = getCardKey(astro);
+            if(getFood(astro.row, astro.col) > 0) {
+                if( getFood(astro.row-1, astro.col) >0
+                || getFood(astro.row-1, astro.col-1) >0
+                || getFood(astro.row, astro.col-1) >0
+                || getFood(astro.row, astro.col) >0
+                ) {
+                    // l'astronaute meurt étouffé par les plantes
+                    astronautsDied.push(astro);
+                    logMessage("un astronaute meurt étouffé par les plantes");
+                }
+            }
+        }
+        astronauts = astronauts.filter(x => !astronautsDied.includes(x))
+
+        renderResources();
+        renderAstronauts();
+    }
+
     // Ici on pourra ajouter les autres péripéties plus tard...
 }
 
@@ -545,18 +648,23 @@ function runDiscardPhase() {
     renderDiscardPile();
 }
 
-function addResourceToCell(row, col, type) {
-    const key = `${row}-${col}`;
-    if (!boardResources[key]) boardResources[key] = { food: 0, energy: 0 };
-
-    const specialMutation = type === 'food'
-        && vegetationAdventure.vegetationPosition
+function addFoodToCell(row, col) {
+    const specialMutation =
+        vegetationAdventure.vegetationPosition
         && vegetationAdventure.vegetationPosition.row === row
         && vegetationAdventure.vegetationPosition.col === col;
     const max = specialMutation? 4 : 3;
     const amount = specialMutation ? 2 : 1;
 
-    boardResources[key][type] = Math.min((boardResources[key][type] || 0) + amount, max);
+    const food = getFood(row, col) + amount;
+    setFood(row, col, Math.min(food, max));
+}
+function addEnergyToCell(row, col) {
+    const max = 3;
+    const amount = 1;
+
+    const energy = getEnergy(row, col) + amount;
+    setEnergy(row, col, Math.min(energy, max));
 }
 
 function renderDiscardPile() {
@@ -719,8 +827,6 @@ function recycle(cell, astro, selectedDiscardCard) {
 
     const cardToDiscard = cell.dataset.card;
     const cardToInstall = selectedDiscardCard.dataset.card;
-
-    console.log(cardToDiscard, cardToInstall);
 
     setCard(selectedDiscardCard, cardToDiscard);
     setCard(cell, cardToInstall);
