@@ -11,6 +11,7 @@ let boardResources = {}; // ex: { "2-3": { food: 1, energy: 2 } }
 let selectedAstronaut = null;
 let selectedDiscardCard = null;
 let discardPile = [];
+
 let alienAdventure = {
     alienPosition:null,      // { row, col }
     alienSignalCount: 0,     // Nombre de signaux sur l'antenne
@@ -18,17 +19,20 @@ let alienAdventure = {
     alienCount: 0,    // Nombre total d’aliens sur le plateau
     bunkers: []         // positions des bases aliens où on ne peut pas se rendre
 }
-
 let vegetationAdventure = {
     vegetationPosition:null,      // { row, col }
     vegetationAdventureStep: 0,
 }
-
 let electricAdventure = {
     shortcutPosition: null,
     firePositions: [],
     smokePosition: null,
     electricStep: 0,
+}
+let sickAdventure = {
+    sickStep: 0,
+    morgLocation: null,
+    pandemicLocation: null,
 }
 
 
@@ -109,47 +113,69 @@ function revealCardFromDeck() {
 
         logMessage(`${card.value} ${getSuitSymbol(card.suit)}`)
 
-        // treffles : l'aventure des aliens
-        if(card.value === 'J' && card.suit === 'spades') { // signal alien
-            //startAlienSignalAdventure();
-            alert("signal Alien");
-        }
-        if(card.value === 'Q' && card.suit === 'spades') { // offensive alien
-            //revealInvasionAlien();
-            alert("Invasion Alien");
-        }
-        if(card.value === 'K' && card.suit === 'spades') { // base alien
-            //triggerEThome();
-            alert("E.T. téléphone maison");
-        }
-
-        if(card.value === 'J' && card.suit === 'clubs') {
-            startVegetationAdventure();
-            alert("Mutation végétale");
-        }
-        if(card.value === 'Q' && card.suit === 'clubs') {
-            startLuxuriance();
-            alert("Luxuriance");
-        }
-        if(card.value === 'K' && card.suit === 'clubs') {
-            triggerRoots();
-            alert("Enracinement");
+        // pique : l'aventure des aliens
+        if(card.suit === 'spades') {
+            if(card.value === 'J') { // signal alien
+                //startAlienSignalAdventure();
+                alert("signal Alien");
+            }
+            if(card.value === 'Q') { // offensive alien
+                //revealInvasionAlien();
+                alert("Invasion Alien");
+            }
+            if(card.value === 'K') { // base alien
+                //triggerEThome();
+                alert("E.T. téléphone maison");
+            }
         }
 
-        if(card.value === 'J' && card.suit === 'diamonds') {
-            startShortCut();
-            alert("Court-circuit");
-        }
-        if(card.value === 'Q' && card.suit === 'diamonds') {
-           startFire();
-           alert("Incendie");
-        }
-        if(card.value === 'K' && card.suit === 'diamonds') {
-           explosion();
-           alert("Explosion");
+        // treffle : l'aventure végétale
+        if (card.suit === 'clubs') {
+            if(card.value === 'J') {
+                startVegetationAdventure();
+                alert("Mutation végétale");
+            }
+            if(card.value === 'Q') {
+                startLuxuriance();
+                alert("Luxuriance");
+            }
+            if(card.value === 'K') {
+                triggerRoots();
+                alert("Enracinement");
+            }
         }
 
-        // todo peripetie
+        // carreau : l'incendie
+        if(card.suit === 'diamonds') {
+            if(card.value === 'J') {
+                startShortCut();
+                alert("Court-circuit");
+            }
+            if(card.value === 'Q') {
+                startFire();
+                alert("Incendie");
+            }
+            if(card.value === 'K') {
+                explosion();
+                alert("Explosion");
+            }
+        }
+
+        // coeur : l'épidémie
+        if(card.suit === 'hearts') {
+            if(card.value === 'J') {
+                startDisease();
+                alert("Patient 0");
+            }
+            if(card.value === 'Q') {
+                diseaseGetWorse();
+                alert("Epidémie");
+            }
+            if(card.value === 'K') {
+                diseaseGetWorst();
+                alert("Symptômes graves");
+            }
+        }
     }
     return card;
 }
@@ -332,7 +358,7 @@ function cleanPosition(row, col, explosition) {
     const astro = astronauts.find(e => e.row === row && e.col === col);
     if (astro) {
         log("un astronaute meurt dans l'incendie");
-        astronauts = astronauts.filter(el => el !== astro);
+        oneAstronautDie(astro);
     }
 
     setEnergy(row, col, 0);
@@ -356,6 +382,72 @@ function explosion() {
         const row = firePosition.row;
         const col = firePosition.col;
         cleanPosition(row, col, true);
+    }
+}
+
+function startDisease() {
+    log("Un astronaute est tombé malade. Pour l'instant les symptômes ne sont pas graves : quelques bouton et un peu de fièvre. Cependant, c'est peut-être contagieux.");
+    const target = findOneAstronautAtRandom();
+    if(target) {
+        target.sick = true;
+        renderAstronauts();
+        contaminate(); // vérifier si le premier astronaute déclenche déjà la contamination
+    }
+
+    sickAdventure.sickStep = 1;
+}
+
+function diseaseGetWorse() {
+    log("Les symptômes semblent s'aggraver : les malades ressentent une grande fatigue.");
+
+    sickAdventure.sickStep = 2;
+}
+
+function diseaseGetWorst() {
+    log("Les symptômes semblent s'aggraver encore : les malades ont maintenant beaucoup de mal à se deplacer. Cependant, un remède a été trouvé. Les malades peuvent être soignés dans n'importe quel module habitable");
+
+    sickAdventure.sickStep = 3;
+}
+
+function contaminate() {
+    if(sickAdventure.sickStep < 1) return; // véirfier que l'aventure a ommencé
+
+    let newSick = false;
+    // propager la contamination
+    for(let i in astronauts) {
+        const astro = astronauts[i];
+        if(!astro.sick && isCloseToContamination(astro.row, astro.col)) {
+            astro.sick = true;
+            newSick = true;
+        }
+    }
+
+    // boucle recursive : tant qu'il y a des nouveaux malades, on continue
+    if(newSick) {
+        renderAstronauts();
+        contaminate();
+    }
+}
+
+function isCloseToContamination(row, col) {
+    if(sickAdventure.sickStep === 0) return false;
+
+    if(sickAdventure.morgLocation) {
+        if(Math.abs(sickAdventure.morgLocation.row-row) <= 1 && Math.abs(sickAdventure.morgLocation.col-col) <= 1) {
+            return true
+        }
+    }
+    if(sickAdventure.pandemicLocation) {
+        if(Math.abs(sickAdventure.pandemicLocation.row-row) <= 1 && Math.abs(sickAdventure.pandemicLocation.col-col) <= 1) {
+            return true
+        }
+    }
+
+    for(let i in astronauts) {
+        const astro = astronauts[i];
+        if(astro.sick && Math.abs(astro.row-row) <= 1 && Math.abs(astro.col-col) <= 1) {
+            return true
+        }
     }
 }
 
@@ -398,12 +490,9 @@ function redrawCell(row, col, card, construction, alien, vegetation) {
 
     // rendu de l'astronaute
     const astroIndex = astronauts.findIndex(a => a.row === row && a.col === col);
-    let astronaut = null;
+    let astro = null;
     if (astroIndex >= 0) {
-        astro = astronauts[astroIndex];
-    }
-    if(astro) {
-        drawAstronautInCell(astro, cell);
+        drawAstronautInCell(astronauts[astroIndex], cell, astroIndex);
     }
 
     // si la case n'est pas encore construite
@@ -446,7 +535,7 @@ function drawResourcesInCell(row, col, cell) {
     }
 }
 
-function drawAstronautInCell(astro, cell) {
+function drawAstronautInCell(astro, cell, i) {
     cell.classList.add('occupied');
 
     const token = document.createElement('div');
@@ -457,7 +546,8 @@ function drawAstronautInCell(astro, cell) {
     token.addEventListener('dragstart', (e) => {
         selectedAstronaut = i;
         const targets = new Set();
-        pathfinder(astro.row, astro.col, 3, targets);
+        const dist = astro.sick && sickAdventure.sickStep >= 3 ? 1 : 3; // en cas de maladie et de péripétie avancée, l'astronaute ne peut se déplacer ue de 1 case, sinon par défaut il peut se déplacer de 3 cases
+        pathfinder(astro.row, astro.col, dist, targets);
 
         targets.forEach(target => {
             const x = target.split('-')[0];
@@ -480,6 +570,12 @@ function drawAstronautInCell(astro, cell) {
         energy.innerText = `🔋${astro.energy}`;
         energy.addEventListener('click', () => discardResource(astro, 'energy'));
         token.appendChild(energy);
+    }
+    if(astro.sick) {
+        const sick = document.createElement('div');
+        sick.className = 'sick-token';
+        sick.innerText = `🦠`;
+        token.appendChild(sick);
     }
 }
 
@@ -506,10 +602,9 @@ function drawAntennaInCell(cell) {
         if(astro) {
             selectedAstronaut = astro.dataset.index;
 
-            // les modules habitables sont des cibles potentielles
-            // todo doit être actif, et libre
+            // les modules habitables sont des cibles potentielles (si libre et actif)
             document.querySelectorAll('.card[data-suit="hearts"]').forEach(el => {
-                if( isFree(parseInt(el.dataset.row), parseInt(el.dataset.col)) && !isOnFire(el.dataset.row, el.dataset.col)) {
+                if( isFree(parseInt(el.dataset.row), parseInt(el.dataset.col)) && isActive(el.dataset.row, el.dataset.col)) {
                     el.classList.add('possible-target' );
                 }
 
@@ -551,7 +646,7 @@ function drawVegetationInCell(cell) {
     if(vegetationAdventure.vegetationAdventureStep === 1 || vegetationAdventure.vegetationAdventureStep === 2) {
         const icon = document.createElement('div');
         icon.className = 'plant-mutation';
-        icon.innerText = `🥬`; // todo changer l'icone
+        icon.innerText = `🌱`;
         icon.title = `Mutation Végétale`;
         cell.appendChild(icon);
     }
@@ -843,7 +938,7 @@ function renderAstronauts() {
         const astro = astronauts[i];
         const cell = document.querySelector(`.cell[data-row="${astro.row}"][data-col="${astro.col}"]`);
         if (cell) {
-            drawAstronautInCell(astro, cell);
+            drawAstronautInCell(astro, cell, i);
         }
     }
 }
@@ -883,11 +978,16 @@ function runResourcePhase() {
         const col = parseInt(cell.dataset.col);
 
         // Vérifie si le module habitable est actif
-        let onActiveHabitat = suit === 'hearts' && !isOnFire(row, col);
+        let onActiveHabitat = suit === 'hearts' && isActive(row, col);
 
-        let maxEnergy = 5 - astro.food;
+        let maxEnergy = astronautLimit(astro) - astro.food;
         if (onActiveHabitat) {
             astro.energy = Math.min(astro.energy + 3, maxEnergy);
+
+            // soigner la maladie
+            if(astro.sick && sickAdventure.sickStep >= 3) {
+                astro.sick = 0;
+            }
         } else {
             astro.food--;
             astro.energy = Math.min(astro.energy + 2, maxEnergy);
@@ -899,13 +999,19 @@ function runResourcePhase() {
             astronautsDied.push(astro);
         }
     }
-    astronauts = astronauts.filter(x => !astronautsDied.includes(x))
+    astronautsDie(astronautsDied)
     renderAstronauts();
 
 }
 
 function isOnFire(row, col) {
     return electricAdventure.firePositions.filter(el => el.row === row && el.col === col).length > 0
+}
+function isActive(row, col) {
+    if(isOnFire(row, col)) return false;
+    if(sickAdventure.morgLocation && sickAdventure.morgLocation.row === row && sickAdventure.morgLocation.col === col) return false;
+    if(sickAdventure.pandemicLocation && sickAdventure.pandemicLocation.row === row && sickAdventure.pandemicLocation.col === col) return false;
+    return true;
 }
 
 function getCardKey(card) {
@@ -954,16 +1060,15 @@ function runAdventurePhase() {
         // +1 alien
         alienAdventure.alienCount++;
 
-        if (astronauts.length > 0) {
-            const targetIndex = Math.floor(Math.random() * astronauts.length);
-            const target = astronauts[targetIndex];
+        const target = findOneAstronautAtRandom();
+        if (target) {
             alienAdventure.alienPosition = { row: target.row, col: target.col };
 
             // Combat
             let totalRes = target.food + target.energy;
             if (totalRes < alienAdventure.alienCount) {
                 log(`Un astronaute a été submergé par ${alienAdventure.alienCount} aliens !`);
-                astronauts.splice(targetIndex, 1);
+                oneAstronautDie(target);
             } else {
                 let toRemove = alienAdventure.alienCount;
                 if (target.food >= toRemove) {
@@ -999,13 +1104,26 @@ function runAdventurePhase() {
                 logMessage("un astronaute meurt étouffé par les plantes");
             }
         }
-        astronauts = astronauts.filter(x => !astronautsDied.includes(x))
+        astronautsDie(astronautsDied);
 
         renderResources();
         renderAstronauts();
     }
 
+    if(sickAdventure.sickStep > 1 && !sickAdventure.pandemicLocation) {
+        sickAdventure.pandemicLocation = getOneActiveHabitationAtRandom();
+        log("un Module habitable a été identifié comme foyer de l'épidémie. Il est placé en quarantaine. Attention aux risques de contamination.");
+    }
+
     // Ici on pourra ajouter les autres péripéties plus tard...
+}
+
+function findOneAstronautAtRandom() {
+    if (astronauts.length > 0) {
+        const targetIndex = Math.floor(Math.random() * astronauts.length);
+        return astronauts[targetIndex];
+    }
+    return null;
 }
 
 function runDiscardPhase() {
@@ -1104,7 +1222,7 @@ function collectResource(row, col, type) {
         }
     }
 
-    if (astronaut.food + astronaut.energy >= 5) {
+    if (astronaut.food + astronaut.energy >= astronautLimit(astronaut)) {
         log("L'astronaute a atteint sa limite de ressources.");
         return;
     }
@@ -1113,6 +1231,12 @@ function collectResource(row, col, type) {
     boardResources[key][type] --;
     renderResources();
     renderAstronauts();
+}
+
+function astronautLimit(astro) {
+    // la limite de ressource d'unastronaute vaut 5
+    // ou 3 s'il est malade et que l'étape de la péripétie vaut au moins 2
+    return astro.sick && sickAdventure.sickStep >= 2 ? 3 : 5
 }
 
 
@@ -1145,7 +1269,9 @@ function setupDragAndDrop() {
             if (selectedAstronaut === null) return;
 
             const astro = astronauts[selectedAstronaut];
+            console.log(selectedAstronaut, astro);
             selectedAstronaut = null;
+
 
             if (!cell.classList.contains("possible-target")) {
                 log("destination invalide.");
@@ -1207,7 +1333,7 @@ function movement(cell, astro) {
     const row = parseInt(cell.dataset.row);
     const col = parseInt(cell.dataset.col);
 
-    if(astro.energy <= 0) {
+    if (astro.energy <= 0) {
         log("Pas d'energie.");
         return;
     }
@@ -1219,22 +1345,23 @@ function movement(cell, astro) {
     if (!hasCard) {
         log("Le mouvement s'arrête sur une case vide.");
         let card = revealCardFromDeck();
-        if(card == null) return; // c'est la fin de la partie
+        if (card == null) return; // c'est la fin de la partie
         adventure = ['J', 'Q', 'K'].includes(card.value);
-        if(!adventure) {
+        if (!adventure) {
             prepareCard(cell, card);
         }
 
     }
-
-    if(!adventure) {
+    // effectuer le mouvement
+    if (!adventure) {
         astro.row = row;
         astro.col = col;
         astro.energy--;
+
+        renderAstronauts();
+
+        contaminate();
     }
-
-
-    renderAstronauts();
 }
 
 function calling(cell, astro) {
@@ -1254,6 +1381,8 @@ function calling(cell, astro) {
     astronauts.push({ row, col, energy: 0, food: 0 });
     renderAstronauts();
     log("Nouvel astronaute appelé sur un module habitable.");
+
+    contaminate();
 
 }
 
@@ -1319,6 +1448,37 @@ function isFree(row, col) {
 
 function log(message) {
     logMessage(message);
+}
+
+function oneAstronautDie(astro) {
+    astronautsDie([astro]);
+}
+function astronautsDie(astronautsDied) {
+    astronauts.filter(x => !astronautsDied.includes(x));
+
+    // si un des astronautes qui est mort était malade, et qu'il n'y a pas encore de morgue
+    if(astronautsDied.filter(a => a.sick).length > 0 && !sickAdventure.morgLocation) {
+        // Choisir un module habitable au hasard
+        sickAdventure.morgLocation = getOneActiveHabitationAtRandom();
+
+        if(sickAdventure.morgLocation) {
+            log("En attendant d'en savoir d'aventage sur la maladie, un module habitable est réquisitionné comme morgue. Attention au risque de contamination.")
+        }
+    }
+}
+
+function getOneActiveHabitationAtRandom() {
+    const habitations = Array.from(document.querySelectorAll('.card[data-suit="hearts"]'))
+        .map(cell => ({
+            row: parseInt(cell.dataset.row),
+            col: parseInt(cell.dataset.col)
+        }))
+        .filter(loc => isActive(loc.row, loc.col));
+
+    if (habitations.length === 0) {
+        return null;
+    }
+    return habitations[Math.floor(Math.random() * habitations.length)];
 }
 
 document.addEventListener('DOMContentLoaded', () => {
