@@ -116,15 +116,15 @@ function revealCardFromDeck() {
         // pique : l'aventure des aliens
         if(card.suit === 'spades') {
             if(card.value === 'J') { // signal alien
-                //startAlienSignalAdventure();
+                startAlienSignalAdventure();
                 alert("signal Alien");
             }
             if(card.value === 'Q') { // offensive alien
-                //revealInvasionAlien();
+                revealInvasionAlien();
                 alert("Invasion Alien");
             }
             if(card.value === 'K') { // base alien
-                //triggerEThome();
+                triggerEThome();
                 alert("E.T. téléphone maison");
             }
         }
@@ -295,7 +295,9 @@ function startShortCut() {
     }
 
     // Choisir un panneau solaire au hasard
-    electricAdventure.firePositions.push(solarPanels[Math.floor(Math.random() * solarPanels.length)]);
+    electricAdventure.shortcutPosition = solarPanels[Math.floor(Math.random() * solarPanels.length)];
+    electricAdventure.firePositions.push({...electricAdventure.shortcutPosition});
+
     electricAdventure.electricStep = 1;
 
     // Ajouter une icône 🥬 sur la cellule
@@ -515,6 +517,37 @@ function redrawCell(row, col, card, construction, alien, vegetation) {
         drawVegetationInCell(cell);
     }
 
+    drawFireOrSmokeInCell(row, col, cell);
+
+    drawPandemicInCell(row, col, cell);
+}
+
+function drawFireOrSmokeInCell(row, col, cell) {
+    if(electricAdventure.electricStep === 1.5 && electricAdventure.smokePosition
+        && electricAdventure.smokePosition.row === row && electricAdventure.smokePosition.col === col) {
+        drawSmokeInCell(cell);
+    }
+    if(electricAdventure.firePositions.filter( loc => loc.row === row && loc.col === col).length > 0) {
+        if(electricAdventure.electricStep === 2 && electricAdventure.firePositions.length === 1) {
+            drawSmokeInCell(cell);
+        } else {
+            drawFireInCell(cell);
+        }
+    }
+}
+
+function drawPandemicInCell(row, col, cell) {
+    if(sickAdventure.morgLocation
+        && sickAdventure.morgLocation.row === row && sickAdventure.morgLocation.col === col) {
+        drawMorgInCell(cell);
+    }
+    else if(sickAdventure.pandemicLocation
+        && sickAdventure.pandemicLocation.row === row && sickAdventure.pandemicLocation.col === col) {
+        drawPandemicInCell(cell);
+    }
+    else if(sickAdventure.sickStep === 3 && cell.dataset.suit === 'hearts') {
+        drawHospitalInCell(cell);
+    }
 }
 
 function drawResourcesInCell(row, col, cell) {
@@ -652,6 +685,11 @@ function drawVegetationInCell(cell) {
     }
     if(vegetationAdventure.vegetationAdventureStep === 3) {
         cell.classList.add('jungle');
+        const icon = document.createElement('div');
+        icon.className = 'jungle-icon';
+        icon.innerText = `🌴`;
+        icon.title = `Jungle`;
+        cell.appendChild(icon);
     }
 }
 
@@ -705,7 +743,7 @@ function drawFires() {
         if(cell) {
             drawSmokeInCell(cell);
         }
-        }
+    }
     for(let i in electricAdventure.firePositions) {
         const firePosition = electricAdventure.firePositions[i];
         const cell = document.querySelector(`.cell[data-row="${firePosition.row}"][data-col="${firePosition.col}"]`);
@@ -725,7 +763,29 @@ function drawSmokeInCell(cell) {
     icon.className = 'smoke-icon';
     icon.innerText = `☁️`;
     icon.title = `smoke`;
-    cell.appendChild(icon);}
+    cell.appendChild(icon);
+}
+function drawMorgInCell(cell) {
+    const icon = document.createElement('div');
+    icon.className = 'morg-icon';
+    icon.innerText = `⚰️`;
+    icon.title = `Morgue`;
+    cell.appendChild(icon);
+}
+function drawPandemicInCell(cell) {
+    const icon = document.createElement('div');
+    icon.className = 'biohazard-icon';
+    icon.innerText = `☣️️`;
+    icon.title = `Foyer de l'épidémie`;
+    cell.appendChild(icon);
+}
+function drawHospitalInCell(cell) {
+    const icon = document.createElement('div');
+    icon.className = 'hospital-icon';
+    icon.innerText = `💉️`;
+    icon.title = `Infirmerie`;
+    cell.appendChild(icon);
+}
 
 String.prototype.replaceAt = function(index, replacement) {
     return this.substring(0, index) + replacement + this.substring(index + replacement.length);
@@ -1269,7 +1329,6 @@ function setupDragAndDrop() {
             if (selectedAstronaut === null) return;
 
             const astro = astronauts[selectedAstronaut];
-            console.log(selectedAstronaut, astro);
             selectedAstronaut = null;
 
 
@@ -1462,7 +1521,9 @@ function astronautsDie(astronautsDied) {
         sickAdventure.morgLocation = getOneActiveHabitationAtRandom();
 
         if(sickAdventure.morgLocation) {
-            log("En attendant d'en savoir d'aventage sur la maladie, un module habitable est réquisitionné comme morgue. Attention au risque de contamination.")
+            log("En attendant d'en savoir d'aventage sur la maladie, un module habitable est réquisitionné comme morgue. Attention au risque de contamination.");
+            const cell = document.querySelector(`.cell[data-row="${sickAdventure.morgLocation.row}"][data-col="${sickAdventure.morgLocation.col}"]`);
+            drawMorgInCell(cell);
         }
     }
 }
