@@ -610,34 +610,6 @@ function samePosition(row, col, position) {
     return position && position.row === row && position.col === col;
 }
 
-function drawFireOrSmokeInCell(row, col, cell) {
-    if(electricAdventure.electricStep === 1.5 && electricAdventure.smokePosition
-        && electricAdventure.smokePosition.row === row && electricAdventure.smokePosition.col === col) {
-        drawSmokeInCell(cell);
-    }
-    if(electricAdventure.firePositions.filter( loc => loc.row === row && loc.col === col).length > 0) {
-        if(electricAdventure.electricStep === 2 && electricAdventure.firePositions.length === 1) {
-            drawSmokeInCell(cell);
-        } else {
-            drawFireInCell(cell);
-        }
-    }
-}
-
-function drawPandemicInCell(row, col, cell) {
-    if(sickAdventure.mortuary
-        && sickAdventure.mortuary.row === row && sickAdventure.mortuary.col === col) {
-        drawMorgInCell(cell);
-    }
-    else if(sickAdventure.pandemicLocation
-        && sickAdventure.pandemicLocation.row === row && sickAdventure.pandemicLocation.col === col) {
-        drawBiohazardInCell(cell);
-    }
-    else if(sickAdventure.sickStep === 3 && cell.dataset.suit === 'hearts') {
-        drawHospitalInCell(cell);
-    }
-}
-
 function drawGridResourcesInCell(position) {
     if (position.food > 0) {
         const icon = createIcon(position.dom, 'resource-token', `🥬${position.food}`, 'ravitaillement');
@@ -775,11 +747,7 @@ function drawVegetationInCell(cell) {
 }
 
 function drawFireInCell(cell) {
-    const icon = document.createElement('div');
-    icon.className = 'fire-icon';
-    icon.innerText = `🔥`;
-    icon.title = `fire`;
-    cell.appendChild(icon);
+    const icon = createIcon(cell, 'fire-icon', `🔥`, `fire`);
     icon.addEventListener('click', () => extinguishFire(cell));
 }
 
@@ -840,32 +808,10 @@ function drawFires() {
 }
 
 function drawSmokeInCell(cell) {
-    const icon = document.createElement('div');
-    icon.className = 'smoke-icon';
-    icon.innerText = `☁️`;
-    icon.title = `smoke`;
-    cell.appendChild(icon);
+    createIcon(cell, 'smoke-icon', `☁️`, `smoke`);
 }
 function drawMorgInCell(cell) {
-    const icon = document.createElement('div');
-    icon.className = 'morg-icon';
-    icon.innerText = `⚰️`;
-    icon.title = `Morgue`;
-    cell.appendChild(icon);
-}
-function drawBiohazardInCell(cell) {
-    const icon = document.createElement('div');
-    icon.className = 'biohazard-icon';
-    icon.innerText = `☣️️`;
-    icon.title = `Foyer de l'épidémie`;
-    cell.appendChild(icon);
-}
-function drawHospitalInCell(cell) {
-    const icon = document.createElement('div');
-    icon.className = 'hospital-icon';
-    icon.innerText = `💉️`;
-    icon.title = `Infirmerie`;
-    cell.appendChild(icon);
+    createIcon(cell, 'morg-icon', `⚰️`, `Morgue`);
 }
 
 String.prototype.replaceAt = function(index, replacement) {
@@ -1155,9 +1101,6 @@ function isActive(row, col) {
     return true;
 }
 
-function getCardKey(card) {
-    return getKey(card.row, card.col);
-}
 function getKey(row, col) {
     return `${row}-${col}`
 }
