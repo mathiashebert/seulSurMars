@@ -22,6 +22,7 @@ let alienAdventure = {
 let vegetationAdventure = {
     vegetationPosition:null,      // { row, col }
     vegetationAdventureStep: 0,
+    jungles: [],
 }
 let electricAdventure = {
     shortcutPosition: null,
@@ -31,10 +32,11 @@ let electricAdventure = {
 }
 let sickAdventure = {
     sickStep: 0,
-    morgLocation: null,
+    mortuary: null,
     pandemicLocation: null,
 }
 
+let grid = [] // grille qui représente toutes les cases (6x6)
 
 /*
 note : à l'interieur d'une case je peux avoir
@@ -66,6 +68,30 @@ function createDeck() {
     }
 }
 
+function initGrid() {
+    for(let row=0; row<boardSize; row++) {
+        for(let col=0; col<boardSize; col++) {
+            const key = `${row}-${col}`;
+            grid[key] = {
+                row: row,
+                col: col,
+                suit: null,
+                food: 0,
+                energy: 0,
+                explored: false,
+                built: false,
+
+                dom: document.querySelector(`.cell[data-row="${row}"][data-col="${col}"]`)
+            }
+        }
+    }
+}
+
+function getGridElement(row, col) {
+    const key = `${row}-${col}`;
+    return grid[key];
+}
+
 function shuffle(array) {
     for (let i = array.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -92,6 +118,7 @@ function initializeDrawPiles() {
 }
 
 function initializeGame() {
+    initGrid();
     createDeck();
     initializeDrawPiles();
     drawInitialLayout();
@@ -266,15 +293,13 @@ function triggerRoots() {
     vegetationAdventure.vegetationAdventureStep = 3;
 
     // remplacer toutes les cartes où il y a de la végétation, par des serres
-    for(let key in boardResources) {
-        const row = key.split("-")[0];
-        const col = key.split('-')[1];
-        if(getFood(row, col) > 0) {
-            const cell = document.querySelector(`.cell[data-row="${row}"][data-col="${col}"]`);
-
-            const alien = cell.classList.contains('alien') || (alienAdventure.alienPosition && alienAdventure.alienPosition.col === col && alienAdventure.alienPosition.row === row);
-
-            redrawCell(row, col, { value: '0', suit: 'clubs'}, false, alien, true);
+    for(let key in grid) {
+        const position = grid[key]
+        if(position.food > 0) {
+            const cell = position.dom;
+            vegetationAdventure.jungles.push({row: position.row, co: position.col}); // todo mettre ça plutôt dans la position directement ?
+            position.suit = 'clubs'; // cette position est maintenant une 'serre'
+            redrawGridCell(position);
         }
     }
 
@@ -356,25 +381,23 @@ function firePropagation() {
     drawFires();
 }
 
-function cleanPosition(row, col, explosition) {
+function cleanPosition(row, col, explosion) {
+    // fonction qui gère un incendie, voir une explosion
     const astro = astronauts.find(e => e.row === row && e.col === col);
     if (astro) {
         log("un astronaute meurt dans l'incendie");
         oneAstronautDie(astro);
     }
 
-    setEnergy(row, col, 0);
-    setFood(row, col, 0);
-
-    const cell = document.querySelector(`.cell[data-row="${row}"][data-col="${col}"]`);
-    if (cell) {
-        let card = null;
-        if(!explosition) {
-            card = {value: cell.dataset.value, suit: cell.dataset.suit};
-        }
-        redrawCell(row, col, card, true, cell.classList.contains('alien'), cell.classList.contains('jungle'));
+    const position = getGridElement(row, col);
+    position.food = 0;
+    position.energy = 0;
+    position.built = false;
+    if(explosion) {
+        position.explored = false;
+        position.suit = null;
     }
-
+    redrawGridCell(position);
 }
 
 function explosion() {
@@ -412,7 +435,7 @@ function diseaseGetWorst() {
 }
 
 function contaminate() {
-    if(sickAdventure.sickStep < 1) return; // véirfier que l'aventure a ommencé
+    if(sickAdventure.sickStep < 1) return; // véirfier que l'aventure a commencé
 
     let newSick = false;
     // propager la contamination
@@ -434,8 +457,8 @@ function contaminate() {
 function isCloseToContamination(row, col) {
     if(sickAdventure.sickStep === 0) return false;
 
-    if(sickAdventure.morgLocation) {
-        if(Math.abs(sickAdventure.morgLocation.row-row) <= 1 && Math.abs(sickAdventure.morgLocation.col-col) <= 1) {
+    if(sickAdventure.mortuary) {
+        if(Math.abs(sickAdventure.mortuary.row-row) <= 1 && Math.abs(sickAdventure.mortuary.col-col) <= 1) {
             return true
         }
     }
@@ -453,73 +476,138 @@ function isCloseToContamination(row, col) {
     }
 }
 
+function redrawGridCell(position) {
+    const cell = position.dom;
+    const row = position.row;
+    const col = position.col;
 
-/*
-note : à l'interieur d'une case je peux avoir
-les resources x
-l'astronaute x
-l'antenne x
-
-les aliens x
-le signal alien x
-
-la mutation genetique
-
-le feu
-le brasier
-
-la morgue
-le foyen épidémique
-l'hopital
-
- */
-function redrawCell(row, col, card, construction, alien, vegetation) {
-    const cell = document.querySelector(`.cell[data-row="${row}"][data-col="${col}"]`);
     cell.className = 'cell';
+    cell.innerHTML = '';
 
-    if(!card) {
-        return;
+    if(position.explored) {
+        cell.classList.add('card');
+
+        if(position.built) {
+            cell.innerHTML = `${getSuitSymbol(position.suit)}`;
+
+            // afficher l'icone de l'antenne
+            if(position.suit === "spades") {
+                const icon = createIcon(cell, 'call-icon', '📡', 'antenne de communication');
+                icon.setAttribute('draggable', 'true');
+                icon.addEventListener('dragstart', e => {
+                    e.dataTransfer.setData('text/plain', 'call');
+
+                    const astro = cell.querySelector(`.astronaut`);
+                    if(astro) {
+                        selectedAstronaut = astro.dataset.index;
+
+                        // les modules habitables sont des cibles potentielles (si libre et actif)
+                        document.querySelectorAll('.card[data-suit="hearts"]').forEach(el => {
+                            if( isFree(parseInt(el.dataset.row), parseInt(el.dataset.col)) && isActive(el.dataset.row, el.dataset.col)) {
+                                el.classList.add('possible-target' );
+                            }
+
+                        });
+                    }
+
+                });
+            }
+        } else {
+            // afficher l'icone de construction
+            cell.classList.add('construction');
+            const icon = createIcon(cell, 'build-icon', '🔧', 'Construire ici');
+            icon.addEventListener('click', () => construction(cell));
+        }
     }
 
-    cell.innerHTML = `${card.value} ${getSuitSymbol(card.suit)}`;
-    cell.dataset.card = `${card.value} ${card.suit}`;
-    cell.dataset.value = card.value;
-    cell.dataset.suit = card.suit;
-    cell.classList.add('card');
-
-    // afficher les resources
-    drawResourcesInCell(row, col, cell);
+    drawGridResourcesInCell(position);
 
     // rendu de l'astronaute
     const astroIndex = astronauts.findIndex(a => a.row === row && a.col === col);
-    let astro = null;
     if (astroIndex >= 0) {
-        drawAstronautInCell(astronauts[astroIndex], cell, astroIndex);
+        drawAstronautInCell(astronauts[astroIndex], cell, astroIndex); // todo : à faire depuis la grid
     }
 
-    // si la case n'est pas encore construite
-    if(construction) {
-
-        drawConstructionInCell(cell);
+    // dessiner les aliens
+    if(alienAdventure.alienAdventureStep > 0) {
+        // signal alien
+        if (alienAdventure.alienAdventureStep === 1 && samePosition(row, col, alienAdventure.alienPosition)) {
+            const icon = createIcon(cell, 'alien-signal-icon', `🛸 ${alienAdventure.alienSignalCount}`, `Signal alien : ${alienAdventure.alienSignalCount}`);
+            icon.addEventListener('click', () => attackAlien());
+        } else if (alienAdventure.alienAdventureStep === 2 && samePosition(row, col, alienAdventure.alienPosition)) {
+            const icon = createIcon(cell, 'alien-group-icon', ((alienAdventure.alienCount > 1) ? '👽' : '🕳️') + alienAdventure.alienCount, `Groupe alien : ${alienAdventure.alienSignalCount}`);
+            icon.addEventListener('click', () => attackAlien());
+        } else if (alienAdventure.alienAdventureStep === 3 && positionInArray(row, col, alienAdventure.bunkers)) {
+            createIcon(cell, 'alien-bunker-icon', '👽', 'Bunker alien');
+            // Marquer la case comme interdite
+            cell.classList.add('alien');
+        }
     }
 
-    // ajout d'une icone d'appel, draggable, en cas d'antenne de communication
-    if (!construction && card.suit === 'spades') {
-        drawAntennaInCell(cell);
+    // dessiner la végétation
+    if(vegetationAdventure.vegetationAdventureStep > 0) {
+        if(samePosition(row, col, vegetationAdventure.vegetationPosition)) {
+            createIcon(cell, 'plant-mutation-icon', '🌱', 'Mutation Végétale');
+        }
+
+        if(positionInArray(row, col, vegetationAdventure.jungles)) {
+            cell.classList.add('jungle');
+            createIcon(cell, 'jungle-icon', '🌴', 'Jungle');
+        }
+
     }
 
-    // gestion des aliens sur la case
-    if(alien && alienAdventure.alienAdventureStep > 0) {
-        drawAlienInCell(cell);
+    // dessiner le feu
+    if(electricAdventure.electricStep > 0) {
+        if(samePosition(row, col, electricAdventure.smokePosition)) {
+            // cas où il y a eu un court circuit traité, on met une icone de fumée pour signaler l'endroit
+            createIcon(cell, 'smoke-icon', '☁️', 'Fumée');
+        }
+
+        if(positionInArray(row, col, electricAdventure.firePositions)) {
+            if(electricAdventure.electricStep === 2 && electricAdventure.firePositions.length === 1) {
+                // s'il n'y a plus que un seul feu, on met une icone de fumée, qui ne peut pas être éteinte
+                createIcon(cell, 'smoke-icon', '☁️', 'Fumée');
+            } else {
+                const icon = createIcon(cell, 'fire-icon', '️🔥', 'Incendie');
+                icon.addEventListener('click', () => extinguishFire(cell));
+            }
+        }
     }
 
-    if(vegetation) {
-        drawVegetationInCell(cell);
+    // dessiner la pandémie
+    if(sickAdventure.sickStep > 0) {
+        // dessiner la morgue
+        if(samePosition(sickAdventure.mortuary)) {
+            createIcon(cell, 'mortuary-icon', '️⚰️', 'Morgue');
+        }
+
+        if(samePosition(sickAdventure.pandemicLocation)) {
+            createIcon(cell, 'biohazard-icon', '️☣️', 'Foyer de l\'épidémie');
+
+        }
+
+        if(sickAdventure.sickStep === 3 && position.suit === 'hearts' && isAdjacentToSuit(row, col, 'hearts') && isActive(row, col)) {
+            // un module habitable actif qui est à côté d'un autre module habitable : ça donne une infirmerie
+            createIcon(cell, 'hospital-icon', '💉', 'Infirmerie');
+        }
     }
+}
 
-    drawFireOrSmokeInCell(row, col, cell);
+function createIcon(cell, className, innerText, title) {
+    const icon = document.createElement('div');
+    icon.className = className;
+    icon.innerText = innerText;
+    icon.title = title;
+    cell.appendChild(icon);
+    return icon;
+}
 
-    drawPandemicInCell(row, col, cell);
+function positionInArray(row, col, array) {
+    return array.filter(loc => loc.row === row && loc.col === col).length > 0;
+}
+function samePosition(row, col, position) {
+    return position && position.row === row && position.col === col;
 }
 
 function drawFireOrSmokeInCell(row, col, cell) {
@@ -537,34 +625,27 @@ function drawFireOrSmokeInCell(row, col, cell) {
 }
 
 function drawPandemicInCell(row, col, cell) {
-    if(sickAdventure.morgLocation
-        && sickAdventure.morgLocation.row === row && sickAdventure.morgLocation.col === col) {
+    if(sickAdventure.mortuary
+        && sickAdventure.mortuary.row === row && sickAdventure.mortuary.col === col) {
         drawMorgInCell(cell);
     }
     else if(sickAdventure.pandemicLocation
         && sickAdventure.pandemicLocation.row === row && sickAdventure.pandemicLocation.col === col) {
-        drawPandemicInCell(cell);
+        drawBiohazardInCell(cell);
     }
     else if(sickAdventure.sickStep === 3 && cell.dataset.suit === 'hearts') {
         drawHospitalInCell(cell);
     }
 }
 
-function drawResourcesInCell(row, col, cell) {
-    const resources = boardResources[getKey(row, col)];
-    if (resources.food > 0) {
-        const food = document.createElement('div');
-        food.className = 'resource-token';
-        food.innerText = `🥬${resources.food}`;
-        food.addEventListener('click', () => collectResource(row, col, 'food'));
-        cell.appendChild(food);
+function drawGridResourcesInCell(position) {
+    if (position.food > 0) {
+        const icon = createIcon(position.dom, 'resource-token', `🥬${position.food}`, 'ravitaillement');
+        icon.addEventListener('click', () => collectResource(position.row, position.col, 'food'));
     }
-    if (resources.energy > 0) {
-        const energy = document.createElement('div');
-        energy.className = 'resource-token';
-        energy.innerText = `🔋${resources.energy}`;
-        energy.addEventListener('click', () => collectResource(row, col, 'energy'));
-        cell.appendChild(energy);
+    if (position.energy > 0) {
+        const icon = createIcon(position.dom, 'resource-token', `🔋${position.energy}`, 'batterie');
+        icon.addEventListener('click', () => collectResource(position.row, position.col, 'energy'));
     }
 }
 
@@ -772,7 +853,7 @@ function drawMorgInCell(cell) {
     icon.title = `Morgue`;
     cell.appendChild(icon);
 }
-function drawPandemicInCell(cell) {
+function drawBiohazardInCell(cell) {
     const icon = document.createElement('div');
     icon.className = 'biohazard-icon';
     icon.innerText = `☣️️`;
@@ -1069,7 +1150,7 @@ function isOnFire(row, col) {
 }
 function isActive(row, col) {
     if(isOnFire(row, col)) return false;
-    if(sickAdventure.morgLocation && sickAdventure.morgLocation.row === row && sickAdventure.morgLocation.col === col) return false;
+    if(samePosition(row, col, sickAdventure.mortuary)) return false;
     if(sickAdventure.pandemicLocation && sickAdventure.pandemicLocation.row === row && sickAdventure.pandemicLocation.col === col) return false;
     return true;
 }
@@ -1081,26 +1162,16 @@ function getKey(row, col) {
     return `${row}-${col}`
 }
 function getFood(row, col) {
-    if(!boardResources[getKey(row, col)]) return 0;
-    if(!boardResources[getKey(row, col)]['food']) return 0;
-    return boardResources[getKey(row, col)]['food']
+    return getGridElement(row, col).food;
 }
 function setFood(row, col, food) {
-    if(!boardResources[getKey(row, col)]) {
-        boardResources[getKey(row, col)] = {food: 0, energy: 0};
-    }
-    boardResources[getKey(row, col)]['food'] = food;
+    getGridElement(row, col).food = food;
 }
 function getEnergy(row, col) {
-    if(!boardResources[getKey(row, col)]) return 0;
-    if(!boardResources[getKey(row, col)]['energy']) return 0;
-    return boardResources[getKey(row, col)]['energy']
+    return getGridElement(row, col).energy;
 }
 function setEnergy(row, col, energy) {
-    if(!boardResources[getKey(row, col)]) {
-        boardResources[getKey(row, col)] = {food: 0, energy: 0};
-    }
-    boardResources[getKey(row, col)]['energy'] = energy;
+    getGridElement(row, col).energy = energy;
 }
 
 function runAdventurePhase() {
@@ -1240,12 +1311,8 @@ function renderResources() {
     // Supprimer les anciens affichages
     document.querySelectorAll('.resource-token').forEach(e => e.remove());
 
-    for (let key in boardResources) {
-        const [row, col] = key.split('-').map(Number);
-        const cell = document.querySelector(`.cell[data-row="${row}"][data-col="${col}"]`);
-        if (!cell) continue;
-
-        drawResourcesInCell(row, col, cell);
+    for (let key in grid) {
+        drawGridResourcesInCell( grid[key]);
     }
 }
 
@@ -1516,13 +1583,13 @@ function astronautsDie(astronautsDied) {
     astronauts.filter(x => !astronautsDied.includes(x));
 
     // si un des astronautes qui est mort était malade, et qu'il n'y a pas encore de morgue
-    if(astronautsDied.filter(a => a.sick).length > 0 && !sickAdventure.morgLocation) {
+    if(astronautsDied.filter(a => a.sick).length > 0 && !sickAdventure.mortuary) {
         // Choisir un module habitable au hasard
-        sickAdventure.morgLocation = getOneActiveHabitationAtRandom();
+        sickAdventure.mortuary = getOneActiveHabitationAtRandom();
 
-        if(sickAdventure.morgLocation) {
+        if(sickAdventure.mortuary) {
             log("En attendant d'en savoir d'aventage sur la maladie, un module habitable est réquisitionné comme morgue. Attention au risque de contamination.");
-            const cell = document.querySelector(`.cell[data-row="${sickAdventure.morgLocation.row}"][data-col="${sickAdventure.morgLocation.col}"]`);
+            const cell = document.querySelector(`.cell[data-row="${sickAdventure.mortuary.row}"][data-col="${sickAdventure.mortuary.col}"]`);
             drawMorgInCell(cell);
         }
     }
@@ -1540,6 +1607,14 @@ function getOneActiveHabitationAtRandom() {
         return null;
     }
     return habitations[Math.floor(Math.random() * habitations.length)];
+}
+
+function isAdjacentToSuit(row, col, suit) {
+    const position1 = getGridElement(row-1, col);
+    const position2 = getGridElement(row+1, col);
+    const position3 = getGridElement(row, col-1);
+    const position4 = getGridElement(row, col+1);
+    return position1?.suit === suit || position2?.suit === suit || position3?.suit === suit || position4?.suit === suit;
 }
 
 document.addEventListener('DOMContentLoaded', () => {
