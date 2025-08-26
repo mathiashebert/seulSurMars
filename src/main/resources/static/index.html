@@ -106,29 +106,6 @@
         '♠': [3, 3],
     };
 
-    function logMessage(msg) {
-        const p = document.createElement('p');
-        p.textContent = msg;
-        logPanel.appendChild(p);
-        logPanel.scrollTop = logPanel.scrollHeight;
-    }
-
-    function nextTurn() {
-        runDiscardPhase();
-
-        logMessage("Début d'un nouveau tour...");
-        // Logique de ressources, péripéties, actions à implémenter ici
-        runResourcePhase();
-        runAdventurePhase();
-    }
-
-    function resetGame() {
-        logPanel.innerHTML = '';
-        logMessage("Partie réinitialisée.");
-        initializeGame();
-    }
-
-    logMessage("Bienvenue sur la Lune !");
 </script>
 <script src="index.js"></script>
 
