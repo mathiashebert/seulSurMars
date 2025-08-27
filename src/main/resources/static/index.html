@@ -33,10 +33,6 @@
             margin: 1rem auto;
         }
 
-
-        .card.cell {
-            background: #333;
-        }
         .card.cell.construction:not(.occupied) {
             color: #333;
         }
@@ -80,6 +76,35 @@
         .astronaut {
             display: block;
             border: 1px solid;
+            background: #333;
+        }
+
+        .card.cell {
+            background-size: contain;
+        }
+        .hearts {
+            background-image: url("./img-moon/hearts_inactive.png");
+        }
+        .hearts.active {
+            background-image: url("./img-moon/hearts_active.png");
+        }
+        .clubs {
+            background-image: url("./img-moon/clubs_inactive.png");
+        }
+        .clubs.active {
+            background-image: url("./img-moon/clubs_active.png");
+        }
+        .spades {
+            background-image: url("./img-moon/spades_inactive.png");
+        }
+        .spades.active {
+            background-image: url("./img-moon/spades_active.png");
+        }
+        .diamonds {
+            background-image: url("./img-moon/diamonds_inactive.png");
+        }
+        .diamonds.active {
+            background-image: url("./img-moon/diamonds_active.png");
         }
     </style>
 </head>
