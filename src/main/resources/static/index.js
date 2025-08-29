@@ -8,20 +8,17 @@ let deck = [];
 let drawPiles = [[], [], [], []];
 let astronauts = []; // Liste des astronautes avec leurs positions et ressources
 let selectedAstronaut = null;
-let selectedDiscardCard = null;
-let discardPile = [];
+let selectedConstructionSuit = null;
 
 let alienAdventure = {
     alienPosition:null,      // { row, col }
     alienSignalCount: 0,     // Nombre de signaux sur l'antenne
     alienAdventureStep: 0,    // 0 = pas commencé, 1 = phase Signal Alien active, 2 = invasion
     alienCount: 0,    // Nombre total d’aliens sur le plateau
-    bunkers: []         // positions des bases aliens où on ne peut pas se rendre
 }
 let vegetationAdventure = {
     vegetationPosition:null,      // { row, col }
     vegetationAdventureStep: 0,
-    jungles: [],
 }
 let electricAdventure = {
     shortcutPosition: null,
@@ -37,25 +34,14 @@ let sickAdventure = {
 
 let grid = [] // grille qui représente toutes les cases (6x6)
 
-/*
-note : à l'interieur d'une case je peux avoir
-les resources
-l'astronaute
-l'antenne
-
-les aliens
-le signal alien
-
-la mutation genetique
-
-le feu
-le brasier
-
-la morgue
-le foyen épidémique
-l'hopital
-
- */
+const TYPE = {
+    EMPTY: 'empty',
+    CONSTRUCTION: 'construction',
+    BUILT: 'built',
+    JUNGLE: 'jungle',
+    BUNKER: 'bunker',
+    EXPLODED: 'exploded'
+};
 
 
 function createDeck() {
@@ -77,8 +63,7 @@ function initGrid() {
                 suit: null,
                 food: 0,
                 energy: 0,
-                explored: false,
-                built: false,
+                type: TYPE.EMPTY,
 
                 dom: null
             }
@@ -100,10 +85,10 @@ function shuffle(array) {
 
 function initializeDrawPiles() {
     const pileDefinitions = [
-        ['2', '3', '4'],
-        ['5', '6', 'J'],
-        ['7', '8', 'Q'],
-        ['9', '1', 'K']
+        ['A'],
+        ['J'],
+        ['Q'],
+        ['K']
     ];
 
     for (let i = 0; i < 4; i++) {
@@ -134,7 +119,6 @@ function renderEverything() {
     for(let key in grid) {
         redrawGridCell(grid[key]);
     }
-    renderDiscardPile();
 }
 
 function revealCardFromDeck() {
@@ -252,12 +236,6 @@ function attackAlien() {
     }
 }
 
-function discardFromDeck(number) {
-    for(let i= 0; i<number; i++) {
-        discardPile.push(revealCardFromDeck());
-    }
-}
-
 function startVegetationAdventure() {
     // Récupère toutes les positions de serres déjà construites
     const greenHouse = getOneActiveLocationAtRandom('clubs');
@@ -291,8 +269,7 @@ function triggerRoots() {
     for(let key in grid) {
         const position = grid[key]
         if(position.food > 0) {
-            const cell = position.dom;
-            vegetationAdventure.jungles.push({row: position.row, co: position.col}); // todo mettre ça plutôt dans la position directement ?
+            position.type = TYPE.JUNGLE;
             position.suit = 'clubs'; // cette position est maintenant une 'serre'
         }
     }
@@ -387,11 +364,10 @@ function cleanPosition(row, col, explosion) {
     const position = getGridElement(row, col);
     position.food = 0;
     position.energy = 0;
-    position.built = false;
+    position.type = TYPE.CONSTRUCTION;
     if(explosion) {
-        position.explored = false;
+        position.type = TYPE.EXPLODED;
         position.suit = null;
-        position.exploded = true;
     }
 }
 
@@ -431,12 +407,16 @@ function diseaseGetWorst() {
 function contaminate() {
     if(sickAdventure.sickStep < 1) return; // véirfier que l'aventure a commencé
 
+    const newSickAstornauts = [];
     // propager la contamination
     for(let i in astronauts) {
         const astro = astronauts[i];
         if(!astro.sick && isCloseToContamination(astro.row, astro.col)) {
-            astro.sick = true;
+            newSickAstornauts.push(astro);
         }
+    }
+    for(let i in newSickAstornauts) {
+        newSickAstornauts[i].sick = true;
     }
 }
 
@@ -470,12 +450,20 @@ function redrawGridCell(position) {
     cell.className = 'cell';
     cell.innerHTML = '';
 
-    if(position.explored) {
-        cell.classList.add('card');
-        cell.innerHTML = `${getSuitSymbol(position.suit)}`;
-
-        if(position.built) {
-
+    cell.classList.add(position.type);
+    switch (position.type) {
+        case TYPE.EMPTY: {
+            // case vide
+            break;
+        }
+        case TYPE.CONSTRUCTION: {
+            // afficher l'icone de construction
+            cell.classList.add('construction');
+            const icon = createIcon(cell, 'build-icon', '🔧', 'Construire ici');
+            icon.addEventListener('click', () => construction(cell));
+            break;
+        }
+        case TYPE.BUILT: {
             // afficher l'icone de l'antenne
             if(position.suit === "spades") {
                 const icon = createIcon(cell, 'call-icon', '📡', 'antenne de communication');
@@ -498,11 +486,6 @@ function redrawGridCell(position) {
 
                 });
             }
-        } else {
-            // afficher l'icone de construction
-            cell.classList.add('construction');
-            const icon = createIcon(cell, 'build-icon', '🔧', 'Construire ici');
-            icon.addEventListener('click', () => construction(cell));
         }
     }
 
@@ -531,10 +514,6 @@ function redrawGridCell(position) {
         } else if (alienAdventure.alienAdventureStep === 2 && samePosition(row, col, alienAdventure.alienPosition)) {
             const icon = createIcon(cell, 'alien-group-icon', ((alienAdventure.alienCount > 1) ? '👽' : '🕳️') + alienAdventure.alienCount, `Groupe alien : ${alienAdventure.alienCount}`);
             icon.addEventListener('click', () => attackAlien());
-        } else if (alienAdventure.alienAdventureStep === 3 && positionInArray(row, col, alienAdventure.bunkers)) {
-            createIcon(cell, 'alien-bunker-icon', '👽', 'Bunker alien');
-            // Marquer la case comme interdite
-            cell.classList.add('alien');
         }
     }
 
@@ -542,11 +521,6 @@ function redrawGridCell(position) {
     if(vegetationAdventure.vegetationAdventureStep > 0) {
         if(samePosition(row, col, vegetationAdventure.vegetationPosition)) {
             createIcon(cell, 'plant-mutation-icon', '🌱', 'Mutation Végétale');
-        }
-
-        if(positionInArray(row, col, vegetationAdventure.jungles)) {
-            cell.classList.add('jungle');
-            createIcon(cell, 'jungle-icon', '🌴', 'Jungle');
         }
 
     }
@@ -576,7 +550,8 @@ function redrawGridCell(position) {
 
         }
 
-        if(sickAdventure.sickStep === 3 && position.suit === 'hearts' && isAdjacentToSuit(row, col, 'hearts') && isActive(position)) {
+        if(sickAdventure.sickStep === 3 && position.suit === 'hearts' && isAdjacentToSuit(row, col, 'hearts')) {
+            cell.classList.add('hearts2');
             // un module habitable actif qui est à côté d'un autre module habitable : ça donne une infirmerie
             createIcon(cell, 'hospital-icon', '💉', 'Infirmerie');
         }
@@ -622,7 +597,7 @@ function drawAstronautInCell(astro, cell, i) {
         selectedAstronaut = i;
         const targets = new Set();
         const dist = astro.sick && sickAdventure.sickStep >= 3 ? 1 : 3; // en cas de maladie et de péripétie avancée, l'astronaute ne peut se déplacer ue de 1 case, sinon par défaut il peut se déplacer de 3 cases
-        pathfinder(astro.row, astro.col, dist, targets);
+        pathfinder(astro.row, astro.col, dist, targets, true);
 
         targets.forEach(target => {
             const x = target.split('-')[0];
@@ -746,11 +721,10 @@ function triggerEThome() {
 
     // Choisir X antennes au hasard
     const chosenAntennas = getSeveralLocationsAtRandom(alienCount, 'spades');
-    chosenAntennas.forEach(cell => {
-        const row = cell.row;
-        const col = cell.col;
-
-        alienAdventure.bunkers.push({row: row, col: col});
+    chosenAntennas.forEach(position => {
+        const row = position.row;
+        const col = position.col;
+        position.type = TYPE.BUNKER;
 
         // Si astronaute présent → il meurt
         const astroIndex = astronauts.findIndex(a => a.row === row && a.col === col);
@@ -785,43 +759,54 @@ function drawInitialLayout() {
     placeCard(3, 3, {suit: 'spades', value: 'A'});
 
     // pile de defausse
-    const discard = document.getElementById('discard');
-    discard.innerHTML = '';
-
-    for (let row = 0; row < discardSize; row++) {
-        const cell = document.createElement('div');
-        cell.className = 'cell';
-        cell.innerHTML = '';
-        cell.dataset.index = ''+row;
-        discard.appendChild(cell);
-
-        cell.setAttribute('draggable', 'true');
-        cell.addEventListener('dragstart', e => {
-            e.dataTransfer.setData('text/plain', 'recycle');
-            selectedDiscardCard = cell;
-
-            document.querySelectorAll('.card.construction.occupied').forEach(el => {
-                el.classList.add('possible-target' )
-            });
-        });
-    }
+    const deck = document.getElementById('construction-deck');
+    deck.innerHTML = '';
+    prepareConstructionDeck(deck, 'hearts');
+    prepareConstructionDeck(deck, 'clubs');
+    prepareConstructionDeck(deck, 'diamonds');
+    prepareConstructionDeck(deck, 'spades');
 }
-function exploreCard(position, suit) {
-    position.suit = suit;
-    position.explored = true;
-    position.exploded = false;
-    redrawGridCell(position);
+
+function prepareConstructionDeck(deck, suit) {
+    const cell = document.createElement('div');
+    cell.className = 'cell';
+    cell.classList.add('construction');
+    cell.classList.add(suit);
+    cell.innerHTML = '';
+    cell.dataset.suit = suit;
+    deck.appendChild(cell);
+
+    cell.setAttribute('draggable', 'true');
+    cell.addEventListener('dragstart', e => {
+        e.dataTransfer.setData('text/plain', 'construction');
+        selectedConstructionSuit = cell.dataset.suit;
+
+        document.querySelectorAll('.cell.empty.occupied').forEach(el => {
+            el.classList.add('possible-target' )
+        });
+        document.querySelectorAll('.cell.construction.occupied').forEach(el => {
+            el.classList.add('possible-target' )
+        });
+    });
 }
 
 function buildCard(position) {
-    position.built = true;
+    position.type = TYPE.BUILT;
     redrawGridCell(position);
 }
 
 function placeCard(row, col, card) {
     const position = getGridElement(row, col);
-    exploreCard(position, card.suit);
-    buildCard(position);
+    startConstruction(position, card.suit);
+    endConstruction(position);
+}
+
+function startConstruction(position, suit) {
+    position.suit = suit;
+    position.type = TYPE.CONSTRUCTION;
+}
+function endConstruction(position) {
+    position.type = TYPE.BUILT;
 }
 
 function getSuitSymbol(suit) {
@@ -849,8 +834,6 @@ function logMessage(msg) {
 }
 
 function nextTurn() {
-    runDiscardPhase();
-
     logMessage("Début d'un nouveau tour...");
     // Logique de ressources, péripéties, actions à implémenter ici
     runResourcePhase();
@@ -869,7 +852,7 @@ function runResourcePhase() {
     // Ajouter ressources aux cartes
     for(let key in grid) {
         const position = grid[key];
-        if(position.built && position.suit && isActive(position)) {
+        if(position.suit && isActive(position)) {
             // Ajouter un jeton ravitaillement si serre (clubs ♣)
             if (position.suit === 'clubs') {
                 addFoodToCell(position.row, position.col);
@@ -919,6 +902,7 @@ function isActive(position) {
     const row = position.row;
     const col = position.col;
 
+    if(position.type !== TYPE.BUILT) return false;
     if(isOnFire(row, col)) return false;
     if(samePosition(row, col, sickAdventure.mortuary)) return false;
     if(samePosition(row, col, sickAdventure.pandemicLocation)) return false;
@@ -951,6 +935,7 @@ function setEnergy(row, col, energy) {
 }
 
 function runAdventurePhase() {
+    revealCardFromDeck();
     // Alien Signal en cours
     if (alienAdventure.alienAdventureStep === 1) {
         alienAdventure.alienSignalCount ++;
@@ -1028,16 +1013,6 @@ function findOneAstronautAtRandom() {
     return null;
 }
 
-function runDiscardPhase() {
-    let pileIndex = 1;
-    if(deck.length <= 36) pileIndex = 2;
-    if(deck.length <= 24) pileIndex = 3;
-    if(deck.length <= 12) pileIndex = 4;
-
-    discardFromDeck(pileIndex);
-    renderDiscardPile();
-}
-
 function addFoodToCell(row, col) {
     const specialMutation = samePosition(row, col, vegetationAdventure.vegetationPosition);
     const max = specialMutation? 4 : 3;
@@ -1052,24 +1027,6 @@ function addEnergyToCell(row, col) {
 
     const energy = getEnergy(row, col) + amount;
     setEnergy(row, col, Math.min(energy, max));
-}
-
-function renderDiscardPile() {
-    const lastCards = discardPile.slice(-1*discardSize).reverse(); // dernières cartes, plus récentes en haut
-
-    for (let i = 0; i < discardSize; i++) {
-
-        const cell = document.querySelector(`#discard .cell[data-index="${i}"]`)
-
-        if(cell) {
-            cell.innerHTML = '';
-            const card = lastCards[i];
-
-            if(card) {
-                cell.innerHTML = `${getSuitSymbol(card.suit)}`;
-            }
-        }
-    }
 }
 
 function collectResource(row, col, type) {
@@ -1137,7 +1094,7 @@ function setupDragAndDrop() {
         cell.addEventListener('drop', (e) => {
             const data = e.dataTransfer.getData('text/plain');
 
-            if (data === 'recycle' && selectedDiscardCard) {
+            if (data === 'construction' && selectedConstructionSuit) {
                 const astronaut = cell.querySelector('.astronaut');
                 if (astronaut) {
                     selectedAstronaut = parseInt(astronaut.dataset.index);
@@ -1165,8 +1122,8 @@ function setupDragAndDrop() {
 
             if (data === 'call') {
                 calling(cell, astro);
-            } else if(data === 'recycle') {
-                recycle(cell, astro, selectedDiscardCard);
+            } else if(data === 'construction') {
+                construct(astro, selectedConstructionSuit);
             }  else {
                 movement(cell, astro);
             }
@@ -1175,22 +1132,15 @@ function setupDragAndDrop() {
     });
 }
 
-function recycle(cell, astro, selectedDiscardCard) {
+function construct(astro, suit) {
     if(astro.energy <= 0) {
         log("Pas d'energie.");
         return;
     }
     astro.energy --;
 
-    const lastCards = discardPile.slice(-1*discardSize).reverse();
-    const cardFromDiscard = lastCards[selectedDiscardCard.dataset.index];
     const position = getGridElement(astro.row, astro.col);
-
-    const suitToDiscard = position.suit;
-    const suitToInstall = cardFromDiscard.suit;
-
-    cardFromDiscard.suit = suitToDiscard;
-    position.suit = suitToInstall;
+    startConstruction(position, suit);
 
     renderEverything();
 }
@@ -1205,26 +1155,9 @@ function movement(cell, astro) {
         return;
     }
 
-    const hasCard = cell.classList.contains('card');
-
-    let adventure = false;
-
-    if (!hasCard) {
-        log("Le mouvement s'arrête sur une case vide.");
-        let card = revealCardFromDeck();
-        if (card == null) return; // c'est la fin de la partie
-        adventure = ['J', 'Q', 'K'].includes(card.value);
-        if (!adventure) {
-            exploreCard(getGridElement(row, col), card.suit);
-        }
-
-    }
-    // effectuer le mouvement
-    if (!adventure) {
-        astro.row = row;
-        astro.col = col;
-        astro.energy--;
-    }
+    astro.row = row;
+    astro.col = col;
+    astro.energy--;
 
     renderEverything();
 }
@@ -1268,11 +1201,10 @@ function construction(cell) {
     renderEverything();
 }
 
-function pathfinder(x, y, dist, targets) {
+function pathfinder(x, y, dist, targets, start) {
 
     const position = getGridElement(x, y);
-    const cell = position.dom;
-    if (positionInArray(x, y, alienAdventure.bunkers)) return; // interdit
+    if (position.type === TYPE.BUNKER) return; // interdit
 
     if(isFree(position)) {
         targets.add(getKey(x,y));
@@ -1280,9 +1212,9 @@ function pathfinder(x, y, dist, targets) {
 
     if(dist <= 0) return;
 
-    const hasCard = cell.classList.contains('card');
-    const isJungle = cell.classList.contains('jungle');
-    if(!hasCard || isJungle) return;
+    if(!start) {
+        if(position.type === TYPE.EMPTY || position.type === TYPE.EXPLODED || position.type === TYPE.JUNGLE) return;
+    }
 
     if(x > 0) pathfinder(x-1, y, dist-1, targets);
     if(y < boardSize-1) pathfinder(x, y+1, dist-1, targets);
@@ -1340,10 +1272,15 @@ function isAdjacentToSuit(row, col, suit) {
     const position2 = getGridElement(row+1, col);
     const position3 = getGridElement(row, col-1);
     const position4 = getGridElement(row, col+1);
-    return position1?.suit === suit && position1?.built ||
-        position2?.suit === suit && position2?.built  ||
-        position3?.suit === suit && position3?.built ||
-        position4?.suit === suit && position4?.built;
+    return isSuitActive(position1, suit) || isSuitActive(position2, suit) || isSuitActive(position3, suit) || isSuitActive(position4, suit);
+}
+
+function isSuitActive(position, suit) {
+    if(!position) return false;
+
+    if(position.type !== TYPE.BUILT) return false;
+    if(isOnFire(position.row, position.col)) return false;
+    return suit === position.suit;
 }
 
 document.addEventListener('DOMContentLoaded', () => {

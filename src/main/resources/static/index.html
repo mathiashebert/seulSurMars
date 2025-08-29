@@ -26,7 +26,7 @@
             margin: 1rem auto;
         }
 
-        .discard {
+        .construction-deck {
             display: grid;
             grid-template-columns: repeat(6, 80px);
             gap: 5px;
@@ -79,32 +79,56 @@
             background: #333;
         }
 
-        .card.cell {
+        .cell {
             background-size: contain;
         }
-        .hearts {
+        .built.hearts {
             background-image: url("./img-moon/hearts_inactive.png");
         }
-        .hearts.active {
+        .built.hearts.active {
             background-image: url("./img-moon/hearts_active.png");
         }
-        .clubs {
+        .construction.hearts {
+            background-image: url("./img-moon/hearts_construction.png");
+        }
+        .built.hearts.hearts2 {
+            background-image: url("./img-moon/hearts2_inactive.png");
+        }
+        .built.hearts.hearts2.active {
+            background-image: url("./img-moon/hearts2_active.png");
+        }
+        .built.clubs {
             background-image: url("./img-moon/clubs_inactive.png");
         }
-        .clubs.active {
+        .built.clubs.active {
             background-image: url("./img-moon/clubs_active.png");
         }
-        .spades {
+        .construction.clubs {
+            background-image: url("./img-moon/clubs_construction.png");
+        }
+        .built.clubs.jungle {
+            background-image: url("./img-moon/jungle.png");
+        }
+        .built.spades {
             background-image: url("./img-moon/spades_inactive.png");
         }
-        .spades.active {
+        .built.spades.active {
             background-image: url("./img-moon/spades_active.png");
         }
-        .diamonds {
+        .construction.spades {
+            background-image: url("./img-moon/spades_construction.png");
+        }
+        .built.diamonds {
             background-image: url("./img-moon/diamonds_inactive.png");
         }
-        .diamonds.active {
+        .built.diamonds.active {
             background-image: url("./img-moon/diamonds_active.png");
+        }
+        .construction.diamonds {
+            background-image: url("./img-moon/diamonds_construction.png");
+        }
+        .spades.bunker {
+            background-image: url("./img-moon/bunker.png");
         }
     </style>
 </head>
@@ -112,7 +136,7 @@
 <h1>Une Maison sur la Lune</h1>
 <div class="board" id="board"></div>
 <p>defausse</p>
-<div class="discard" id="discard"></div>
+<div class="construction-deck" id="construction-deck"></div>
 <div class="controls">
     <button onclick="nextTurn()">Tour Suivant</button>
     <button onclick="resetGame()">Réinitialiser</button>
