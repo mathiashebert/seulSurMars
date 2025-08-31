@@ -1,0 +1,41 @@
+
+
+.objet {
+    position: absolute;
+    width: 1em;
+    height: 1em;
+    background-size: contain;
+    z-index: 4;
+}
+.objet.inventaire {
+    z-index: 29;
+}
+
+
+.objet.bouteille {
+    background-image: url("img/bouteille.png");
+}
+.objet.oxygene {
+    background-image: url("img/oxygen.png");
+}
+.objet.hydrogene {
+    background-image: url("img/h2.png");
+}
+.objet.tomate {
+    background-image: url("img/tomate.png");
+}
+.objet.inflammable {
+    background-image: url("img/inflammable.png");
+}
+.objet.sucre {
+    background-image: url("img/sucre.png");
+}
+.objet.cupcake {
+    background-image: url("img/cupcake.png");
+}
+.objet.explosif {
+    background-image: url("img/explosif.png");
+}
+.objet.electrique {
+    background-image: url("img/electrique.png");
+}

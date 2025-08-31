@@ -1,0 +1,86 @@
+
+
+.animation {
+    position: absolute;
+    width: 1em;
+    height: 1em;
+    background-size: cover;
+    z-index: 5;
+
+    background-repeat: no-repeat;
+    animation-name: sprite;
+    animation-duration: 10s;
+    animation-timing-function: steps(6);
+    animation-iteration-count: 1;
+    animation-fill-mode: forwards;
+}
+.animation.decor {
+    width: 2em;
+    height: 2em;
+}
+
+
+.animation.tomatequipousse {
+    background-image: url("img/tomate-animation.gif");
+}
+.animation.cupcakequicuit {
+    background-image: url("img/four-animation.png");
+    width: 2em;
+    height: 2em;
+    animation-name: sprite2;
+
+}
+
+.animation.feu {
+    background-image: url("img/animation-feu.png");
+}
+
+.animation.decomptefeu {
+    background-image: url("img/animation-electrique.png");
+}
+
+.animation.explosion {
+    background-image: url("img/animation-explosion.png");
+}
+
+.animation.decompteexplosion {
+    background-image: url("img/animation-electrique.png");
+}
+
+@keyframes sprite {
+    from { background-position: 0em; }
+    to { background-position: -6em; }
+}
+
+@keyframes sprite2 {
+    from { background-position: 0em; }
+    to { background-position: -12em; }
+}
+
+
+.animation.tourelleOuverture {
+    background-image: url("img/animation-tourrelleOuverture.png");
+    width: 2em;
+    height: 2em;
+    animation-name: sprite2;
+}
+
+.animation.tourelleFermeture {
+    background-image: url("img/animation-tourrelleFermeture.png");
+    width: 2em;
+    height: 2em;
+    animation-name: sprite2;
+}
+.animation.tourelleVisee {
+    background-image: url("img/tourelleouverte.png");
+    width: 2em;
+    height: 2em;
+    animation-name: none;
+}
+.animation.tourelleMiseEnVeille {
+    background-image: url("img/tourellefermee.png");
+    width: 2em;
+    height: 2em;
+    animation-name: none;
+
+}

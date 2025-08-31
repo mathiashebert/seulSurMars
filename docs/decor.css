@@ -1,0 +1,68 @@
+
+
+.decor {
+    position: absolute;
+    width: 2em;
+    height: 2em;
+    background-size: contain;
+}
+
+.decor.background {
+    z-index: 1;
+}
+.decor.foreground {
+    z-index: 4;
+}
+
+.decor.ascenseur.background {
+    background-image: url("./img/ascenseur_b.png");
+}
+.decor.ascenseur.foreground {
+    background-image: url("./img/ascenseur.png");
+}
+
+.decor.potager.background {
+    background-image: url("./img/potager_b.png");
+}
+.decor.potager.foreground {
+    background-image: url("./img/potager_f.png");
+}
+
+.decor.hydrazine.background {
+    background-image: url("./img/h2n4.png");
+}
+
+.decor.fontaine.background {
+    background-image: url("./img/fontaine_b.png");
+}
+.decor.terminal.background {
+    background-image: url("./img/terminal_b.png");
+}
+.decor.terminalCasse.background {
+    background-image: url("./img/terminalCasse_b.png");
+}
+
+.decor.recycleurAir.background {
+    background-image: url("./img/air-recycling.png");
+}
+
+.decor.four.background {
+    background-image: url("./img/four.png");
+}
+
+.decor.ampouleAllumee.background {
+    background-image: url("./img/ampouleAllumee.png");
+}
+
+.decor.ampouleEteinte.background {
+    background-image: url("./img/ampouleEteinte.png");
+}
+.decor.tourelleFermee.background {
+    background-image: url("./img/tourellefermee.png");
+}
+.decor.tourelleOuverte.background {
+    background-image: url("./img/tourelleouverte.png");
+}
+.decor.tourelleCassee.background {
+    background-image: url("./img/tourellecassee.png");
+}

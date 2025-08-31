@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Une Maison sur la Lune</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            background: #111;
+            color: #eee;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1rem;
+        }
+        h1 {
+            text-align: center;
+            color: #90ee90;
+        }
+        .board {
+            display: grid;
+            grid-template-columns: repeat(6, 80px);
+            grid-template-rows: repeat(6, 80px);
+            gap: 5px;
+            margin: 1rem auto;
+        }
+
+        .construction-deck {
+            display: grid;
+            grid-template-columns: repeat(6, 80px);
+            gap: 5px;
+            margin: 1rem auto;
+        }
+
+        .card.cell.construction:not(.occupied) {
+            color: #333;
+        }
+        .cell {
+            width: 80px;
+            height: 80px;
+            background: #222;
+            border: 1px solid #555;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+        .possible-target {
+            border-color: white;
+        }
+        .controls {
+            margin-top: 1rem;
+        }
+        button {
+            background: #444;
+            color: #fff;
+            border: none;
+            padding: 0.5rem 1rem;
+            margin: 0.3rem;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #666;
+        }
+        .log {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #666;
+            background: #1a1a1a;
+            padding: 0.5rem;
+            width: 90%;
+            margin-top: 1rem;
+        }
+        .astronaut {
+            display: block;
+            border: 1px solid;
+            width: 40px;
+            height: 40px;
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background-size: contain;
+            background-image: url("./img-moon/astro.png");
+        }
+        .astronaut.sick {
+            background-image: url("./img-moon/astro_sick.png");
+
+        }
+
+        .cell {
+            background-size: contain;
+            position: relative;
+        }
+        .cell:not(.built) {
+            opacity: 0.7;
+        }
+        .cell.communication {
+            border-color:  #EEE;
+        }
+        .built.hearts {
+            background-image: url("./img-moon/hearts_inactive.png");
+        }
+        .built.hearts.active {
+            background-image: url("./img-moon/hearts_active.png");
+        }
+        .construction.hearts {
+            background-image: url("./img-moon/hearts_construction.png");
+        }
+        .built.hearts.hearts2 {
+            background-image: url("./img-moon/hearts2_inactive.png");
+        }
+        .built.hearts.hearts2.active {
+            background-image: url("./img-moon/hearts2_active.png");
+        }
+        .built.clubs {
+            background-image: url("./img-moon/clubs_inactive.png");
+        }
+        .built.clubs.active {
+            background-image: url("./img-moon/clubs_active.png");
+        }
+        .construction.clubs {
+            background-image: url("./img-moon/clubs_construction.png");
+        }
+        .cell.clubs.jungle {
+            background-image: url("./img-moon/jungle.png");
+        }
+        .cell.exploded {
+            background-image: url("./img-moon/exploded.png");
+        }
+        .built.spades {
+            background-image: url("./img-moon/spades_inactive.png");
+        }
+        .built.spades.active {
+            background-image: url("./img-moon/spades_active.png");
+        }
+        .construction.spades {
+            background-image: url("./img-moon/spades_construction.png");
+        }
+        .built.diamonds {
+            background-image: url("./img-moon/diamonds_inactive.png");
+        }
+        .built.diamonds.active {
+            background-image: url("./img-moon/diamonds_active.png");
+        }
+        .construction.diamonds {
+            background-image: url("./img-moon/diamonds_construction.png");
+        }
+        .spades.bunker {
+            background-image: url("./img-moon/bunker.png");
+        }
+
+        .capsule {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            animation: descend 2s ease-in-out forwards;
+            pointer-events: none; /* pour ne pas gêner */
+            background-size: contain;
+            background-image: url("./img-moon/landing.png");
+        }
+
+        @keyframes descend {
+            0% {
+                transform: translateY(-200px) scale(1);
+                opacity: 0;
+            }
+            10% {
+                transform: translateY(-200px) scale(1);
+                opacity: 1;
+            }
+            70% {
+                transform: translateY(var(--targetY)) scale(1);
+                opacity: 1;
+            }
+            80% {
+                transform: translateY(var(--targetY)) scale(1.2); /* effet pop */
+            }
+            90% {
+                transform: translateY(var(--targetY)) scale(1);
+            }
+            100% {
+                transform: translateY(var(--targetY)) scale(0.25);
+                opacity: 0;
+            }
+        }
+
+        .resource-token {
+            position: absolute;
+            width: 40px;
+            height: 20px;
+            bottom: 0;
+            text-align: center;
+        }
+        .resource-token-food {
+            left: 0;
+            background: #109010;
+        }
+        .resource-token-energy {
+            right: 0;
+            background: #901010;
+        }
+
+        .astronaut .resource-token {
+            width: 15px;
+            height: 15px;
+            font-size: 1rem;
+            opacity: 1;
+        }
+
+        .action-token {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            top: 0;
+            text-align: center;
+            background: #333333;
+            font-size: 1rem;
+
+        }
+        .call-icon {
+            left: 0;
+        }
+        .build-icon {
+            left: 0;
+        }
+        .alien-signal-icon { /* par dessus l'antenne */
+            left: 0;
+        }
+        .alien-group-icon {  /* par dessus l'antenne */
+            left: 0;
+        }
+        .fire-icon {
+            left: 20px;
+        }
+
+        .status-token {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            text-align: center;
+            background: #333333;
+            font-size: 1rem;
+        }
+        .plant-mutation-icon {
+            left: 0;
+            top: 20px;
+        }
+        .smoke-icon {
+            left: 0;
+            top: 40px;
+        }
+        .mortuary-icon {
+            right: 0;
+            top: 20px;
+        }
+        .biohazard-icon {
+            right: 0;
+            top: 20px;
+        }
+        .hospital-icon {
+            left: 20px;
+        }
+    </style>
+</head>
+<body>
+<h1>Une Maison sur la Lune</h1>
+<div class="board" id="board"></div>
+<p>defausse</p>
+<div class="construction-deck" id="construction-deck"></div>
+<div class="controls">
+    <button onclick="nextTurn()">Tour Suivant</button>
+    <button onclick="resetGame()">Réinitialiser</button>
+</div>
+<div class="log" id="log"></div>
+
+<script>
+    const logPanel = document.getElementById('log');
+    const boardSize = 6;
+    const discardSize = 6;
+    const cards = [];
+    const specialPositions = {
+        '♥': [2, 2],
+        '♣': [2, 3],
+        '♦': [3, 2],
+        '♠': [3, 3],
+    };
+
+</script>
+<script src="index.js"></script>
+
+</body>
+</html>

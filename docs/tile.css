@@ -1,0 +1,76 @@
+
+
+.tile {
+    position: absolute;
+    width: 2em;
+    height: 2em;
+    background-size: contain;
+}
+
+.tile.background {
+    z-index: 0;
+}
+.tile.foreground {
+    z-index: 5;
+}
+
+.tile.sol.background {
+    background-image: url("./img/sol.png");
+}
+.tile.roche.foreground {
+    background-image: url("./img/roche.png");
+}
+.tile.mur1.foreground {
+    background-image: url("./img/mur-1-f.png");
+}
+.tile.mur1.background {
+    background-image: url("./img/toit.png");
+}
+.tile.mur2.foreground {
+    background-image: url("./img/mur-2-f.png");
+}
+.tile.mur2.background {
+    background-image: url("./img/toit.png");
+}
+.tile.mur3.foreground {
+    background-image: url("./img/mur-3-f.png");
+}
+.tile.mur3.background {
+    background-image: url("./img/mur-3-b.png");
+}
+.tile.mur4.foreground {
+    background-image: url("./img/mur-4-f.png");
+}
+.tile.mur4.background {
+    background-image: url("./img/face-interieure.png");
+}
+.tile.mur5.foreground {
+    background-image: url("./img/mur-5-f.png");
+}
+.tile.mur5.background {
+    background-image: url("./img/face-exterieure.png");
+}
+.tile.mur6.foreground {
+    background-image: url("./img/mur-6-f.png");
+}
+.tile.mur7.foreground {
+    background-image: url("./img/mur-7-f.png");
+}
+.tile.mur8.foreground {
+    background-image: url("./img/mur-8-f.png");
+}
+.tile.mur8.background {
+    background-image: url("./img/face-interieure.png");
+}
+.tile.porte.foreground {
+    background-image: url("./img/porte.png");
+}
+.tile.porte.background {
+    background-image: url("./img/dalle.png");
+}
+.tile.dalle.background {
+    background-image: url("./img/dalle.png");
+}
+.tile.carreau.background {
+    background-image: url("./img/carreau.png");
+}
