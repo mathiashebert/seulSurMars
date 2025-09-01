@@ -299,7 +299,7 @@ function startShortCut() {
 
     // Choisir un panneau solaire au hasard
     electricAdventure.shortcutPosition = solarPanel;
-    electricAdventure.firePositions.push({...electricAdventure.shortcutPosition});
+    setFire(electricAdventure.shortcutPosition.row, electricAdventure.shortcutPosition.col);
 
     electricAdventure.electricStep = 1;
 
@@ -316,7 +316,7 @@ function startFire() {
     // cas où l'incendie avait été éteint lors du court circuit
     if(electricAdventure.smokePosition) {
         // alors on remet simplement un "feu" là où il y a eu le court circuit
-        electricAdventure.firePositions.push({...electricAdventure.smokePosition});
+        setFire(electricAdventure.smokePosition.row, electricAdventure.smokePosition.col);
         electricAdventure.smokePosition = null;
     }
     // cas où l'incendie n'a pas été maitrisé
@@ -327,13 +327,19 @@ function startFire() {
     log("lincendie devient incontrolable");
 }
 
+function setFire(row, col) {
+    electricAdventure.firePositions.push({row:row, col: col});
+    setFood(row, col, 0);
+    setEnergy(row, col, 0);
+
+}
 function firePropagation() {
 
     const newFire = [];
 
     // etape 0 : s'il y a de la fumée, elle devient du feu
     if(electricAdventure.smokePosition) {
-        electricAdventure.firePositions.push({...electricAdventure.smokePosition});
+        setFire(electricAdventure.smokePosition.row, electricAdventure.smokePosition.col);
         electricAdventure.smokePosition = null;
     }
 
@@ -353,7 +359,7 @@ function firePropagation() {
 
     // etape 2 : mettre en feu les cases adjacentes
     for (let i in newFire) {
-        if(!isOnFire(newFire[i].row, newFire[i].col)) electricAdventure.firePositions.push(newFire[i]);
+        if(!isOnFire(newFire[i].row, newFire[i].col)) setFire(newFire[i].row, newFire[i].col);
     }
 }
 
@@ -1065,7 +1071,7 @@ function runAdventurePhase() {
         astronautsDie(astronautsDied);
     }
 
-    if(sickAdventure.sickStep > 1 && !sickAdventure.pandemicLocation) {
+    if(sickAdventure.sickStep === 2 && !sickAdventure.pandemicLocation) {
         sickAdventure.pandemicLocation = getOneActiveLocationAtRandom('hearts');
         log("un Module habitable a été identifié comme foyer de l'épidémie. Il est placé en quarantaine. Attention aux risques de contamination.");
     }
@@ -1329,7 +1335,7 @@ function astronautsDie(astronautsDied) {
     astronauts = astronauts.filter(x => !astronautsDied.includes(x));
 
     // si un des astronautes qui est mort était malade, et qu'il n'y a pas encore de morgue
-    if(astronautsDied.filter(a => a.sick).length > 0 && !sickAdventure.mortuary) {
+    if(astronautsDied.filter(a => a.sick).length > 0 && !sickAdventure.mortuary && sickAdventure.sickStep < 3) {
         // Choisir un module habitable au hasard
         sickAdventure.mortuary = getOneActiveLocationAtRandom('hearts');
 
