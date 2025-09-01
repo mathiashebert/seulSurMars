@@ -7,8 +7,15 @@ const values = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '1', 'J', 'Q', 'K']
 let deck = [];
 let drawPiles = [[], [], [], []];
 let astronauts = []; // Liste des astronautes avec leurs positions et ressources
-let selectedAstronaut = null;
-let selectedConstructionSuit = null;
+
+
+let dragAndDropAction = {
+    astronaut: null,
+    action: null,
+    possibleTargets: []
+}; // { astronaut, action, possible-targets }
+
+
 
 let alienAdventure = {
     alienPosition:null,      // { row, col }
@@ -119,6 +126,9 @@ function renderEverything() {
     for(let key in grid) {
         redrawGridCell(grid[key]);
     }
+
+    document.querySelector('.construction-deck').classList.remove('calling');
+
 }
 
 function revealCardFromDeck() {
@@ -445,6 +455,39 @@ function isCloseToContamination(row, col) {
     }
 }
 
+
+function handleCallingStart(suit) {
+
+    const astro = dragAndDropAction.astronaut;
+    if(!astro) return;
+
+    dragAndDropAction.action = suit;
+
+    if(suit === 'astronaut') {
+        console.log("appeler un nouvel astro ?")
+        const targets = Object.values(grid).filter(position => position.suit === 'hearts' && isFree(position) && isActive(position)
+            && distance(astro.row, astro.col, position) <= 2)
+        dragAndDropAction.possibleTargets = targets;
+        console.log(targets);
+
+
+    } else {
+        const targets = Object.values(grid).filter(position => (position.type === TYPE.EMPTY || position.type === TYPE.CONSTRUCTION || position.type === TYPE.EXPLODED)
+            && distance(astro.row, astro.col, position) <= 2)
+        dragAndDropAction.possibleTargets = targets;
+    }
+
+    document.querySelectorAll(`.cell`).forEach(c => {
+        c.classList.remove('possible-target')
+    });
+
+    log("début d'appel : "+suit);
+    for(let position of dragAndDropAction.possibleTargets) {
+        position.dom.classList.add('possible-target');
+    }
+
+}
+
 function redrawGridCell(position) {
     const cell = position.dom;
     const row = position.row;
@@ -455,6 +498,15 @@ function redrawGridCell(position) {
 
     if(isCloseToSuit(row, col, 'spades', 2)) {
         cell.classList.add('communication');
+    }
+
+    // rendu de l'astronaute
+    const astroIndex = astronauts.findIndex(a => a.row === row && a.col === col);
+    let astronaut = null;
+    if (astroIndex >= 0) {
+        astronaut = astronauts[astroIndex];
+        drawAstronautInCell(astronaut, cell, astroIndex);
+
     }
 
     cell.classList.add(position.type);
@@ -474,24 +526,14 @@ function redrawGridCell(position) {
             // afficher l'icone de l'antenne
             if(position.suit === "spades") {
                 const icon = createIcon(cell, 'action-token call-icon', '📡', 'antenne de communication');
-                icon.setAttribute('draggable', 'true');
-                icon.addEventListener('dragstart', e => {
-                    e.dataTransfer.setData('text/plain', 'call');
-
-                    const astro = cell.querySelector(`.astronaut`);
-                    if(astro) {
-                        selectedAstronaut = astro.dataset.index;
-
-                        // les modules habitables sont des cibles potentielles (si libre et actif)
-                        for(let key in grid) {
-                            const position = grid[key];
-                            if(position.suit === 'hearts' && isFree(position) && isActive(position)) {
-                                position.dom.classList.add('possible-target');
-                            }
-                        }
-                    }
-
-                });
+                if(astronaut) {
+                    icon.addEventListener('click', () => {
+                        log("utiliser l'antenne");
+                        dragAndDropAction.astronaut = astronaut;
+                        document.querySelector('.construction-deck').classList.add('calling');
+                    })
+                }
+;
             }
         }
     }
@@ -505,12 +547,6 @@ function redrawGridCell(position) {
     }
 
     drawGridResourcesInCell(position);
-
-    // rendu de l'astronaute
-    const astroIndex = astronauts.findIndex(a => a.row === row && a.col === col);
-    if (astroIndex >= 0) {
-        drawAstronautInCell(astronauts[astroIndex], cell, astroIndex);
-    }
 
     // dessiner les aliens
     if(alienAdventure.alienAdventureStep > 0) {
@@ -594,6 +630,25 @@ function drawGridResourcesInCell(position) {
     }
 }
 
+function handleStartMoving(astro) {
+    const targets = new Set();
+    const dist = astro.sick && sickAdventure.sickStep >= 3 ? 1 : 3; // en cas de maladie et de péripétie avancée, l'astronaute ne peut se déplacer ue de 1 case, sinon par défaut il peut se déplacer de 3 cases
+    pathfinder(astro.row, astro.col, dist, targets, true);
+
+    const possibleTargets = [];
+    targets.forEach(target => {
+        const x = target.split('-')[0];
+        const y = target.split('-')[1];
+        possibleTargets.push(getGridElement(x, y));
+        getGridElement(x, y).dom.classList.add('possible-target');
+    });
+
+    dragAndDropAction.astronaut = astro;
+    dragAndDropAction.action = 'move';
+    dragAndDropAction.possibleTargets = possibleTargets;
+
+}
+
 function drawAstronautInCell(astro, cell, i) {
     cell.classList.add('occupied');
 
@@ -601,18 +656,26 @@ function drawAstronautInCell(astro, cell, i) {
     token.className = 'astronaut';
     token.draggable = true;
     token.dataset.index = i;
-    token.addEventListener('dragstart', (e) => {
-        selectedAstronaut = i;
-        const targets = new Set();
-        const dist = astro.sick && sickAdventure.sickStep >= 3 ? 1 : 3; // en cas de maladie et de péripétie avancée, l'astronaute ne peut se déplacer ue de 1 case, sinon par défaut il peut se déplacer de 3 cases
-        pathfinder(astro.row, astro.col, dist, targets, true);
 
-        targets.forEach(target => {
-            const x = target.split('-')[0];
-            const y = target.split('-')[1];
-            getGridElement(x, y).dom.classList.add('possible-target');
-        })
+    // Souris
+    token.setAttribute('draggable', 'true');
+    token.addEventListener('dragstart', () =>  {
+        handleStartMoving(astro)
     });
+    // Mobile
+    token.addEventListener("touchstart", (e) => {
+        e.preventDefault();
+        handleStartMoving(astro);
+    });
+    token.addEventListener("touchend", (e) => {
+        e.preventDefault();
+        const touch = e.changedTouches[0];
+        const target = document.elementFromPoint(touch.clientX, touch.clientY);
+        if(target.classList.contains('cell')) {
+            handleEndDragAndDrop(target);
+        }
+    });
+
     cell.appendChild(token);
 
     if (astro.food > 0) {
@@ -770,6 +833,7 @@ function drawInitialLayout() {
     prepareConstructionDeck(deck, 'clubs');
     prepareConstructionDeck(deck, 'diamonds');
     prepareConstructionDeck(deck, 'spades');
+    prepareConstructionDeck(deck, 'astronaut');
 }
 
 function prepareConstructionDeck(deck, suit) {
@@ -782,19 +846,21 @@ function prepareConstructionDeck(deck, suit) {
     deck.appendChild(cell);
 
     cell.setAttribute('draggable', 'true');
-    cell.addEventListener('dragstart', e => {
-        e.dataTransfer.setData('text/plain', 'construction');
-        selectedConstructionSuit = cell.dataset.suit;
-
-        document.querySelectorAll('.cell.empty.occupied.communication').forEach(el => {
-            el.classList.add('possible-target' )
-        });
-        document.querySelectorAll('.cell.construction.occupied.communication').forEach(el => {
-            el.classList.add('possible-target' )
-        });
-        document.querySelectorAll('.cell.construction.exploded.communication').forEach(el => {
-            el.classList.add('possible-target' )
-        });
+    cell.addEventListener('dragstart', () =>  {
+        handleCallingStart(cell.dataset.suit)
+    });
+    // Mobile
+    cell.addEventListener("touchstart", (e) => {
+        e.preventDefault();
+        handleCallingStart(cell.dataset.suit);
+    });
+    cell.addEventListener("touchend", (e) => {
+        e.preventDefault();
+        const touch = e.changedTouches[0];
+        const target = document.elementFromPoint(touch.clientX, touch.clientY);
+        if(target.classList.contains('cell')) {
+            handleEndDragAndDrop(target);
+        }
     });
 }
 
@@ -1095,46 +1161,62 @@ function discardResource(astronaut, type) {
     renderEverything();
 }
 
+function handleEndDragAndDrop(cell) {
+    console.log(cell);
+    if(!dragAndDropAction.astronaut || !dragAndDropAction.action) return; // rien à faire
+
+    if (!cell.classList.contains("possible-target")) {
+        log("destination invalide.");
+        document.querySelectorAll(`.cell`).forEach(c => {
+            c.classList.remove('possible-target')
+        });
+        return;
+    }
+
+    document.querySelectorAll(`.cell`).forEach(c => {
+        c.classList.remove('possible-target')
+    });
+
+    const row = parseInt(cell.dataset.row);
+    const col = parseInt(cell.dataset.col);
+    const astro = dragAndDropAction.astronaut
+
+    if (astro.energy <= 0) {
+        log("Pas d'energie.");
+        return;
+    }
+
+    astro.energy--;
+
+    if(dragAndDropAction.action === 'move') {
+        // mouvement d'un astronaute
+        astro.row = row;
+        astro.col = col;
+        renderEverything();
+
+    } else if(dragAndDropAction.action === 'astronaut') {
+        astronauts.push({ row, col, energy: 0, food: 0, sick: false });
+        dropCapsule(cell);
+        log("Nouvel astronaute appelé sur un module habitable.");
+    } else {
+        const position = getGridElement(row, col);
+        dropCapsule(position.dom);
+
+        startConstruction(position, dragAndDropAction.action);
+
+    }
+
+    dragAndDropAction.astronaut = null;
+    dragAndDropAction.action = null;
+
+}
 
 function setupDragAndDrop() {
     document.querySelectorAll('.cell').forEach(cell => {
         cell.addEventListener('dragover', (e) => e.preventDefault());
         cell.addEventListener('drop', (e) => {
-            const data = e.dataTransfer.getData('text/plain');
 
-            if (data === 'construction' && selectedConstructionSuit) {
-                const astronaut = cell.querySelector('.astronaut');
-                if (astronaut) {
-                    selectedAstronaut = parseInt(astronaut.dataset.index);
-                }
-            }
-
-            if (selectedAstronaut === null) return;
-
-            const astro = astronauts[selectedAstronaut];
-            selectedAstronaut = null;
-
-
-            if (!cell.classList.contains("possible-target")) {
-                log("destination invalide.");
-                document.querySelectorAll(`.cell`).forEach(c => {
-                    c.classList.remove('possible-target')
-                });
-                return;
-            }
-
-            document.querySelectorAll(`.cell`).forEach(c => {
-                c.classList.remove('possible-target')
-            });
-
-
-            if (data === 'call') {
-                calling(cell, astro);
-            } else if(data === 'construction') {
-                construct(astro, selectedConstructionSuit);
-            }  else {
-                movement(cell, astro);
-            }
+            handleEndDragAndDrop(cell);
 
         });
     });
@@ -1186,10 +1268,7 @@ function calling(cell, astro) {
     }
     astro.energy--;
 
-    astronauts.push({ row, col, energy: 0, food: 0, sick: false });
-    dropCapsule(cell);
-    renderEverything();
-    log("Nouvel astronaute appelé sur un module habitable.");
+
 
 }
 
@@ -1283,7 +1362,6 @@ function isAdjacentToSuit(row, col, suit) {;
 }
 function isCloseToSuit(row, col, suit, dist) {
     const closePositions = Object.values(grid).filter(position =>  distance(row, col, position) <= dist);
-    console.log("isClose", row, col, dist, closePositions);
     for(let position of closePositions) {
         if(isSuitActive(position, suit)) return true;
     }
@@ -1321,6 +1399,7 @@ function dropCapsule(targetCell) {
     // Nettoyage après l’animation
     img.addEventListener("animationend", () => {
         img.remove();
+        renderEverything();
     });
 }
 
