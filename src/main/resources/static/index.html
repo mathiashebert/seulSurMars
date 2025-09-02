@@ -35,7 +35,12 @@
         .construction-deck.calling {
             display: grid;
         }
-
+        .construction-deck.calling :not(.used){
+            opacity: 1;
+        }
+        .construction-deck.calling .used{
+            opacity: 0.3;
+        }
 
         .card.cell.construction:not(.occupied) {
             color: #333;
@@ -92,6 +97,9 @@
         .astronaut.sick {
             background-image: url("./img-moon/astro_sick.png");
         }
+        .astronaut.sick.verySick {
+            background-image: url("./img-moon/astro_very_sick.png");
+        }
         .astronaut.construction {
             width: 80px;
             height: 80px;
@@ -136,6 +144,9 @@
         .cell.clubs.jungle {
             background-image: url("./img-moon/jungle.png");
         }
+        .cell.clubs.active.mutation {
+            background-image: url("./img-moon/mutation.png");
+        }
         .cell.exploded {
             background-image: url("./img-moon/exploded.png");
         }
@@ -161,6 +172,10 @@
             background-image: url("./img-moon/bunker.png");
         }
 
+        .construction.supply {
+            background-image: url("./img-moon/supply.png");
+        }
+
         .capsule {
             position: absolute;
             width: 80px;
@@ -168,7 +183,12 @@
             animation: descend 2s ease-in forwards;
             pointer-events: none; /* pour ne pas gêner */
             background-size: contain;
+        }
+        .capsule.rocket {
             background-image: url("./img-moon/landing.png");
+        }
+        .capsule.alien {
+            background-image: url("./img-moon/alien_attack.png");
         }
 
         @keyframes descend {
@@ -224,25 +244,18 @@
             width: 20px;
             height: 20px;
             top: 0;
+            left: 0;
             text-align: center;
             background: #333333;
             font-size: 1rem;
 
         }
-        .call-icon {
-            left: 0;
+        .alien-signal-icon {
+            left: 60px;
         }
-        .build-icon {
-            left: 0;
-        }
-        .alien-signal-icon { /* par dessus l'antenne */
-            left: 0;
-        }
-        .alien-group-icon {  /* par dessus l'antenne */
-            left: 0;
-        }
-        .fire-icon {
+        .alien-group-icon {
             left: 20px;
+            width: 40px;
         }
 
         .status-token {
@@ -268,9 +281,6 @@
         .biohazard-icon {
             right: 0;
             top: 20px;
-        }
-        .hospital-icon {
-            left: 20px;
         }
     </style>
 </head>
