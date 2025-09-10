@@ -48,6 +48,10 @@ const callingActions = ['hearts', 'clubs', 'diamonds', 'spades', 'astronaut', 's
 
 const antennaRange = 3;
 
+let alienLevel = 0;
+let alienNewOne = false;
+let mutationLevel = 0;
+
 function createDeck() {
     const pileDefinitions = [
         ['A'],
@@ -80,6 +84,11 @@ function initGrid() {
                 food: 0,
                 energy: 0,
                 type: TYPE.EMPTY,
+                nbAliens: 0,
+
+                signal: false,
+                infectious: false,
+                mutation: false,
 
                 dom: null
             }
@@ -119,6 +128,7 @@ function renderEverything() {
     }
 
     document.querySelector('.construction-deck').classList.remove('calling');
+    document.querySelector('.adventure-pannel-item.alien-pannel').innerHTML = alienLevel;
 
 }
 
@@ -129,72 +139,61 @@ function revealCardFromDeck() {
         return;
     }
     const card = deck.shift();
-    if(['J', 'Q', 'K'].includes(card.value)) {
 
-        logMessage(`${card.value} ${getSuitSymbol(card.suit)}`)
+    logMessage(`${card.value} ${getSuitSymbol(card.suit)}`)
 
-        // pique : l'aventure des aliens
-        if(card.suit === 'spades') {
-            if(card.value === 'J') { // signal alien
-                startAlienSignalAdventure();
-                alert("signal Alien");
-            }
-            if(card.value === 'Q') { // offensive alien
-                revealInvasionAlien();
-                alert("Invasion Alien");
-            }
-            if(card.value === 'K') { // base alien
-                triggerEThome();
-                alert("E.T. téléphone maison");
-            }
+    // pique : l'aventure des aliens
+    if(card.suit === 'spades') {
+        // nouveau group alien qui attaque
+        alien_calamity();
+
+    }
+
+    // treffle : l'aventure végétale
+    if (card.suit === 'clubs') {
+        if(card.value === 'J') {
+            plantAdventure1();
+            alert("Mutation végétale");
         }
-
-        // treffle : l'aventure végétale
-        if (card.suit === 'clubs') {
-            if(card.value === 'J') {
-                plantAdventure1();
-                alert("Mutation végétale");
-            }
-            if(card.value === 'Q') {
-                plantAdventure2();
-                alert("Luxuriance");
-            }
-            if(card.value === 'K') {
-                plantAdventure3();
-                alert("Enracinement");
-            }
+        if(card.value === 'Q') {
+            plantAdventure2();
+            alert("Luxuriance");
         }
-
-        // carreau : l'incendie
-        if(card.suit === 'diamonds') {
-            if(card.value === 'J') {
-                fire_adventure1();
-                alert("Court-circuit");
-            }
-            if(card.value === 'Q') {
-                fire_adventure2();
-                alert("Incendie");
-            }
-            if(card.value === 'K') {
-                fire_adventure3();
-                alert("Explosion");
-            }
+        if(card.value === 'K') {
+            plantAdventure3();
+            alert("Enracinement");
         }
+    }
 
-        // coeur : l'épidémie
-        if(card.suit === 'hearts') {
-            if(card.value === 'J') {
-                startDisease();
-                alert("Patient 0");
-            }
-            if(card.value === 'Q') {
-                diseaseGetWorse();
-                alert("Epidémie");
-            }
-            if(card.value === 'K') {
-                diseaseGetWorst();
-                alert("Symptômes graves");
-            }
+    // carreau : l'incendie
+    if(card.suit === 'diamonds') {
+        if(card.value === 'J') {
+            fire_adventure1();
+            alert("Court-circuit");
+        }
+        if(card.value === 'Q') {
+            fire_adventure2();
+            alert("Incendie");
+        }
+        if(card.value === 'K') {
+            fire_adventure3();
+            alert("Explosion");
+        }
+    }
+
+    // coeur : l'épidémie
+    if(card.suit === 'hearts') {
+        if(card.value === 'J') {
+            startDisease();
+            alert("Patient 0");
+        }
+        if(card.value === 'Q') {
+            diseaseGetWorse();
+            alert("Epidémie");
+        }
+        if(card.value === 'K') {
+            diseaseGetWorst();
+            alert("Symptômes graves");
         }
     }
     return card;
@@ -205,44 +204,59 @@ function vegetation_readyToJungle(position) {
         && getAdjacentPositions(position).filter(value => value.food > 0).length === 4;
 }
 
-function alien_call() {
-    alienAdventure.alienCount++;
-}
-function alien_attack() {
-    if(nbAliens === 0) return;
+function alien_adventure() {
+    const newAliens = Object.values(grid).filter(value => value.signal).length;
+    alienLevel += newAliens;
 
-    const alienGroups = [nbAliens];
+    alien_allAttack();
+}
+function alien_calamity() {
+    if(alienLevel === 0) return;
+    alert("attaque alienne");
+    alienNewOne = true;
+}
+function alien_oneAttack(groupSize) {
+    const target = findOneAstronautAtRandom();
+    if (target) {
+        const position = getGridElement(target.row, target.col);
+        position.nbAliens += groupSize;
+        dropCapsule(position.dom, 'alien');
+
+        // Combat
+        let totalRes = target.food + target.energy;
+        if (totalRes <= groupSize) {
+            logMessage(`Un astronaute a été submergé par ${groupSize} aliens !`);
+            oneAstronautDie(target);
+        } else {
+            let toRemove = groupSize;
+            if (target.food >= toRemove) {
+                target.food -= toRemove;
+            } else {
+                toRemove -= target.food;
+                target.food = 0;
+                target.energy = Math.max(0, target.energy - toRemove);
+            }
+            logMessage(`Un astronaute perd ${groupSize} ressources. suite à l'attaque alien`);
+        }
+    }
+}
+function alien_allAttack() {
+    if(alienLevel === 0) return;
+
+    const alienGroups = [];
+    if(alienNewOne) {
+        alienNewOne = false;
+        alienGroups.push(alienLevel);
+    }
     Object.values(grid).forEach(value => {
-        if(value.alien > 0) {
-            alienGroups.push(value.alien);
-            value.alien = 0;
+        if(value.nbAliens > 0) {
+            alienGroups.push(value.nbAliens);
+            value.nbAliens = 0;
         }
     });
 
     for(let groupSize of alienGroups) {
-        const target = findOneAstronautAtRandom();
-        if (target) {
-            const position = getGridElement(target.row, target.col);
-            position.alien += groupSize;
-            dropCapsule(position.dom, 'alien');
-
-            // Combat
-            let totalRes = target.food + target.energy;
-            if (totalRes <= groupSize) {
-                logMessage(`Un astronaute a été submergé par ${groupSize} aliens !`);
-                oneAstronautDie(target);
-            } else {
-                let toRemove = groupSize;
-                if (target.food >= toRemove) {
-                    target.food -= toRemove;
-                } else {
-                    toRemove -= target.food;
-                    target.food = 0;
-                    target.energy = Math.max(0, target.energy - toRemove);
-                }
-                logMessage(`Un astronaute perd ${groupSize} ressources. suite à l'attaque alien`);
-            }
-        }
+        alien_oneAttack(groupSize);
     }
 
 
@@ -265,7 +279,7 @@ function alien_removeAlien(position, astronaut) {
         return;
     }
     astronaut.energy --;
-    alienAdventure.alienCount --;
+    position.nbAliens --;
 
     renderEverything();
 }
@@ -568,7 +582,7 @@ function redrawGridCell(position) {
                 }
 
             }
-            if(position.alien > 0) {
+            if(position.nbAliens > 0) {
                 cell.classList.add('alien');
             }
         }
@@ -591,8 +605,8 @@ function redrawGridCell(position) {
             icon.addEventListener('click', () => alien_removeSignal(position, astronaut));
         }
     }
-    if(position.alien && nbAliens > 0) {
-        const icon = createIcon(cell, 'action-token alien-group-icon', '👽 '+nbAliens, 'Groupe alien');
+    if(position.nbAliens > 0) {
+        const icon = createIcon(cell, 'action-token alien-group-icon', '👽 '+position.nbAliens, 'Groupe alien');
         if(astronaut) {
             icon.addEventListener('click', () => alien_removeAlien(position, astronaut));
         }
@@ -784,6 +798,7 @@ function getSuitSymbol(suit) {
 function placeInitialAstronaut() {
     const row = 2;
     const col = 2;
+    astronauts = [];
     astronauts.push({ row, col, energy: 0, food: 0, sick: false });
     logMessage("Astronaute initial placé sur l'as de cœur.");
 }
@@ -804,9 +819,9 @@ function nextTurn() {
     // Logique de ressources, péripéties, actions à implémenter ici
     runResourcePhase();
 
-    runAdventurePhase();
-    runProblemsPhase();
-    runIncidentPhase();
+    runCalamityPhase(); // reveller une carte du deck
+    runAdventurePhase(); // appliquer les "problèmes" qu'on a chaque tour (la contamination, la propgation du feu, l'attaque alien, la vegetation).
+    runIncidentPhase(); // on tire au hasard des nouveaux lieux problématiques
 
     renderEverything();
 }
@@ -877,16 +892,11 @@ function getKey(row, col) {
     return `${row}-${col}`
 }
 
-function runAdventurePhase() {
+function runCalamityPhase() {
     revealCardFromDeck();
 }
 
-function runProblemsPhase() {
-    for(let position of Object.values(grid)) {
-        if(position.signal) {
-            nbAliens ++;
-        }
-    }
+function runAdventurePhase() {
 
     sick_contaminate();
 
@@ -897,7 +907,7 @@ function runProblemsPhase() {
     renderEverything();
 
     // résoudre l'attaque alien après le rendu, car il y a une descente de capsule
-    alien_call();
+    alien_adventure();
 }
 function runIncidentPhase() {
     for(let position of Object.values(grid)) {
@@ -905,7 +915,7 @@ function runIncidentPhase() {
             const incident = Math.floor(Math.random() * 6);
             console.log( `pour la case ${position.row} ${position.col} : incident = ${incident}`)
             if(incident === 0) { // une chance sur 6
-
+/*
                 if(position.suit === 'hearts') { // incident du module habitable : nouveau foyer infectieux
                     position.infectious = true;
                 }
@@ -915,10 +925,10 @@ function runIncidentPhase() {
                 else if(position.suit === 'clubs') { // incident de la serre : mutation génétique
                     position.mutation = true;
                     position.food ++;
-                }
-                else if(position.suit === 'spades') { // incident de l'antenne : signal alien
+                }*/
+                if(position.suit === 'spades') { // incident de l'antenne : signal alien
                     position.signal = true;
-                    nbAliens ++;
+                    alienLevel ++;
                 }
             }
         }
