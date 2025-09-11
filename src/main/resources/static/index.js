@@ -48,9 +48,13 @@ const callingActions = ['hearts', 'clubs', 'diamonds', 'spades', 'astronaut', 's
 
 const antennaRange = 3;
 
-let alienLevel = 0;
-let alienNewOne = false;
-let mutationLevel = 0;
+const problemLevel = {
+    hearts: 0,
+    clubs: 0,
+    diamonds: 0,
+    spades: 0
+
+}
 
 function createDeck() {
     const pileDefinitions = [
@@ -116,8 +120,17 @@ function initializeGame() {
     placeInitialAstronaut();
     setupDragAndDrop();
 
+    //////////////
+    // test purpose only
+    ////////////
+
+    /////////
+
     // première phase de resource (début du tour 1)
     runResourcePhase();
+
+
+
 
     renderEverything();
 }
@@ -128,7 +141,10 @@ function renderEverything() {
     }
 
     document.querySelector('.construction-deck').classList.remove('calling');
-    document.querySelector('.adventure-pannel-item.alien-pannel').innerHTML = alienLevel;
+    for(let suit of suits) {
+        document.querySelector('.adventure-pannel-item.'+suit).innerHTML = problemLevel[suit];
+
+    }
 
 }
 
@@ -142,85 +158,75 @@ function revealCardFromDeck() {
 
     logMessage(`${card.value} ${getSuitSymbol(card.suit)}`)
 
-    // pique : l'aventure des aliens
-    if(card.suit === 'spades') {
-        // nouveau group alien qui attaque
-        alien_calamity();
-
-    }
-
-    // treffle : l'aventure végétale
-    if (card.suit === 'clubs') {
-        if(card.value === 'J') {
-            plantAdventure1();
-            alert("Mutation végétale");
-        }
-        if(card.value === 'Q') {
-            plantAdventure2();
-            alert("Luxuriance");
-        }
-        if(card.value === 'K') {
-            plantAdventure3();
-            alert("Enracinement");
-        }
-    }
-
-    // carreau : l'incendie
-    if(card.suit === 'diamonds') {
-        if(card.value === 'J') {
-            fire_adventure1();
-            alert("Court-circuit");
-        }
-        if(card.value === 'Q') {
-            fire_adventure2();
-            alert("Incendie");
-        }
-        if(card.value === 'K') {
-            fire_adventure3();
-            alert("Explosion");
-        }
-    }
-
-    // coeur : l'épidémie
-    if(card.suit === 'hearts') {
-        if(card.value === 'J') {
-            startDisease();
-            alert("Patient 0");
-        }
-        if(card.value === 'Q') {
-            diseaseGetWorse();
-            alert("Epidémie");
-        }
-        if(card.value === 'K') {
-            diseaseGetWorst();
-            alert("Symptômes graves");
-        }
-    }
+    problemLevel[card.suit] ++;
     return card;
 }
 
-function vegetation_readyToJungle(position) {
-    return position.food > 0
-        && getAdjacentPositions(position).filter(value => value.food > 0).length === 4;
+function plant_adventure() {
+
+    const mutations = Object.values(grid).filter(value => value.mutation);
+    for(let position of mutations) {
+        const targets = plant_pathfinder(position);
+        const astronautTargets = targets
+            .map(value => value[value.length-1])
+            .map(value => getAstronaut(value))
+            .filter(value => value !== undefined);
+
+        if(astronautTargets.length > 0) {
+            const targetIndex = Math.floor(Math.random() * astronautTargets.length);
+            const astro = astronautTargets[targetIndex];
+            oneAstronautDie(astro);
+            logMessage("un astronaut meurt étouffé par les plantes");
+        }
+    }
+
+}
+function plant_pathfinder(position, targets = {}, path = []) {
+    const x = position.row;
+    const y = position.col;
+    const newPath = [...path, position];
+    targets[getKey(x,y)] = newPath;
+
+    // recupérer les positions adjacentes, avec de la nourriture, et pas encore explorées par le pathfinder
+    const adj = getAdjacentPositions(position).filter(value => value.food > 0 && !targets[getKey(value.row, value.col)]);
+    for(let location of adj) {
+        plant_pathfinder(location, targets, newPath)
+    }
+
+    return Object.values(targets);
+
+}
+function plant_incident(position) {
+    const level = problemLevel['clubs'];
+    if(level > 0) {
+        position.mutation = true;
+
+        // on met un minimum de nourriture sur la position
+        if(position.food < level) {
+            position.food = level;
+        }
+    }
 }
 
+function alien_incident(position) {
+    const level = problemLevel['spades'];
+    if(level > 0) {
+        alien_oneAttack(level, position)
+    }
+}
 function alien_adventure() {
-    const newAliens = Object.values(grid).filter(value => value.signal).length;
-    alienLevel += newAliens;
+    //const newAliens = Object.values(grid).filter(value => value.signal).length;
+    //alienLevel += newAliens;
 
     alien_allAttack();
 }
-function alien_calamity() {
-    if(alienLevel === 0) return;
-    alert("attaque alienne");
-    alienNewOne = true;
-}
-function alien_oneAttack(groupSize) {
-    const target = findOneAstronautAtRandom();
+function alien_oneAttack(groupSize, position) {
+    position.nbAliens += groupSize;
+    dropCapsule(position.dom, 'alien');
+
+    const target = getAstronaut(position);
     if (target) {
-        const position = getGridElement(target.row, target.col);
-        position.nbAliens += groupSize;
-        dropCapsule(position.dom, 'alien');
+//        const position = getGridElement(target.row, target.col);
 
         // Combat
         let totalRes = target.food + target.energy;
@@ -241,13 +247,9 @@ function alien_oneAttack(groupSize) {
     }
 }
 function alien_allAttack() {
-    if(alienLevel === 0) return;
+    if(problemLevel["spades"] === 0) return;
 
     const alienGroups = [];
-    if(alienNewOne) {
-        alienNewOne = false;
-        alienGroups.push(alienLevel);
-    }
     Object.values(grid).forEach(value => {
         if(value.nbAliens > 0) {
             alienGroups.push(value.nbAliens);
@@ -256,7 +258,12 @@ function alien_allAttack() {
     });
 
     for(let groupSize of alienGroups) {
-        alien_oneAttack(groupSize);
+        const astro = findOneAstronautAtRandom();
+        if(astro) {
+            const position = getGridElement(astro.row, astro.col);
+            alien_oneAttack(groupSize, position);
+
+        }
     }
 
 
@@ -897,24 +904,22 @@ function runCalamityPhase() {
 }
 
 function runAdventurePhase() {
+    // adventurePhase, c'est ce qui se passe chaque tour, dans la continuité des incidents précédents
 
-    sick_contaminate();
 
-    fire_propagation();
-
-    // mutation végétale ???
+    // les aliens se deplacent (et attaquent)
+    alien_adventure();
+    // les plantes attaques les astronautes si possible
+    plant_adventure();
 
     renderEverything();
-
-    // résoudre l'attaque alien après le rendu, car il y a une descente de capsule
-    alien_adventure();
 }
 function runIncidentPhase() {
     for(let position of Object.values(grid)) {
         if(position.type === TYPE.BUILT) {
             const incident = Math.floor(Math.random() * 6);
-            console.log( `pour la case ${position.row} ${position.col} : incident = ${incident}`)
             if(incident === 0) { // une chance sur 6
+                console.log("incident sur la case ", position);
 /*
                 if(position.suit === 'hearts') { // incident du module habitable : nouveau foyer infectieux
                     position.infectious = true;
@@ -927,8 +932,10 @@ function runIncidentPhase() {
                     position.food ++;
                 }*/
                 if(position.suit === 'spades') { // incident de l'antenne : signal alien
-                    position.signal = true;
-                    alienLevel ++;
+                    alien_incident(position);
+                }
+                else if(position.suit === 'clubs') { // incident de l'antenne : signal alien
+                    plant_incident(position);
                 }
             }
         }
@@ -945,13 +952,19 @@ function findOneAstronautAtRandom() {
 
 function addFoodToCell(position) {
     const specialMutation = position.mutation;
-    const max = specialMutation? 5 : 3;
-    const amount = specialMutation ? 3 : 1;
+    const plantLevel = problemLevel['clubs'];
+    let max = 3;
+    let amount = 1;
+    if(specialMutation) {
+        max += plantLevel;
+        amount += plantLevel;
+    }
 
     let food = position.food + amount;
+
     while(food > max) {
         if(specialMutation) {
-            vegetation_setFoodToRandomAdjacentPosition(position.row, position.col);
+            vegetation_setFoodToRandomAdjacentPosition(position);
         }
         food --;
     }
@@ -960,11 +973,25 @@ function addFoodToCell(position) {
 }
 
 function vegetation_setFoodToRandomAdjacentPosition(position) {
-    const positions = getAdjacentPositions(position).filter(value => value.food === 0);
-    if(positions.length > 0) {
-        const index = Math.floor(Math.random()*positions.length);
-        positions[index].food ++;
+    const locationsAccessibleViaPlantPath = plant_pathfinder(position).map(value => value[value.length-1])
+    const targetMap = {}
+    for(let locationAccessible of locationsAccessibleViaPlantPath) {
+        getAdjacentPositions(locationAccessible).filter(value => value.food === 0).forEach(value => targetMap[getKey(value.row, value.col)] = value);
     }
+    const targets = Object.values(targetMap);
+
+    if(targets.length === 0) return; // si aucune case sans nourriture n'est accessible, alors on s'arrête là
+    const targetsWithAstronaut = targets.filter(value => !isFree(value));
+    let target;
+    // on prend en priorité une case avec un astronaute
+    if(targetsWithAstronaut.length > 0) {
+        const index = Math.floor(Math.random()*targetsWithAstronaut.length);
+        target = targetsWithAstronaut[index];
+    } else {
+        const index = Math.floor(Math.random()*targets.length);
+        target = targets[index];
+    }
+    if(target) target.food ++;
 }
 
 function getAdjacentPositions(position) {
@@ -976,7 +1003,7 @@ function getAdjacentPositions(position) {
     positions.push(getGridElement(row+1, col));
     positions.push(getGridElement(row, col-1));
     positions.push(getGridElement(row, col+1));
-    return positions.filter(value => value !== null && value !== undefined);
+    return positions.filter(value => value !== null && value !== undefined && value.type !== TYPE.EMPTY);
 }
 
 function addEnergyToCell(position) {

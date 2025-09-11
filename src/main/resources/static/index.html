@@ -59,9 +59,21 @@
             justify-content: center;
             font-size: 2.2rem;
         }
-        .adventure-pannel-item.alien-pannel {
+        .adventure-pannel-item.spades {
             background-size: contain;
             background-image: url("./img-moon/alien_attack.png");
+        }
+        .adventure-pannel-item.clubs {
+            background-size: contain;
+            background-image: url("./img-moon/mutation.png");
+        }
+        .adventure-pannel-item.hearts {
+            background-size: contain;
+            background-image: url("./img-moon/astro_sick.png");
+        }
+        .adventure-pannel-item.diamonds {
+            background-size: contain;
+            background-image: url("./img-moon/exploded.png");
         }
 
         .card.cell.construction:not(.occupied) {
@@ -316,7 +328,10 @@
 <div class="board" id="board"></div>
 <div class="construction-deck" id="construction-deck"></div>
 <div class="adventure-pannel" id="adventure-pannel">
-    <div class="adventure-pannel-item alien-pannel"></div>
+    <div class="adventure-pannel-item hearts"></div>
+    <div class="adventure-pannel-item clubs"></div>
+    <div class="adventure-pannel-item diamonds"></div>
+    <div class="adventure-pannel-item spades"></div>
 </div>
 <div class="controls">
     <button onclick="nextTurn()">Tour Suivant</button>
