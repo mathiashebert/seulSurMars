@@ -4,15 +4,34 @@
 const suits = ['hearts', 'clubs', 'diamonds', 'spades'];
 
 let deck = [];
+let drawPiles = [[], [], [], []];
 let astronauts = []; // Liste des astronautes avec leurs positions et ressources
-
-let nbAliens = 0;
 
 let dragAndDropAction = {
     astronaut: null,
     action: null,
     possibleTargets: []
 }; // { astronaut, action, possible-targets }
+
+let alienAdventure = {
+    alienPosition:null,      // { row, col }
+    alienAdventureStep: 0,    // 0 = pas commencé, 1 = phase Signal Alien active, 2 = invasion
+    alienCount: 0,    // Nombre total d’aliens sur le plateau
+}
+let vegetationAdventure = {
+    mutationPosition:null,      // { row, col }
+    vegetationAdventureStep: 0,
+}
+let electricAdventure = {
+    firePositions: [],
+    smokePosition: null,
+    electricStep: 0,
+}
+let sickAdventure = {
+    sickStep: 0,
+    mortuary: null,
+    pandemicLocations: null,
+}
 
 let grid = [] // grille qui représente toutes les cases (6x6)
 
@@ -25,15 +44,37 @@ const TYPE = {
     EXPLODED: 'exploded'
 };
 
+const callingActions = ['hearts', 'clubs', 'diamonds', 'spades', 'astronaut', 'supply'];
+
+const antennaRange = 3;
+
+const problemLevel = {
+    hearts: 0,
+    clubs: 0,
+    diamonds: 0,
+    spades: 0
+
+}
 
 function createDeck() {
-    deck = [];
-    for (let suit of suits) {
-        for (let i in [1,2,3,4]) {
-            deck.push(suit);
+    const pileDefinitions = [
+        ['A'],
+        ['J'],
+        ['Q'],
+        ['K']
+    ];
+
+    for (let i = 0; i < 4; i++) {
+        for (let s of suits) {
+            drawPiles[i].push({value: pileDefinitions[i], suit: s});
+
         }
+        shuffle(drawPiles[i]);
     }
-    shuffle(deck);
+    deck = [];
+    for (let i = 0; i < 4; i++) {
+        deck.push(...drawPiles[i]);
+    }
 }
 
 function initGrid() {
@@ -47,6 +88,11 @@ function initGrid() {
                 food: 0,
                 energy: 0,
                 type: TYPE.EMPTY,
+                nbAliens: 0,
+
+                signal: false,
+                infectious: false,
+                mutation: false,
 
                 dom: null
             }
@@ -69,12 +115,22 @@ function shuffle(array) {
 function initializeGame() {
     initGrid();
     createDeck();
+
     drawInitialLayout();
     placeInitialAstronaut();
     setupDragAndDrop();
 
+    //////////////
+    // test purpose only
+    ////////////
+
+    /////////
+
     // première phase de resource (début du tour 1)
     runResourcePhase();
+
+
+
 
     renderEverything();
 }
@@ -85,78 +141,121 @@ function renderEverything() {
     }
 
     document.querySelector('.construction-deck').classList.remove('calling');
+    for(let suit of suits) {
+        document.querySelector('.adventure-pannel-item.'+suit).innerHTML = problemLevel[suit];
+
+    }
 
 }
 
 function revealCardFromDeck() {
     if(deck.length === 0) {
-        createDeck();
+        // todo  : victoire
+        alert('fin de la partie : le deck est terminé. bravo !!!!')
+        return;
     }
-    const suit = deck.shift();
+    const card = deck.shift();
 
-    logMessage(`péripétie ${getSuitSymbol(suit)}`)
+    logMessage(`${card.value} ${getSuitSymbol(card.suit)}`)
 
-    // pique : l'aventure des aliens
-    if(suit === 'spades') {
-        if(nbAliens > 0) {
-            alert("E.T. téléphone maison");
-        }
-        alien_bunker();
-    }
-
-    // treffle : l'aventure végétale
-    if (suit === 'clubs') {
-        const jungles = Object.values(grid).filter(value => vegetation_readyToJungle(value.row, value.col));
-        if(jungles > 0) {
-            alert("Les plantes deviennent incontrolable");
-        }
-        jungles.forEach(value => value.type = TYPE.JUNGLE);
-    }
-
-    // carreau : l'incendie
-    if(suit === 'diamonds') {
-        const explosions = Object.values(grid).filter(value => value.fire);
-        if( explosions.length > 0) {
-            alert("explosion");
-            explosions.forEach(value => fire_clean(value, true));
-        }
-    }
-
-    // coeur : l'épidémie
-    if(suit === 'hearts') {
-        const astroGettingBad = astronauts.filter(value => value.sick && !value.verySick);
-        if(astroGettingBad.length > 0) {
-            alert("L'état des malades empire");
-            astroGettingBad.forEach(value => value.verySick = true);
-        }
-    }
-
-    return suit;
+    problemLevel[card.suit] ++;
+    return card;
 }
 
-function vegetation_readyToJungle(position) {
-    return position.food > 0
-        && getAdjacentPositions(position).filter(value => value.food > 0).length === 4;
+function plant_adventure() {
+
+    const mutations = Object.values(grid).filter(value => value.mutation);
+    for(let position of mutations) {
+        const targets = plant_pathfinder(position);
+        const astronautTargets = targets
+            .map(value => value[value.length-1])
+            .map(value => getAstronaut(value))
+            .filter(value => value !== undefined);
+
+        if(astronautTargets.length > 0) {
+            const targetIndex = Math.floor(Math.random() * astronautTargets.length);
+            const astro = astronautTargets[targetIndex];
+            oneAstronautDie(astro);
+            logMessage("un astronaut meurt étouffé par les plantes");
+        }
+    }
+
+}
+function plant_pathfinder(position, targets = {}, path = []) {
+    const x = position.row;
+    const y = position.col;
+    const newPath = [...path, position];
+    targets[getKey(x,y)] = newPath;
+
+    // recupérer les positions adjacentes, avec de la nourriture, et pas encore explorées par le pathfinder
+    const adj = getAdjacentPositions(position).filter(value => value.food > 0 && !targets[getKey(value.row, value.col)]);
+    for(let location of adj) {
+        plant_pathfinder(location, targets, newPath)
+    }
+
+    return Object.values(targets);
+
+}
+function plant_incident(position) {
+    const level = problemLevel['clubs'];
+    if(level > 0) {
+        position.mutation = true;
+
+        // on met un minimum de nourriture sur la position
+        if(position.food < level) {
+            position.food = level;
+        }
+    }
+}
+function plant_setFoodToRandomAdjacentPosition(position) {
+    const locationsAccessibleViaPlantPath = plant_pathfinder(position).map(value => value[value.length-1])
+    const targetMap = {}
+    for(let locationAccessible of locationsAccessibleViaPlantPath) {
+        getAdjacentPositions(locationAccessible).filter(value => value.food === 0).forEach(value => targetMap[getKey(value.row, value.col)] = value);
+    }
+    const targets = Object.values(targetMap);
+
+    if(targets.length === 0) return; // si aucune case sans nourriture n'est accessible, alors on s'arrête là
+    const targetsWithAstronaut = targets.filter(value => !isFree(value));
+    let target;
+    // on prend en priorité une case avec un astronaute
+    if(targetsWithAstronaut.length > 0) {
+        const index = Math.floor(Math.random()*targetsWithAstronaut.length);
+        target = targetsWithAstronaut[index];
+    } else {
+        const index = Math.floor(Math.random()*targets.length);
+        target = targets[index];
+    }
+    if(target) target.food ++;
 }
 
-function alien_attack() {
-    if(nbAliens === 0) return;
+function alien_incident(position) {
+    const level = problemLevel['spades'];
+    if(level > 0) {
+        alien_oneAttack(level, position)
+    }
+}
+function alien_adventure() {
+    //const newAliens = Object.values(grid).filter(value => value.signal).length;
+    //alienLevel += newAliens;
 
-    Object.values(grid).forEach(value => value.alien = false); // retirer les aliens s'il y en a déjà
+    alien_allAttack();
+}
+function alien_oneAttack(groupSize, position) {
+    position.nbAliens += groupSize;
+    dropCapsule(position.dom, 'alien');
 
-    const target = findOneAstronautAtRandom();
+    const target = getAstronaut(position);
     if (target) {
-        const position = getGridElement(target.row, target.col);
-        position.alien = true;
-        dropCapsule(position.dom, 'alien');
+//        const position = getGridElement(target.row, target.col);
 
         // Combat
         let totalRes = target.food + target.energy;
-        if (totalRes < nbAliens) {
-            logMessage(`Un astronaute a été submergé par ${nbAliens} aliens !`);
+        if (totalRes <= groupSize) {
+            logMessage(`Un astronaute a été submergé par ${groupSize} aliens !`);
             oneAstronautDie(target);
         } else {
-            let toRemove = nbAliens;
+            let toRemove = groupSize;
             if (target.food >= toRemove) {
                 target.food -= toRemove;
             } else {
@@ -164,9 +263,31 @@ function alien_attack() {
                 target.food = 0;
                 target.energy = Math.max(0, target.energy - toRemove);
             }
-            logMessage(`Un astronaute perd ${nbAliens} ressources. suite à l'attaque alien`);
+            logMessage(`Un astronaute perd ${groupSize} ressources. suite à l'attaque alien`);
         }
     }
+}
+function alien_allAttack() {
+    if(problemLevel["spades"] === 0) return;
+
+    const alienGroups = [];
+    Object.values(grid).forEach(value => {
+        if(value.nbAliens > 0) {
+            alienGroups.push(value.nbAliens);
+            value.nbAliens = 0;
+        }
+    });
+
+    for(let groupSize of alienGroups) {
+        const astro = findOneAstronautAtRandom();
+        if(astro) {
+            const position = getGridElement(astro.row, astro.col);
+            alien_oneAttack(groupSize, position);
+
+        }
+    }
+
+
 
 
 }
@@ -186,30 +307,65 @@ function alien_removeAlien(position, astronaut) {
         return;
     }
     astronaut.energy --;
-    nbAliens --;
+    position.nbAliens --;
 
     renderEverything();
 }
-function alien_bunker() {
-    if(nbAliens === 0) return;
 
-    // Choisir X antennes au hasard
-    const chosenAntennas = getSeveralLocationsAtRandom(nbAliens, 'spades');
-    chosenAntennas.forEach(position => {
-        position.type = TYPE.BUNKER;
+function fire_incident(position) {
+    const level = problemLevel["diamonds"];
+    if(level === 0) return;
+    if(position.fire || position.type === TYPE.EXPLODED) return;
+    position.fire = true;
 
-        // Si astronaute présent → il meurt
-        const astro = getAstronaut(position);
-        if (astro >= 0) {
-            logMessage(`Un astronaute est tué par un alien`);
-            oneAstronautDie(astro);
-        }
-    });
-
-    nbAliens -= chosenAntennas.length; // ne devrait jamais être négatif
-
+    if(level === 1) return;
+    for(let i=1; i<level; i++) {
+        const adj = getAdjacentPositions(position).filter(value => !value.fire && value.type !== TYPE.EXPLODED);
+        if(adj.length === 0) return; // plus aucune position adjacente où mettre le feu
+        const index = Math.floor(Math.random()*adj.length);
+        const target = adj[index];
+        target.fire = true;
+    }
+}
+function fire_adventure() {
+    fire_propagation();
 }
 
+function fire_adventure1() {
+    const location= getOneActiveLocationAtRandom('diamonds');
+
+    if (location == null) {
+        logMessage("Aucune panneau solaire pour placer le court circuit.");
+        return;
+    }
+
+    // Choisir un panneau solaire au hasard
+    electricAdventure.shortcutPosition = location;
+    fire_set(location);
+
+    electricAdventure.electricStep = 1;
+
+    // Ajouter une icône de feu sur la cellule
+    logMessage(`un court circuit risque de provouer d'importants dégats sur le panneau solaire : ${location.row},${location.col}.`);
+}
+function fire_adventure2() {
+    electricAdventure.electricStep = 2;
+    fire_propagation();
+}
+function fire_adventure3() {
+    const fireBeforeExplosion = Object.values(grid).filter(value => value.fire);
+    if(electricAdventure.smokePosition) {
+        fireBeforeExplosion.push(electricAdventure.smokePosition);
+    }
+
+    fire_propagation();
+
+    for(let position of fire_propagation) {
+        position.type = TYPE.EXPLODED;
+        position.suit = null;
+    }
+
+}
 function fire_set(newFire) {
     newFire.fire = true;
     newFire.food = 0;
@@ -218,24 +374,13 @@ function fire_set(newFire) {
 }
 function fire_propagation() {
 
-    const newFires = [];
-
-    // etape 1 : traiter les cases déjà en feu
     for (let firePosition of Object.values(grid).filter(value => value.fire)) {
-        const row = firePosition.row;
-        const col = firePosition.col;
-
-        fire_clean(firePosition, false);
-
-        fire_extend(row-1, col, newFires);
-        fire_extend(row+1, col, newFires);
-        fire_extend(row, col-1, newFires);
-        fire_extend(row, col+1, newFires);
-    }
-
-    // etape 2 : mettre en feu les cases adjacentes
-    for (let newFire of newFires) {
-        if(!newFire.fire) fire_set(newFire);
+        // 1/ on détruit les astronautes et les batiments où il y avait du feu
+        fire_clean(firePosition);
+        // 2 / on met le feu aux positions adjacentes
+        getAdjacentPositions(firePosition)
+            .filter(value => value.type !== TYPE.EXPLODED && !value.fire)
+            .forEach(value => value.fire = true);
     }
 }
 function fire_extend(row, col, newFire) {
@@ -244,21 +389,22 @@ function fire_extend(row, col, newFire) {
     if(position.fire) return;
     newFire.push(position);
 }
-function fire_clean(position, explosion) {
+function fire_clean(position) {
     // fonction qui gère un incendie, voir une explosion
 
     position.food = 0;
     position.energy = 0;
-    position.type = TYPE.CONSTRUCTION;
-    if(explosion) {
+    if(position.type === TYPE.BUILT) {
+        position.type = TYPE.CONSTRUCTION;
+    } else {
         position.type = TYPE.EXPLODED;
         position.suit = null;
-
-        const astro = astronauts.find(e => e.row === position.row && e.col === position.col);
-        if (astro) {
-            logMessage("un astronaute meurt dans l'explosion");
-            oneAstronautDie(astro);
-        }
+        position.fire = false;
+    }
+    const astro = astronauts.find(e => e.row === position.row && e.col === position.col);
+    if (astro) {
+        logMessage("un astronaute meurt dans l'explosion");
+        oneAstronautDie(astro);
     }
 }
 function fire_extinguish(position) {
@@ -276,6 +422,68 @@ function fire_extinguish(position) {
     }
 }
 
+function plantAdventure1() {
+    const location= getOneActiveLocationAtRandom('clubs');
+
+    if (location == null) {
+        logMessage("Aucune serre pour placer la mutation.");
+        return;
+    }
+
+    vegetationAdventure.mutationPosition = location;
+    if(location.food < 3) location.food = 3;
+
+    vegetationAdventure.mutationPosition = 1;
+
+    // Ajouter une icône de feu sur la cellule
+    logMessage(`Une mutation génétique s'est développée sur les plantes de la serre : ${location.row},${location.col}.`);
+}
+function plantAdventure2() {
+    vegetationAdventure.mutationPosition = 2;
+
+    // Ajouter une icône de feu sur la cellule
+    logMessage(`Les plantes dans les serres se developpent de plus en plus vite, risquant parfois d'atouffer les astronautes`);
+}
+function plantAdventure3() {
+    for(let location of Object.values(grid).filter(value => value.food > 0)) {
+        const plantValue = getAdjacentPositions().filter(value => value.food > 0).length;
+        // si il y a une plante, et qu'on est adjacent à au moins 2 autres plantes, alors ça se transforme en jungle
+        if(plantValue >= 2) {
+            location.type = TYPE.JUNGLE;
+
+            // s'il y avait un astronaut ici, il meurt
+            const astro = getAstronaut(location);
+            if(astro) {
+                oneAstronautDie(astro);
+            }
+        }
+    }
+    vegetationAdventure.mutationPosition = 3;
+
+    // Ajouter une icône de feu sur la cellule
+    logMessage(`Les plantes s'enracinnent`);
+}
+
+function sickAdventure1() {
+    const location= getOneActiveLocationAtRandom('hearts');
+    location.infectious = true;
+    sickAdventure.sickStep = 1;
+    logMessage(`Une étrange épidémie semble se developper dans un module habitable : ${location.row},${location.col}.`);
+}
+function sickAdventure2() {
+    const location= getOneActiveLocationAtRandom('hearts');
+    location.infectious = true;
+    sickAdventure.sickStep = 2;
+    logMessage(`Une étrange épidémie semble se developper dans un module habitable : ${location.row},${location.col}.`);
+}
+
+function sick_incident(position) {
+    position.infectious = true;
+    const astro = getAstronaut(position);
+    if(astro) {
+        astro.sick = true;
+    }
+}
 function sick_contaminate() {
     const newSickAstornauts = [];
     // propager la contamination
@@ -308,17 +516,6 @@ function sick_isContagious(row, col) {
     return false;
 
 }
-function sick_isHosptial(position) {
-    // on est un hopital si on est un module habitable adjacent à au moins 2 autres modules habitables
-    const row = position.row;
-    const col = position.col;
-    const adjacentCureValue =
-        sick_cureValue(row-1, col)
-        + sick_cureValue(row+1, col)
-        + sick_cureValue(row, col-1)
-        + sick_cureValue(row, col+1);
-    return sick_cureValue(row, col) === 1 && adjacentCureValue >= 2;
-}
 function sick_cureValue(row, col) {
     const position = getGridElement(row, col);
     if(position && position.type === TYPE.BUILT && position.suit === 'hearts') return 1;
@@ -326,6 +523,7 @@ function sick_cureValue(row, col) {
 }
 
 function getAstronaut(position) {
+    if(!position) return null;
     return astronauts.find(value => value.row === position.row && value.col === position.col);
 }
 
@@ -338,13 +536,16 @@ function handleCallingStart(suit) {
 
     if(suit === 'astronaut') {
         const targets = Object.values(grid).filter(position => position.suit === 'hearts' && isFree(position) && isActive(position)
-            && distance(astro.row, astro.col, position) <= 2)
+            && distance(astro.row, astro.col, position) <= antennaRange)
         dragAndDropAction.possibleTargets = targets;
+    }
+    else if(suit === 'supply') {
+        const targets = Object.values(grid).filter(position => position.suit !== 'spades' && distance(astro.row, astro.col, position) <= antennaRange && position.type !== TYPE.EMPTY);
+        dragAndDropAction.possibleTargets = targets;
+    }
 
-
-    } else {
-        const targets = Object.values(grid).filter(position => (position.type === TYPE.EMPTY || position.type === TYPE.CONSTRUCTION || position.type === TYPE.EXPLODED)
-            && distance(astro.row, astro.col, position) <= 2)
+    else {
+        const targets = Object.values(grid).filter(position => distance(astro.row, astro.col, position) <= antennaRange && position.type !== TYPE.BUILT);
         dragAndDropAction.possibleTargets = targets;
     }
 
@@ -383,7 +584,9 @@ function redrawGridCell(position) {
             // case vide
             break;
         }
-        case TYPE.CONSTRUCTION: {
+        case TYPE.CONSTRUCTION:
+        case TYPE.BUNKER:
+        {
             // afficher l'icone de construction
             cell.classList.add('construction');
             const icon = createIcon(cell, 'action-token build-icon', '🔧', 'Construire ici');
@@ -411,7 +614,10 @@ function redrawGridCell(position) {
                         document.querySelector('.construction-deck').classList.add('calling');
                     })
                 }
-                ;
+
+            }
+            if(position.nbAliens > 0) {
+                cell.classList.add('alien');
             }
         }
     }
@@ -433,8 +639,8 @@ function redrawGridCell(position) {
             icon.addEventListener('click', () => alien_removeSignal(position, astronaut));
         }
     }
-    if(position.alien && nbAliens > 0) {
-        const icon = createIcon(cell, 'action-token alien-group-icon', '👽 '+nbAliens, 'Groupe alien');
+    if(position.nbAliens > 0) {
+        const icon = createIcon(cell, 'action-token alien-group-icon', '👽 '+position.nbAliens, 'Groupe alien');
         if(astronaut) {
             icon.addEventListener('click', () => alien_removeAlien(position, astronaut));
         }
@@ -442,7 +648,8 @@ function redrawGridCell(position) {
 
     // déssiner la mutation végétale
     if(position.mutation) {
-        createIcon(cell, 'status-token plant-mutation-icon', '🌱', 'Mutation Végétale'); // todo prendre un icone de gêne
+        cell.classList.add('mutation')
+        createIcon(cell, 'status-token plant-mutation-icon', '🧬', 'Mutation Végétale');
     }
 
     // dessiner l'incendie
@@ -450,17 +657,11 @@ function redrawGridCell(position) {
         const icon = createIcon(cell, 'action-token fire-icon', '️🔥', 'Incendie');
         icon.addEventListener('click', () => fire_extinguish(position));
     }
-    if(position.malfunction) {
-        createIcon(cell, 'status-token shortcut-icon', '️🔥', 'Court-circuit'); // todo changer l'icone
-    }
 
 
     // dessiner l'épidémie
     if(position.infectious) {
         createIcon(cell, 'status-token biohazard-icon', '️☣️', 'Foyer inféctieux');
-    }
-    if(sick_isHosptial(position)) {
-        cell.classList.add('hearts2');
     }
 
 }
@@ -548,6 +749,10 @@ function drawAstronautInCell(astro, cell) {
     }
     if(astro.sick) {
         token.classList.add('sick');
+        if(astro.verySick) {
+            token.classList.add('verySick');
+        }
+
     }
 }
 
@@ -577,11 +782,8 @@ function drawInitialLayout() {
     // pile de cnstruction
     const deck = document.getElementById('construction-deck');
     deck.innerHTML = '';
-    prepareConstructionDeck(deck, 'hearts');
-    prepareConstructionDeck(deck, 'clubs');
-    prepareConstructionDeck(deck, 'diamonds');
-    prepareConstructionDeck(deck, 'spades');
-    prepareConstructionDeck(deck, 'astronaut');
+
+    callingActions.forEach(value => prepareConstructionDeck(deck, value));
 }
 
 function prepareConstructionDeck(deck, suit) {
@@ -630,6 +832,7 @@ function getSuitSymbol(suit) {
 function placeInitialAstronaut() {
     const row = 2;
     const col = 2;
+    astronauts = [];
     astronauts.push({ row, col, energy: 0, food: 0, sick: false });
     logMessage("Astronaute initial placé sur l'as de cœur.");
 }
@@ -646,12 +849,13 @@ function logMessage(msg) {
 
 function nextTurn() {
     logMessage("Début d'un nouveau tour...");
+
     // Logique de ressources, péripéties, actions à implémenter ici
     runResourcePhase();
 
-    runAdventurePhase();
-    runProblemsPhase();
-    runIncidentPhase();
+    runCalamityPhase(); // reveller une carte du deck
+    runAdventurePhase(); // appliquer les "problèmes" qu'on a chaque tour (la contamination, la propgation du feu, l'attaque alien, la vegetation).
+    runIncidentPhase(); // on tire au hasard des nouveaux lieux problématiques
 
     renderEverything();
 }
@@ -691,12 +895,6 @@ function runResourcePhase() {
         let maxEnergy = astronautLimit(astro) - astro.food;
         if (onActiveHabitat) {
             astro.energy = Math.min(astro.energy + 3, maxEnergy);
-
-            // soigner la maladie
-            if(sick_isHosptial(position)) {
-                astro.sick = false;
-                astro.verySick = false;
-            }
         } else {
             astro.food--;
             astro.energy = Math.min(astro.energy + 2, maxEnergy);
@@ -715,9 +913,9 @@ function runResourcePhase() {
 function isActive(position) {
     if(!position) return false;
     if(position.type !== TYPE.BUILT) return false;
-    if(position.fire || position.malfunction) return false;
-    if(position.suit === 'hearts') { // pour être actif, un module habitable doit être à côté d'un panneau solaire et d'une serre (actifs)
-        const adj= getAdjacentPositions(position);
+    //if(position.fire) return false;
+    if(position.suit === 'hearts') { // pour être actif, un module habitable doit être à côté d'un panneau solaire et d'une serre
+        const adj = getAdjacentPositions(position);
         if(adj.filter(value => value.suit === 'diamonds' && isActive(value)).length === 0) return false;
         if(adj.filter(value => value.suit === 'clubs' && isActive(value)).length === 0) return false;
     }
@@ -728,49 +926,51 @@ function getKey(row, col) {
     return `${row}-${col}`
 }
 
-function runAdventurePhase() {
+function runCalamityPhase() {
     revealCardFromDeck();
 }
 
-function runProblemsPhase() {
-    for(let position of Object.values(grid)) {
-        if(position.malfunction) {
-            position.malfunction = false;
-            position.fire = true;
-        }
-        if(position.signal) {
-            nbAliens ++;
-        }
-    }
+function runAdventurePhase() {
+    // adventurePhase, c'est ce qui se passe chaque tour, dans la continuité des incidents précédents
 
-    sick_contaminate();
 
-    fire_propagation();
-
-    // mutation végétale ???
+    // les aliens se deplacent (et attaquent)
+    alien_adventure();
+    // les plantes attaques les astronautes si possible
+    plant_adventure();
+    // l'incendie se propage
+    fire_adventure();
 
     renderEverything();
-
-    // résoudre l'attaque alien après le rendu, car il y a une descente de capsule
-    alien_attack();
 }
 function runIncidentPhase() {
     for(let position of Object.values(grid)) {
         if(position.type === TYPE.BUILT) {
             const incident = Math.floor(Math.random() * 6);
             if(incident === 0) { // une chance sur 6
-
-                if(position.suit === 'heart') { // incident du module habitable : nouveau foyer infectieux
+                console.log("incident sur la case ", position);
+/*
+                if(position.suit === 'hearts') { // incident du module habitable : nouveau foyer infectieux
                     position.infectious = true;
-                } else if(position.suit === 'diamonds') { // incident du panneau solaire : malfonction éléctrique (futur incendie)
-                    position.malfunction = true;
-                    position.energy = 0;
-                } else if(position.suit === 'clubs') { // incident de la serre : mutation génétique
+                }
+                else if(position.suit === 'diamonds') { // incident du panneau solaire : malfonction éléctrique (futur incendie)
+                    fire_set(position);
+                }
+                else if(position.suit === 'clubs') { // incident de la serre : mutation génétique
                     position.mutation = true;
                     position.food ++;
-                } else if(position.suit === 'spades') { // incident de l'antenne : signal alien
-                    position.signal = true;
-                    nbAliens ++;
+                }*/
+                if(position.suit === 'spades') { // nouveau groupe alien sur l'antenne
+                    alien_incident(position);
+                }
+                else if(position.suit === 'clubs') { // mutation des plantes dans une serre
+                    plant_incident(position);
+                }
+                else if(position.suit === 'diamonds') { // incendi sur un panneau solaire
+                    fire_incident(position);
+                }
+                else if(position.suit === 'hearts') { // un module habitable devient foyer d'infectation
+                    sick_incident(position);
                 }
             }
         }
@@ -787,13 +987,19 @@ function findOneAstronautAtRandom() {
 
 function addFoodToCell(position) {
     const specialMutation = position.mutation;
-    const max = specialMutation? 5 : 3;
-    const amount = specialMutation ? 3 : 1;
+    const plantLevel = problemLevel['clubs'];
+    let max = 3;
+    let amount = 1;
+    if(specialMutation) {
+        max += plantLevel;
+        amount += plantLevel;
+    }
 
     let food = position.food + amount;
+
     while(food > max) {
         if(specialMutation) {
-            vegetation_setFoodToRandomAdjacentPosition(position.row, position.col);
+            plant_setFoodToRandomAdjacentPosition(position);
         }
         food --;
     }
@@ -801,13 +1007,6 @@ function addFoodToCell(position) {
     position.food = food;
 }
 
-function vegetation_setFoodToRandomAdjacentPosition(position) {
-    const positions = getAdjacentPositions(position).filter(value => value.food === 0);
-    if(positions.length > 0) {
-        const index = Math.floor(Math.random()*positions.length);
-        positions[index].food ++;
-    }
-}
 
 function getAdjacentPositions(position) {
     const row = position.row;
@@ -818,7 +1017,7 @@ function getAdjacentPositions(position) {
     positions.push(getGridElement(row+1, col));
     positions.push(getGridElement(row, col-1));
     positions.push(getGridElement(row, col+1));
-    return positions.filter(value => value !== null);
+    return positions.filter(value => value !== null && value !== undefined && value.type !== TYPE.EMPTY);
 }
 
 function addEnergyToCell(position) {
@@ -915,23 +1114,31 @@ function handleEndDragAndDrop(cell) {
 
     astro.energy--;
 
+    const position = getGridElement(row, col);
+
     if(dragAndDropAction.action === 'move') {
         // mouvement d'un astronaute
         astro.row = row;
         astro.col = col;
         renderEverything();
 
-    } else if(dragAndDropAction.action === 'astronaut') {
+    }
+    else if(dragAndDropAction.action === 'astronaut') {
         astronauts.push({ row, col, energy: 0, food: 0, sick: false });
         dropCapsule(cell, 'rocket');
         logMessage("Nouvel astronaute appelé sur un module habitable.");
-    } else {
-        const position = getGridElement(row, col);
+    }
+    else if(dragAndDropAction.action === 'supply') {
+        position.food++;
+        position.energy++;
+        position.infectious = false;
+        dropCapsule(cell, 'rocket');
+        logMessage("Envoie de ravitaillement");
+    }
+    else {
         dropCapsule(position.dom, 'rocket');
-
         position.suit = dragAndDropAction.action;
         position.type = TYPE.CONSTRUCTION;
-
     }
 
     dragAndDropAction.astronaut = null;
@@ -953,7 +1160,7 @@ function setupDragAndDrop() {
 function pathfinder(x, y, dist, targets, start) {
 
     const position = getGridElement(x, y);
-    if (position.type === TYPE.BUNKER || position.type === TYPE.EMPTY) return; // interdit de se rendre sur un bunker alien ou sur une case pas encore construite
+    if (position.type === TYPE.EMPTY) return; // interdit de se rendre sur un bunker alien ou sur une case pas encore construite
 
     if(isFree(position)) {
         targets.add(getKey(x,y));
@@ -962,7 +1169,7 @@ function pathfinder(x, y, dist, targets, start) {
     if(dist <= 0) return;
 
     if(!start) {
-        if(position.type === TYPE.EXPLODED || position.type === TYPE.JUNGLE) return; // un cratère ou une jungle met fin au mouvement
+        if(position.type === TYPE.EXPLODED || position.type === TYPE.JUNGLE || position.type === TYPE.BUNKER) return; // un cratère ou une jungle met fin au mouvement
     }
 
     if(x > 0) pathfinder(x-1, y, dist-1, targets);
@@ -995,6 +1202,14 @@ function getSeveralLocationsAtRandom(number, suit) {
     }
 
 }
+function getOneActiveLocationAtRandom(suit) {
+    const locations = Object.values(grid).filter(loc => loc.suit === suit && isActive(loc));
+    if(locations.length === 0) return null;
+
+    const targetIndex = Math.floor(Math.random() * locations.length);
+    return locations[targetIndex];
+}
+
 function isCloseToAntena(row, col) {
     return Object.values(grid)
         .filter(position => position.type === 'spades')
