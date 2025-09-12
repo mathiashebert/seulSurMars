@@ -207,6 +207,27 @@ function plant_incident(position) {
         }
     }
 }
+function plant_setFoodToRandomAdjacentPosition(position) {
+    const locationsAccessibleViaPlantPath = plant_pathfinder(position).map(value => value[value.length-1])
+    const targetMap = {}
+    for(let locationAccessible of locationsAccessibleViaPlantPath) {
+        getAdjacentPositions(locationAccessible).filter(value => value.food === 0).forEach(value => targetMap[getKey(value.row, value.col)] = value);
+    }
+    const targets = Object.values(targetMap);
+
+    if(targets.length === 0) return; // si aucune case sans nourriture n'est accessible, alors on s'arrête là
+    const targetsWithAstronaut = targets.filter(value => !isFree(value));
+    let target;
+    // on prend en priorité une case avec un astronaute
+    if(targetsWithAstronaut.length > 0) {
+        const index = Math.floor(Math.random()*targetsWithAstronaut.length);
+        target = targetsWithAstronaut[index];
+    } else {
+        const index = Math.floor(Math.random()*targets.length);
+        target = targets[index];
+    }
+    if(target) target.food ++;
+}
 
 function alien_incident(position) {
     const level = problemLevel['spades'];
@@ -291,6 +312,25 @@ function alien_removeAlien(position, astronaut) {
     renderEverything();
 }
 
+function fire_incident(position) {
+    const level = problemLevel["diamonds"];
+    if(level === 0) return;
+    if(position.fire || position.type === TYPE.EXPLODED) return;
+    position.fire = true;
+
+    if(level === 1) return;
+    for(let i=1; i<level; i++) {
+        const adj = getAdjacentPositions(position).filter(value => !value.fire && value.type !== TYPE.EXPLODED);
+        if(adj.length === 0) return; // plus aucune position adjacente où mettre le feu
+        const index = Math.floor(Math.random()*adj.length);
+        const target = adj[index];
+        target.fire = true;
+    }
+}
+function fire_adventure() {
+    fire_propagation();
+}
+
 function fire_adventure1() {
     const location= getOneActiveLocationAtRandom('diamonds');
 
@@ -334,35 +374,13 @@ function fire_set(newFire) {
 }
 function fire_propagation() {
 
-    // 1/ on détruit les astronautes et les batiments où il y avait du feu
     for (let firePosition of Object.values(grid).filter(value => value.fire)) {
-        fire_clean(firePosition, false);
-    }
-
-    if(electricAdventure.smokePosition) {
-        fire_set(electricAdventure.smokePosition);
-        electricAdventure.smokePosition = null;
-    }
-
-
-    const newFires = [];
-
-    // 2/ : detecter les cases adjacentes
-    for (let firePosition of Object.values(grid).filter(value => value.fire)) {
-        const row = firePosition.row;
-        const col = firePosition.col;
-
-        fire_clean(firePosition, false);
-
-        fire_extend(row-1, col, newFires);
-        fire_extend(row+1, col, newFires);
-        fire_extend(row, col-1, newFires);
-        fire_extend(row, col+1, newFires);
-    }
-
-    // etape 2 : mettre en feu les cases adjacentes
-    for (let newFire of newFires) {
-        if(!newFire.fire) fire_set(newFire);
+        // 1/ on détruit les astronautes et les batiments où il y avait du feu
+        fire_clean(firePosition);
+        // 2 / on met le feu aux positions adjacentes
+        getAdjacentPositions(firePosition)
+            .filter(value => value.type !== TYPE.EXPLODED && !value.fire)
+            .forEach(value => value.fire = true);
     }
 }
 function fire_extend(row, col, newFire) {
@@ -371,20 +389,22 @@ function fire_extend(row, col, newFire) {
     if(position.fire) return;
     newFire.push(position);
 }
-function fire_clean(position, explosion) {
+function fire_clean(position) {
     // fonction qui gère un incendie, voir une explosion
 
     position.food = 0;
     position.energy = 0;
-    position.type = TYPE.CONSTRUCTION;
+    if(position.type === TYPE.BUILT) {
+        position.type = TYPE.CONSTRUCTION;
+    } else {
+        position.type = TYPE.EXPLODED;
+        position.suit = null;
+        position.fire = false;
+    }
     const astro = astronauts.find(e => e.row === position.row && e.col === position.col);
     if (astro) {
         logMessage("un astronaute meurt dans l'explosion");
         oneAstronautDie(astro);
-    }
-    if(explosion) {
-        position.type = TYPE.EXPLODED;
-        position.suit = null;
     }
 }
 function fire_extinguish(position) {
@@ -457,6 +477,13 @@ function sickAdventure2() {
     logMessage(`Une étrange épidémie semble se developper dans un module habitable : ${location.row},${location.col}.`);
 }
 
+function sick_incident(position) {
+    position.infectious = true;
+    const astro = getAstronaut(position);
+    if(astro) {
+        astro.sick = true;
+    }
+}
 function sick_contaminate() {
     const newSickAstornauts = [];
     // propager la contamination
@@ -886,7 +913,7 @@ function runResourcePhase() {
 function isActive(position) {
     if(!position) return false;
     if(position.type !== TYPE.BUILT) return false;
-    if(position.fire) return false;
+    //if(position.fire) return false;
     if(position.suit === 'hearts') { // pour être actif, un module habitable doit être à côté d'un panneau solaire et d'une serre
         const adj = getAdjacentPositions(position);
         if(adj.filter(value => value.suit === 'diamonds' && isActive(value)).length === 0) return false;
@@ -911,6 +938,8 @@ function runAdventurePhase() {
     alien_adventure();
     // les plantes attaques les astronautes si possible
     plant_adventure();
+    // l'incendie se propage
+    fire_adventure();
 
     renderEverything();
 }
@@ -931,11 +960,17 @@ function runIncidentPhase() {
                     position.mutation = true;
                     position.food ++;
                 }*/
-                if(position.suit === 'spades') { // incident de l'antenne : signal alien
+                if(position.suit === 'spades') { // nouveau groupe alien sur l'antenne
                     alien_incident(position);
                 }
-                else if(position.suit === 'clubs') { // incident de l'antenne : signal alien
+                else if(position.suit === 'clubs') { // mutation des plantes dans une serre
                     plant_incident(position);
+                }
+                else if(position.suit === 'diamonds') { // incendi sur un panneau solaire
+                    fire_incident(position);
+                }
+                else if(position.suit === 'hearts') { // un module habitable devient foyer d'infectation
+                    sick_incident(position);
                 }
             }
         }
@@ -964,7 +999,7 @@ function addFoodToCell(position) {
 
     while(food > max) {
         if(specialMutation) {
-            vegetation_setFoodToRandomAdjacentPosition(position);
+            plant_setFoodToRandomAdjacentPosition(position);
         }
         food --;
     }
@@ -972,27 +1007,6 @@ function addFoodToCell(position) {
     position.food = food;
 }
 
-function vegetation_setFoodToRandomAdjacentPosition(position) {
-    const locationsAccessibleViaPlantPath = plant_pathfinder(position).map(value => value[value.length-1])
-    const targetMap = {}
-    for(let locationAccessible of locationsAccessibleViaPlantPath) {
-        getAdjacentPositions(locationAccessible).filter(value => value.food === 0).forEach(value => targetMap[getKey(value.row, value.col)] = value);
-    }
-    const targets = Object.values(targetMap);
-
-    if(targets.length === 0) return; // si aucune case sans nourriture n'est accessible, alors on s'arrête là
-    const targetsWithAstronaut = targets.filter(value => !isFree(value));
-    let target;
-    // on prend en priorité une case avec un astronaute
-    if(targetsWithAstronaut.length > 0) {
-        const index = Math.floor(Math.random()*targetsWithAstronaut.length);
-        target = targetsWithAstronaut[index];
-    } else {
-        const index = Math.floor(Math.random()*targets.length);
-        target = targets[index];
-    }
-    if(target) target.food ++;
-}
 
 function getAdjacentPositions(position) {
     const row = position.row;
