@@ -75,6 +75,7 @@ function createDeck() {
     for (let i = 0; i < 4; i++) {
         deck.push(...drawPiles[i]);
     }
+    shuffle(deck);
 }
 
 function initGrid() {
@@ -91,8 +92,9 @@ function initGrid() {
                 nbAliens: 0,
 
                 signal: false,
-                infectious: false,
                 mutation: false,
+                emergencyKit: false,
+
 
                 dom: null
             }
@@ -151,8 +153,9 @@ function renderEverything() {
 function revealCardFromDeck() {
     if(deck.length === 0) {
         // todo  : victoire
-        alert('fin de la partie : le deck est terminé. bravo !!!!')
-        return;
+        //alert('fin de la partie : le deck est terminé. bravo !!!!')
+        //return;
+        createDeck();
     }
     const card = deck.shift();
 
@@ -422,104 +425,11 @@ function fire_extinguish(position) {
     }
 }
 
-function plantAdventure1() {
-    const location= getOneActiveLocationAtRandom('clubs');
-
-    if (location == null) {
-        logMessage("Aucune serre pour placer la mutation.");
-        return;
-    }
-
-    vegetationAdventure.mutationPosition = location;
-    if(location.food < 3) location.food = 3;
-
-    vegetationAdventure.mutationPosition = 1;
-
-    // Ajouter une icône de feu sur la cellule
-    logMessage(`Une mutation génétique s'est développée sur les plantes de la serre : ${location.row},${location.col}.`);
-}
-function plantAdventure2() {
-    vegetationAdventure.mutationPosition = 2;
-
-    // Ajouter une icône de feu sur la cellule
-    logMessage(`Les plantes dans les serres se developpent de plus en plus vite, risquant parfois d'atouffer les astronautes`);
-}
-function plantAdventure3() {
-    for(let location of Object.values(grid).filter(value => value.food > 0)) {
-        const plantValue = getAdjacentPositions().filter(value => value.food > 0).length;
-        // si il y a une plante, et qu'on est adjacent à au moins 2 autres plantes, alors ça se transforme en jungle
-        if(plantValue >= 2) {
-            location.type = TYPE.JUNGLE;
-
-            // s'il y avait un astronaut ici, il meurt
-            const astro = getAstronaut(location);
-            if(astro) {
-                oneAstronautDie(astro);
-            }
-        }
-    }
-    vegetationAdventure.mutationPosition = 3;
-
-    // Ajouter une icône de feu sur la cellule
-    logMessage(`Les plantes s'enracinnent`);
-}
-
-function sickAdventure1() {
-    const location= getOneActiveLocationAtRandom('hearts');
-    location.infectious = true;
-    sickAdventure.sickStep = 1;
-    logMessage(`Une étrange épidémie semble se developper dans un module habitable : ${location.row},${location.col}.`);
-}
-function sickAdventure2() {
-    const location= getOneActiveLocationAtRandom('hearts');
-    location.infectious = true;
-    sickAdventure.sickStep = 2;
-    logMessage(`Une étrange épidémie semble se developper dans un module habitable : ${location.row},${location.col}.`);
-}
-
 function sick_incident(position) {
-    position.infectious = true;
     const astro = getAstronaut(position);
     if(astro) {
         astro.sick = true;
     }
-}
-function sick_contaminate() {
-    const newSickAstornauts = [];
-    // propager la contamination
-    for(let i in astronauts) {
-        const astro = astronauts[i];
-        if(!astro.sick && sick_isCloseToContamination(astro.row, astro.col)) {
-            newSickAstornauts.push(astro);
-        }
-    }
-    for(let i in newSickAstornauts) {
-        newSickAstornauts[i].sick = true;
-    }
-}
-function sick_isCloseToContamination(row, col) {
-    return sick_isContagious(row, col)
-        || sick_isContagious(row-1, col)
-        || sick_isContagious(row+1, col)
-        || sick_isContagious(row, col-1)
-        || sick_isContagious(row, col+1);
-}
-function sick_isContagious(row, col) {
-    const position = getGridElement(row, col);
-    if(position && position.infectious) {
-        return true;
-    }
-    const astro = getAstronaut(position);
-    if(astro && astro.sick) {
-        return true;
-    }
-    return false;
-
-}
-function sick_cureValue(row, col) {
-    const position = getGridElement(row, col);
-    if(position && position.type === TYPE.BUILT && position.suit === 'hearts') return 1;
-    return 0;
 }
 
 function getAstronaut(position) {
@@ -598,6 +508,9 @@ function redrawGridCell(position) {
                     }
                     astronaut.energy--;
                     position.type = TYPE.BUILT;
+                    if(Object.values(grid).filter(value => value.type !== TYPE.BUILT).length === 0 ) {
+                        alert('fin de la partie : toute la iune est construite. bravo !!!!')
+                    }
                     renderEverything();
                 });
             }
@@ -660,8 +573,11 @@ function redrawGridCell(position) {
 
 
     // dessiner l'épidémie
-    if(position.infectious) {
-        createIcon(cell, 'status-token biohazard-icon', '️☣️', 'Foyer inféctieux');
+    if(position.emergencyKit) {
+        const icon = createIcon(cell, 'status-token seringe-icon', '💉', 'Kit de secours');
+        icon.addEventListener('click', () => collectResource(position.row, position.col, 'stim-pack'));
+
+
     }
 
 }
@@ -688,7 +604,6 @@ function drawGridResourcesInCell(position) {
 
 function handleStartMoving(astro) {
     const targets = new Set();
-    const dist = astro.verySick >= 3 ? 1 : 3; // en cas de maladie et de péripétie avancée, l'astronaute ne peut se déplacer ue de 1 case, sinon par défaut il peut se déplacer de 3 cases
     pathfinder(astro.row, astro.col, dist, targets, true);
 
     const possibleTargets = [];
@@ -749,9 +664,6 @@ function drawAstronautInCell(astro, cell) {
     }
     if(astro.sick) {
         token.classList.add('sick');
-        if(astro.verySick) {
-            token.classList.add('verySick');
-        }
 
     }
 }
@@ -949,17 +861,7 @@ function runIncidentPhase() {
             const incident = Math.floor(Math.random() * 6);
             if(incident === 0) { // une chance sur 6
                 console.log("incident sur la case ", position);
-/*
-                if(position.suit === 'hearts') { // incident du module habitable : nouveau foyer infectieux
-                    position.infectious = true;
-                }
-                else if(position.suit === 'diamonds') { // incident du panneau solaire : malfonction éléctrique (futur incendie)
-                    fire_set(position);
-                }
-                else if(position.suit === 'clubs') { // incident de la serre : mutation génétique
-                    position.mutation = true;
-                    position.food ++;
-                }*/
+
                 if(position.suit === 'spades') { // nouveau groupe alien sur l'antenne
                     alien_incident(position);
                 }
@@ -1039,6 +941,17 @@ function collectResource(row, col, type) {
         return;
     }
 
+    if(type === 'stim-pack') {
+        astronaut.sick = false;
+        if(astronaut.food === 0) {
+            astronaut.food = 1;
+        }
+        if(astronaut.energy === 0) {
+            astronaut.energy = 1;
+        }
+        return;
+    }
+
     const position = getGridElement(row, col);
     if (position[type] <= 0) {
         logMessage("Plus aucune ressource à ramasser");
@@ -1046,8 +959,8 @@ function collectResource(row, col, type) {
     }
 
     // cas particulier de la mutation vegetale
-    const specialVegetationMutation = type === 'food' && position.mutation && position.food <= 3;
-    if(specialVegetationMutation) { // pour retirer les 3 derniers jetons de plante d'une case où il y a une mutation, ça demande de l'energie
+    const specialVegetationMutation = type === 'food' && position.mutation;
+    if(specialVegetationMutation) { // pour retirer les jetons de plante d'une case où il y a une mutation, ça demande de l'energie
         if (astronaut.energy <= 0) {
             logMessage("L'astronaute n'a pas d'energie");
             return;
@@ -1073,7 +986,11 @@ function collectResource(row, col, type) {
 function astronautLimit(astro) {
     // la limite de ressource d'unastronaute vaut 5
     // ou 3 s'il est malade et que l'étape de la péripétie vaut au moins 2
-    return astro.sick ? 3 : 5
+    let limit =  5;
+    if(astro.sick) {
+        limit -= problemLevel['hearts'];
+    }
+    return limit;
 }
 
 
@@ -1129,9 +1046,9 @@ function handleEndDragAndDrop(cell) {
         logMessage("Nouvel astronaute appelé sur un module habitable.");
     }
     else if(dragAndDropAction.action === 'supply') {
-        position.food++;
-        position.energy++;
-        position.infectious = false;
+        //position.food++;
+        //position.energy++;
+        position.emergencyKit = true;
         dropCapsule(cell, 'rocket');
         logMessage("Envoie de ravitaillement");
     }
