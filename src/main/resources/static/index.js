@@ -604,6 +604,7 @@ function drawGridResourcesInCell(position) {
 
 function handleStartMoving(astro) {
     const targets = new Set();
+    const dist = 3;
     pathfinder(astro.row, astro.col, dist, targets, true);
 
     const possibleTargets = [];
