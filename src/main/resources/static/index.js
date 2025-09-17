@@ -431,6 +431,18 @@ function sick_incident(position) {
         astro.sick = true;
     }
 }
+function sick_contaminate() {
+    for(let astro of astronauts.filter(value => value.sick)) {
+        const adj = getAdjacentPositions(getGridElement(astro.row, astro.col));
+        for(let position of adj) {
+            const target = getAstronaut(position);
+            if(target && !target.sick) {
+                target.sick = true;
+            }
+        }
+    }
+
+}
 
 function getAstronaut(position) {
     if(!position) return null;
@@ -853,6 +865,8 @@ function runAdventurePhase() {
     plant_adventure();
     // l'incendie se propage
     fire_adventure();
+    // contamination
+    sick_contaminate();
 
     renderEverything();
 }
@@ -942,18 +956,21 @@ function collectResource(row, col, type) {
         return;
     }
 
+    const position = getGridElement(row, col);
+
     if(type === 'stim-pack') {
         astronaut.sick = false;
+        position.emergencyKit = false;
         if(astronaut.food === 0) {
             astronaut.food = 1;
         }
         if(astronaut.energy === 0) {
             astronaut.energy = 1;
         }
+        redrawGridCell(position);
         return;
     }
 
-    const position = getGridElement(row, col);
     if (position[type] <= 0) {
         logMessage("Plus aucune ressource à ramasser");
         return;
